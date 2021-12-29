@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
+        x:Class="PKXIconGen.AvaloniaUI.Views.DialogWindow"
+        Title="{Binding DialogTitle}"
+        Icon="/Assets/gen-icon.ico"
+
+        
+        Width="500" Height="200" CanResize="False" >
+  <Window.Resources>
+    <conv:BitmapAssetValueConverter x:Key="stringToBitmap"/>
+  </Window.Resources>
+
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            BackgroundSource="Digger"
+            TintColor="Black"
+            TintOpacity="0.75"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <DockPanel>
+
+      <Panel DockPanel.Dock="Bottom">
+        <Button Width="50" HorizontalAlignment="Right" Margin="8" Click="Ok_Click">
+          <TextBlock TextAlignment="Center">OK</TextBlock>
+        </Button>
+      </Panel>
+
+      <StackPanel Name="IconPanel" Orientation="Horizontal">
+        <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}"  />
+        <Image IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource stringToBitmap}}" Margin="32" />
+        <TextBlock Margin="32" TextWrapping="Wrap" MaxWidth="350" Text="{Binding DialogText}" />
+      </StackPanel>
+    </DockPanel>
+  </Panel>
+  
+</Window>

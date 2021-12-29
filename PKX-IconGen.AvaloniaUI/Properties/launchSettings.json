@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PKX-IconGen.AvaloniaUI": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    }
+  }
+}

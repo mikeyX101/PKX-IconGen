@@ -1,0 +1,183 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
+        xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:ai="using:Avalonia.Xaml.Interactivity"
+        xmlns:aic="using:Avalonia.Xaml.Interactions.Core"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="780"
+        x:Class="PKXIconGen.AvaloniaUI.Views.MainWindow"
+        Icon="/Assets/gen-icon.ico"
+        Title="PKX-IconGen"
+        
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaToDecorationsHint="True"
+        
+        MinWidth="800" Width="1024" MinHeight="780" Height="780" CanResize="True">
+  <Window.Styles>
+    <StyleInclude Source="/Assets/Styles.axaml" />
+  </Window.Styles>
+
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            BackgroundSource="Digger"
+            TintColor="Black"
+            TintOpacity="0.75"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <DockPanel>
+      <StackPanel IsVisible="{Binding IsWindows, Mode=OneTime}" Orientation="Horizontal" HorizontalAlignment="Left" Height="32" Margin="8,0,0,0" DockPanel.Dock="Top">
+        <Image Source="/Assets/gen-icon.ico" Width="16" Margin="0,0,8,0" />
+        <TextBlock VerticalAlignment="Center">PKX-IconGen</TextBlock>
+      </StackPanel>
+      <views:MenuView DataContext="{Binding MenuVM}" DockPanel.Dock="Top" />
+      <!--20 rows-->
+      <Grid ShowGridLines="True" ColumnDefinitions="0.35*,*,1.5*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+        <!--Blender Path-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
+        <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="*,30" RowDefinitions="*">
+          <TextBox Text="{Binding BlenderPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+            <ToolTip.Tip>
+              Path to the Blender executable.
+
+              On Windows: Path to the Blender 2.83 executable.
+
+              On MacOS: The default path is included, if any aliases have been made for Blender for different versions, you can specify that alias for Blender 2.83 here. I also have no idea how OSX works exactly to be honest. 😂
+
+              On Linux: Path to the Blender 2.83 executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_283".
+            </ToolTip.Tip>
+          </TextBox>
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseBlenderPath}" Grid.Column="1" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
+          </Button>
+        </Grid>
+        <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
+          <i:Icon FontSize="16" Value="fas fa-exclamation-triangle" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
+          <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText}" Grid.Column="1" Grid.Row="0" />
+        </Grid>
+
+        <!--Blender Optional Arguments-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Blender Args:</TextBlock>
+        <TextBox Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3">
+          <ToolTip.Tip>
+            Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
+
+            USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
+
+            &lt;List used args here&gt;
+          </ToolTip.Tip>
+        </TextBox>
+
+        <!--Output Path-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4">Output Path:</TextBlock>
+        <Grid Grid.Column="1" Grid.Row="4" ColumnDefinitions="*,30" RowDefinitions="*">
+          <TextBox Text="{Binding OutputPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+            <ToolTip.Tip>
+              Output path for the generated icons.
+            </ToolTip.Tip>
+          </TextBox>
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseOutputPath}" Grid.Column="1" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
+          </Button>
+        </Grid>
+
+        <!--Icon Style-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
+        <ComboBox Items="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <Panel VerticalAlignment="Center" Height="30">
+                <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}" />
+              </Panel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+
+          <ToolTip.Tip>
+            Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Battle Revolution.
+
+            Pokémon Colosseum has no cropping.
+
+            Pokémon XD uses the same rendering as Colosseum, but circle crops are used for each icon.
+
+            Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline.
+          </ToolTip.Tip>
+        </ComboBox>
+
+        <!--Render Scale-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6">Render Scale:</TextBlock>
+        <ComboBox Items="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
+          <ToolTip.Tip>
+            Integer scale used to know at what resolution the icons are going to be rendered.
+
+            Use x1 for making new pokemon icons.
+
+            Use the others for texture packs or higher resolution needs.
+          </ToolTip.Tip>
+        </ComboBox>
+
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" Text="Pokemon" Grid.Column="1" Grid.Row="7" />
+        <!--Pokemon Buttons-->
+        <Grid ShowGridLines="True" ColumnDefinitions="*,*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
+          <Panel HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0">
+            <Button Content="Select All"  />
+          </Panel>
+
+          <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
+            <Button Content="Unselect All"  />
+          </Panel>
+        </Grid>
+        <!--Pokemon-->
+        <DataGrid Background="Red" Grid.Column="1" Grid.Row="9" Grid.RowSpan="9">
+
+        </DataGrid>
+
+        <!--Assets Path-->
+        <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
+        <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
+          <TextBox Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+            <ToolTip.Tip>
+              Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
+              Make sure to "export" everything containing "pkx".
+              In Colosseum/GoD Tool:
+              Go in 4. Import/Export files
+              Filter with "pkx"
+              Enter "export"
+            </ToolTip.Tip>
+          </TextBox>
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
+          </Button>
+        </Grid>
+
+        <!--Log-->
+        <Grid Margin="16,0,16,0" Grid.Column="2" Grid.Row="0" Grid.RowSpan="19" ColumnDefinitions="*" RowDefinitions="20,*">
+          <TextBlock Height="20" Margin="5" Grid.Column="0" Grid.Row="0">Log</TextBlock>
+          <views:LogView DataContext="{Binding LogVM}" Padding="0,5,0,5" Grid.Column="0" Grid.Row="1" />
+        </Grid>
+
+        <!--State and render button-->
+        <Grid Margin="16,0,16,5" ColumnDefinitions="50,*,75" RowDefinitions="*" Grid.Column="2" Grid.Row="19" Grid.RowSpan="1">
+          <Grid ColumnDefinitions="50" RowDefinitions="*,*" Grid.Column="0" Grid.Row="0">
+            <TextBlock Text="{Binding PercentPokemonRendered}" Width="50" TextAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" />
+            <TextBlock Text="{Binding DisplayPokemonRendered}" Width="50" TextAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" />
+          </Grid>
+
+          <ProgressBar Height="20" Margin="5" Grid.Column="1" Grid.Row="0" />
+          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{Binding RenderCommand}" Grid.Column="2" Grid.Row="0">
+            <TextBlock TextAlignment="Center">Render</TextBlock>
+          </Button>
+          <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{Binding EndRender}" Grid.Column="2" Grid.Row="0">
+            <TextBlock TextAlignment="Center">Cancel</TextBlock>
+          </Button>
+        </Grid>
+      </Grid>
+    </DockPanel>
+  </Panel>
+</Window>

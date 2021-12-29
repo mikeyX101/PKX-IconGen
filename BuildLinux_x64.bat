@@ -1,0 +1,1 @@
+dotnet publish ./PKX-IconGen.AvaloniaUI/PKX-IconGen.AvaloniaUI.csproj --configuration Debug --framework net6.0 --runtime linux-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true --output ./Publish/linux-x64

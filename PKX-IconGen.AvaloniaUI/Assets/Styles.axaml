@@ -1,0 +1,28 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+          <StackPanel>
+            <TextBlock Classes="Warning">Warning</TextBlock>
+            <TextBlock Classes="Error">Error</TextBlock>
+          </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+  <Style Selector="TextBlock.Warning">
+    <Setter Property="Foreground" Value="Goldenrod" />
+  </Style>
+  <Style Selector=":is(i|Icon).Warning">
+    <Setter Property="Foreground" Value="Goldenrod" />
+  </Style>
+
+  <Style Selector="TextBlock.Error">
+    <Setter Property="Foreground" Value="Red" />
+  </Style>
+  <Style Selector=":is(i|Icon).Error">
+    <Setter Property="Foreground" Value="Red" />
+  </Style>
+</Styles>
