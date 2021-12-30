@@ -18,19 +18,16 @@
 #endregion
 
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Xaml.Interactivity;
 using Avalonia.Xaml.Interactions.Core;
-using PKXIconGen.AvaloniaUI.Models.Dialog;
+using Avalonia.Xaml.Interactivity;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
+using PKXIconGen.Core;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using System;
-using PKXIconGen.AvaloniaUI.Services;
-using PKXIconGen.Core;
 
 namespace PKXIconGen.AvaloniaUI
 {

@@ -17,11 +17,8 @@
 */
 #endregion
 
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
-using System.Windows.Input;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

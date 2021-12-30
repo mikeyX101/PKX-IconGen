@@ -21,11 +21,6 @@ using Avalonia.Controls;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.Services
 {

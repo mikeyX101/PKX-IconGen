@@ -18,7 +18,6 @@
 #endregion
 
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.ReactiveUI;
 using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
@@ -26,7 +25,6 @@ using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using System;
-using System.Diagnostics;
 
 namespace PKXIconGen.AvaloniaUI
 {

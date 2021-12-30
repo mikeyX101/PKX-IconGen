@@ -17,21 +17,17 @@
 */
 #endregion
 
-using ReactiveUI;
-using System.Reactive.Linq;
-using PKXIconGen.Core.Data;
-using System;
-using System.Reactive;
 using Avalonia.Controls;
+using PKXIconGen.AvaloniaUI.Services;
+using PKXIconGen.Core.Data;
+using PKXIconGen.Core.Services;
+using ReactiveUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
-using System.IO;
-using Avalonia.Media;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading;
-using PKXIconGen.Core.Services;
-using PKXIconGen.AvaloniaUI.Services;
-using PKXIconGen.Core;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

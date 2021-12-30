@@ -17,15 +17,8 @@
 */
 #endregion
 
-using Avalonia;
 using PKXIconGen.AvaloniaUI.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

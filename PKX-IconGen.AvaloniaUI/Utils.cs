@@ -18,11 +18,7 @@
 #endregion
 
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using PKXIconGen.AvaloniaUI.Models.Dialog;
-using PKXIconGen.AvaloniaUI.ViewModels;
-using PKXIconGen.AvaloniaUI.Views;
 
 namespace PKXIconGen.AvaloniaUI
 {
