@@ -1,6 +1,6 @@
 ﻿#region License
 /*  PKX-IconGen.Core - Pokemon Icon Generator for GCN/WII Pokemon games
-    Copyright (C) 2021-2022 mikeyX#4697
+    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,11 +26,13 @@ using PKXIconGen.Core.Data.Blender;
 
 namespace PKXIconGen.Core.Data
 {
+
     public class PokemonRenderData
     {
         public string Name { get; set; }
         public string Model { get; set; }
         public bool BuiltIn { get; set; }
+
         internal Camera Camera { get; set; }
         internal Light[] Lights { get; set; }
 

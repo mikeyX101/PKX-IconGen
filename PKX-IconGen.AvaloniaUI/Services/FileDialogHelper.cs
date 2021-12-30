@@ -1,6 +1,6 @@
 ﻿#region License
 /*  PKX-IconGen.AvaloniaUI - Avalonia user interface for PKX-IconGen.Core
-    Copyright (C) 2021-2022 mikeyX#4697
+    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
