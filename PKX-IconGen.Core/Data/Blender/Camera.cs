@@ -18,15 +18,30 @@
 #endregion
 
 using System.Numerics;
+using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data.Blender
 {
-    internal readonly struct Camera : IBlenderObject
+    /// <summary>
+    /// Data for a Camera in a Blender scene.
+    /// </summary>
+    internal readonly struct Camera : ISerializableBlenderObject
     {
-        public Vector3 Position { get; init; }
-        public Vector3 RotationEulerXYZ { get; init; }
+        [JsonPropertyName("pos")]
+        public JSONSerializableVector3 Position { get; init; }
+        [JsonPropertyName("rot")]
+        public JSONSerializableVector3 RotationEulerXYZ { get; init; }
 
-
+        [JsonPropertyName("fov")]
         public int FieldOfView { get; init; }
+
+        public Camera(Vector3 position, Vector3 rotationEulerXYZ, int fieldOfView)
+        {
+            Position = new(position);
+            RotationEulerXYZ = new(rotationEulerXYZ);
+            FieldOfView = fieldOfView;
+        }
+
+        public static Camera GetDefaultCamera() => new();
     }
 }

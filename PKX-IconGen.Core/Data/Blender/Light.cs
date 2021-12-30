@@ -18,25 +18,36 @@
 #endregion
 
 using System.Numerics;
+using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data.Blender
 {
-    internal readonly struct Light : IBlenderObject
+    /// <summary>
+    /// Data for one light in a Blender scene.
+    /// </summary>
+    internal readonly struct Light : ISerializableBlenderObject
     {
-        public Vector3 Position { get; init; }
-        public Vector3 RotationEulerXYZ { get; init; }
+        [JsonPropertyName("pos")]
+        public JSONSerializableVector3 Position { get; init; }
+        [JsonPropertyName("rot")]
+        public JSONSerializableVector3 RotationEulerXYZ { get; init; }
 
+        [JsonPropertyName("lightType")]
         public LightType Type { get; init; }
+        [JsonPropertyName("strength")]
         public float Strength { get; init; }
+        [JsonPropertyName("color")]
         public Color Color { get; init; }
 
         public Light(Vector3 position, Vector3 rotationEulerXYZ, LightType type, float strength, Color color)
         {
-            Position = position;
-            RotationEulerXYZ = rotationEulerXYZ;
+            Position = new(position);
+            RotationEulerXYZ = new(rotationEulerXYZ);
             Type = type;
             Strength = strength;
             Color = color;
         }
+
+        public static Light GetDefaultLight() => new();
     }
 }

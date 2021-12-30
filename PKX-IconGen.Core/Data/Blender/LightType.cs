@@ -19,7 +19,10 @@
 
 namespace PKXIconGen.Core.Data.Blender
 {
-    // https://docs.blender.org/api/current/bpy.types.Light.html#bpy.types.Light.type
+    /// <summary>
+    /// Light types available in Blender.
+    /// See: https://docs.blender.org/api/current/bpy.types.Light.html#bpy.types.Light.type
+    /// </summary>
     public enum LightType : byte
     {
         Point,

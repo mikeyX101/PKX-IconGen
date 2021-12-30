@@ -21,21 +21,39 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data.Blender;
 
 namespace PKXIconGen.Core.Data
 {
-
-    public class PokemonRenderData
+    /// <summary>
+    /// Data for one Pokemon render.
+    /// </summary>
+    public struct PokemonRenderData
     {
+        [JsonPropertyName("name")]
         public string Name { get; set; }
+        [JsonPropertyName("model")]
         public string Model { get; set; }
+        [JsonPropertyName("builtIn")]
         public bool BuiltIn { get; set; }
 
+        [JsonPropertyName("camera")]
         internal Camera Camera { get; set; }
+        [JsonPropertyName("lights")]
         internal Light[] Lights { get; set; }
 
+        public PokemonRenderData(string name, string model, bool builtIn)
+        {
+            Name = name;
+            Model = model;
+            BuiltIn = builtIn;
+
+            Camera = Camera.GetDefaultCamera();
+            Lights = Array.Empty<Light>();
+        }
+        [JsonConstructor]
         internal PokemonRenderData(string name, string model, bool builtIn, Camera camera, Light[] lights)
         {
             Name = name;

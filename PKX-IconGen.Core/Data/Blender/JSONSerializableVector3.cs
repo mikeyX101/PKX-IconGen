@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -27,22 +28,32 @@ using System.Threading.Tasks;
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
-    /// Color reported from Blender, storing each color value in the range [0..1].
+    /// Wrapper for Vector3 so that it can be serialized with the JSONSerializer.
+    /// The original Vector3 struct can be accessed with the Vector property.
     /// </summary>
-    internal readonly struct Color
+    internal struct JSONSerializableVector3
     {
-        [JsonPropertyName("r")]
-        public float Red { get; init; }
-        [JsonPropertyName("g")]
-        public float Green { get; init; }
-        [JsonPropertyName("b")]
-        public float Blue { get; init; }
+        [JsonIgnore]
+        public Vector3 Vector { get; set; }
 
-        public Color(float red, float green, float blue)
+        [JsonPropertyName("x")]
+        public float X => Vector.X;
+
+        [JsonPropertyName("y")]
+        public float Y => Vector.Y;
+
+        [JsonPropertyName("z")]
+        public float Z => Vector.Z;
+
+        public JSONSerializableVector3(Vector3 vector)
         {
-            Red = red;
-            Green = green;
-            Blue = blue;
+            Vector = vector;
+        }
+
+        [JsonConstructor]
+        public JSONSerializableVector3(float x, float y, float z)
+        {
+            Vector = new(x, y, z);
         }
     }
 }

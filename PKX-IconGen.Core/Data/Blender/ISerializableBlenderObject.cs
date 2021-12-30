@@ -27,11 +27,11 @@ using System.Threading.Tasks;
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
-    /// Blender object that's in a 3D space.
+    /// Blender object in a 3D space with Serializable Vector3s.
     /// </summary>
-    internal interface IBlenderObject
+    internal interface ISerializableBlenderObject
     {
-        public Vector3 Position { get; }
-        public Vector3 RotationEulerXYZ { get; }
+        public JSONSerializableVector3 Position { get; }
+        public JSONSerializableVector3 RotationEulerXYZ { get; }
     }
 }
