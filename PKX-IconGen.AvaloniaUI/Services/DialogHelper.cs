@@ -21,35 +21,42 @@ using Avalonia.Controls;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.Services
 {
     public static class DialogHelper
     {
-        public static void ShowDialog(DialogType dialogType, string message, string? title = null, Window? parent = null)
+        public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, string? title = null, Window? parent = null)
         {
             if (parent == null)
             {
                 parent = Utils.GetApplicationLifetime().MainWindow;
             }
 
-            new DialogWindow
+            DialogWindowViewModel vm = new DialogWindowViewModel(dialogType, dialogButtons, message, title);
+            await new DialogWindow
             {
-                DataContext = new DialogWindowViewModel(dialogType, message, title)
+                DataContext = vm
             }.ShowDialog(parent);
+
+            return vm.ReturnValue;
         }
 
-        public static void ShowDialog(string asset, string message, string title, Window? parent = null)
+        public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, Window? parent = null)
         {
             if (parent == null)
             {
                 parent = Utils.GetApplicationLifetime().MainWindow;
             }
 
-            new DialogWindow
+            DialogWindowViewModel vm = new DialogWindowViewModel(asset, dialogButtons, message, title);
+            await new DialogWindow
             {
-                DataContext = new DialogWindowViewModel(asset, message, title)
+                DataContext = vm
             }.ShowDialog(parent);
+
+            return vm.ReturnValue;
         }
     }
 }

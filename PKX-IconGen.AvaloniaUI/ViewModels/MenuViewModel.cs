@@ -17,6 +17,7 @@
 */
 #endregion
 
+using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.Services;
 using System.Reflection;
 
@@ -24,13 +25,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class MenuViewModel : ViewModelBase
     {
-        public void AboutCommand()
+        public async void AboutCommand()
         {
             Assembly coreAssembly = Assembly.Load("PKX-IconGen.Core");
             Assembly uiAssembly = Assembly.GetExecutingAssembly();
             Assembly avaloniaAssembly = Assembly.Load("Avalonia");
 
-            DialogHelper.ShowDialog("/Assets/gen-icon-x512.png", 
+           await DialogHelper.ShowDialog("/Assets/gen-icon-x512.png",
+                DialogButtons.Ok,
 @$"PKX-IconGen by mikeyX
 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"} 
 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}

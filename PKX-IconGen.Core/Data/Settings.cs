@@ -17,6 +17,7 @@
 */
 #endregion
 
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -28,7 +29,7 @@ namespace PKXIconGen.Core.Data
     public class Settings
     {
         [Column("ID"), Key, DefaultValue(1)]
-        public uint InternalID { get; set; } = 1;
+        public uint InternalID { get; private set; } = 1;
 
         [Column]
         public string BlenderPath { get; set; }

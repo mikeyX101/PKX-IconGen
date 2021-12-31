@@ -34,16 +34,33 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public string? ImageAsset { get; set; }
         public bool ImageVisible { get; set; } = false;
 
-        private DialogWindowViewModel(string text, string title)
+        public bool OkButtonVisible { get; set; } = false;
+        public bool YesNoButtonsVisible { get; set; } = false;
+
+        public bool ReturnValue { get; set; } = false;
+
+        private DialogWindowViewModel(string text, string title, DialogButtons dialogButtons)
         {
             DialogText = text;
             DialogTitle = title;
+
+            switch (dialogButtons)
+            {
+                case DialogButtons.Ok:
+                    OkButtonVisible = true;
+                    break;
+
+                case DialogButtons.YesNo:
+                    YesNoButtonsVisible = true;
+                    break;
+            }
         }
 
-        public DialogWindowViewModel(DialogType dialogType, string text, string? title = null)
+        public DialogWindowViewModel(DialogType dialogType, DialogButtons dialogButtons, string text, string? title = null)
             : this(
                   text,
-                  title ?? GetTitle(dialogType)
+                  title ?? GetTitle(dialogType),
+                  dialogButtons
             )
         {
             Icon = "fas " + GetFontAwesomeIcon(dialogType);
@@ -51,14 +68,20 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             IconVisible = true;
         }
 
-        public DialogWindowViewModel(string asset, string text, string title)
+        public DialogWindowViewModel(string asset, DialogButtons dialogButtons, string text, string title)
             : this(
                   text,
-                  title
+                  title,
+                  dialogButtons
             )
         {
             ImageAsset = asset;
             ImageVisible = true;
+        }
+
+        public void SetPositiveReturnValue()
+        {
+            ReturnValue = true;
         }
 
         private static string GetFontAwesomeIcon(DialogType dialogType)

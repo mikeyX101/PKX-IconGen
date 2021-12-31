@@ -17,6 +17,7 @@
 */
 #endregion
 
+using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -25,12 +26,12 @@ namespace PKXIconGen.Core.Data.Blender
     /// <summary>
     /// Data for one light in a Blender scene.
     /// </summary>
-    internal readonly struct Light : ISerializableBlenderObject
+    internal readonly struct Light : IJsonSerializableBlenderObject, IEquatable<Light>
     {
         [JsonPropertyName("pos")]
-        public JSONSerializableVector3 Position { get; init; }
+        public JsonSerializableVector3 Position { get; init; }
         [JsonPropertyName("rot")]
-        public JSONSerializableVector3 RotationEulerXYZ { get; init; }
+        public JsonSerializableVector3 RotationEulerXYZ { get; init; }
 
         [JsonPropertyName("lightType")]
         public LightType Type { get; init; }
@@ -49,5 +50,16 @@ namespace PKXIconGen.Core.Data.Blender
         }
 
         public static Light GetDefaultLight() => new();
+
+
+        public bool Equals(Light other)
+        {
+            return 
+                Position.Equals(other.Position) &&
+                RotationEulerXYZ.Equals(other.RotationEulerXYZ) &&
+                Type == other.Type &&
+                Strength == other.Strength &&
+                Color.Equals(other.Color);
+        }
     }
 }

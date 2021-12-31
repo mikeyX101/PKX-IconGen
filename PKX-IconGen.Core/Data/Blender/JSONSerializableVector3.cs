@@ -17,6 +17,7 @@
 */
 #endregion
 
+using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -26,29 +27,34 @@ namespace PKXIconGen.Core.Data.Blender
     /// Wrapper for Vector3 so that it can be serialized with the JSONSerializer.
     /// The original Vector3 struct can be accessed with the Vector property.
     /// </summary>
-    internal struct JSONSerializableVector3
+    internal struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
     {
         [JsonIgnore]
         public Vector3 Vector { get; set; }
 
         [JsonPropertyName("x")]
-        public float X => Vector.X;
+        public readonly float X => Vector.X;
 
         [JsonPropertyName("y")]
-        public float Y => Vector.Y;
+        public readonly float Y => Vector.Y;
 
         [JsonPropertyName("z")]
-        public float Z => Vector.Z;
+        public readonly float Z => Vector.Z;
 
-        public JSONSerializableVector3(Vector3 vector)
+        public JsonSerializableVector3(Vector3 vector)
         {
             Vector = vector;
         }
 
         [JsonConstructor]
-        public JSONSerializableVector3(float x, float y, float z)
+        public JsonSerializableVector3(float x, float y, float z)
         {
             Vector = new(x, y, z);
+        }
+
+        public bool Equals(JsonSerializableVector3 other)
+        {
+            return Vector.Equals(other.Vector);
         }
     }
 }

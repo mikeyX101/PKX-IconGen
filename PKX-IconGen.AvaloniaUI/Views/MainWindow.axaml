@@ -34,7 +34,7 @@
         ExtendClientAreaChromeHints="PreferSystemChrome"
         ExtendClientAreaToDecorationsHint="True"
         
-        MinWidth="800" Width="1024" MinHeight="780" Height="780" CanResize="True">
+        MinWidth="1024" Width="1024" MinHeight="780" Height="780" CanResize="True">
   <Window.Styles>
     <StyleInclude Source="/Assets/Styles.axaml" />
   </Window.Styles>
@@ -56,7 +56,7 @@
       </StackPanel>
       <views:MenuView DataContext="{Binding MenuVM}" DockPanel.Dock="Top" />
       <!--20 rows-->
-      <Grid ShowGridLines="True" ColumnDefinitions="0.35*,*,1.5*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+      <Grid ShowGridLines="False" ColumnDefinitions="0.35*,*,1.5*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
         <!--Blender Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="*,30" RowDefinitions="*">
@@ -141,19 +141,37 @@
 
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" Text="Pokemon" Grid.Column="1" Grid.Row="7" />
         <!--Pokemon Buttons-->
-        <Grid ShowGridLines="True" ColumnDefinitions="*,*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
+        <Grid ShowGridLines="False" ColumnDefinitions="0.30*,1.15*,0.75*,0.90*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
           <Panel HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0">
-            <Button Content="Select All"  />
+            <Button Content="+" Command="{Binding NewRenderData}" />
           </Panel>
-
           <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
-            <Button Content="Unselect All"  />
+            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}" />
+          </Panel>
+          <Panel HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0">
+            <Button Content="Select All" Command="{Binding SelectAllRenderData}" />
+          </Panel>
+          <Panel HorizontalAlignment="Center" Grid.Column="3" Grid.Row="0">
+            <Button Content="Unselect All" Command="{Binding DeselectAllRenderData}" />
           </Panel>
         </Grid>
         <!--Pokemon-->
-        <DataGrid Background="Red" Grid.Column="1" Grid.Row="9" Grid.RowSpan="9">
-
-        </DataGrid>
+        <ListBox Items="{Binding PokemonRenderDataItems}" SelectedItems="{Binding SelectedPokemonRenderData}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="9" Grid.RowSpan="9">
+          <ListBox.Styles>
+            <Style Selector="ListBoxItem">
+              <Setter Property="Padding" Value="6"/>
+            </Style>
+          </ListBox.Styles>
+          <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="0.65*, *, 0.15*" RowDefinitions="*">
+                  <TextBlock Text="{Binding Name}" Grid.Column="0" />
+                  <TextBlock Text="{Binding Model}" Grid.Column="1" />
+                  <i:Icon IsVisible="{Binding BuiltIn}" FontSize="16" Value="fas fa-check" Grid.Column="2" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <!--Assets Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
@@ -162,6 +180,7 @@
             <ToolTip.Tip>
               Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
               Make sure to "export" everything containing "pkx".
+              
               In Colosseum/GoD Tool:
               Go in 4. Import/Export files
               Filter with "pkx"

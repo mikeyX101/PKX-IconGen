@@ -1,5 +1,5 @@
 ﻿#region License
-/*  PKX-IconGen.Core - Pokemon Icon Generator for GCN/WII Pokemon games
+/*  PKX-IconGen.AvaloniaUI - Avalonia user interface for PKX-IconGen.Core
     Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
@@ -17,15 +17,12 @@
 */
 #endregion
 
-
-namespace PKXIconGen.Core.Data.Blender
+namespace PKXIconGen.AvaloniaUI.Models.Dialog
 {
-    /// <summary>
-    /// Blender object in a 3D space with Serializable Vector3s.
-    /// </summary>
-    internal interface ISerializableBlenderObject
+    public enum DialogButtons
     {
-        public JSONSerializableVector3 Position { get; }
-        public JSONSerializableVector3 RotationEulerXYZ { get; }
+        Ok = 0,
+        YesNo = 1
     }
 }
+

@@ -53,7 +53,7 @@ namespace PKXIconGen.Core
         }
         private static ILogger? NullableLogger { get; set; }
 
-        private static bool Initiated = false;
+        public static bool Initiated { get; private set; } = false;
         public static void Initiate()
         {
             if (Initiated)
@@ -86,12 +86,18 @@ namespace PKXIconGen.Core
 #endif
                 .CreateLogger();
 
+            try
+            {
+                using Database db = new();
+                db.RunMigrations();
 
-            using Database db = new();
-            db.RunMigrations();
-
-            Initiated = true;
-            Logger.Information("PKX-IconGen Core initiated!");
+                Initiated = true;
+                Logger.Information("PKX-IconGen Core initiated!");
+            }
+            catch (Exception ex)
+            {
+                Logger.Fatal(ex, "An exception occured while migrating the database.");
+            }
         }
 
         public static void OnApplicationEnd(object? sender, EventArgs eventArgs)

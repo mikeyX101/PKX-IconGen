@@ -24,12 +24,12 @@
              x:Class="PKXIconGen.AvaloniaUI.Views.MenuView">
   <Menu>
     <MenuItem Header="_File">
-      <MenuItem Header="_Import Pokemon">
+      <MenuItem Header="_Import...">
         <MenuItem.Icon>
           <i:Icon Value="fas fa-file-import"></i:Icon>
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="_Export Pokemon">
+      <MenuItem Header="_Export Selected...">
         <MenuItem.Icon>
           <i:Icon Value="fas fa-file-export"></i:Icon>
         </MenuItem.Icon>

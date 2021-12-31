@@ -17,36 +17,14 @@
 */
 #endregion
 
-using System;
-using System.Text.Json.Serialization;
-
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
-    /// Color reported from Blender, storing each color value in the range [0..1].
+    /// Blender object in a 3D space with Serializable Vector3s.
     /// </summary>
-    internal readonly struct Color : IJsonSerializable, IEquatable<Color>
+    internal interface IJsonSerializableBlenderObject : IJsonSerializable
     {
-        [JsonPropertyName("r")]
-        public float Red { get; init; }
-        [JsonPropertyName("g")]
-        public float Green { get; init; }
-        [JsonPropertyName("b")]
-        public float Blue { get; init; }
-
-        public Color(float red, float green, float blue)
-        {
-            Red = red;
-            Green = green;
-            Blue = blue;
-        }
-
-        public bool Equals(Color other)
-        {
-            return 
-                Red == other.Red &&
-                Green == other.Green &&
-                Blue == other.Blue;
-        }
+        public JsonSerializableVector3 Position { get; }
+        public JsonSerializableVector3 RotationEulerXYZ { get; }
     }
 }

@@ -37,29 +37,35 @@ namespace PKXIconGen.AvaloniaUI
         public static void Main(string[] args) {
             IconProvider.Register<FontAwesomeIconProvider>();
             CoreManager.Initiate();
-
-            try
+            if (CoreManager.Initiated)
             {
-                CoreManager.Logger.Information("Initiating Avalonia App...");
-                BuildAvaloniaApp()
-                    .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
-            }
-            catch (Exception ex)
-            {
-                Settings? settings = null;
                 try
                 {
-                    using Database db = new();
-                    settings = db.GetSettings();
+                    CoreManager.Logger.Information("Initiating Avalonia App...");
+                    BuildAvaloniaApp()
+                        .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
                 }
-                catch (Exception settingsEx)
+                catch (Exception ex)
                 {
-                    CoreManager.Logger.Fatal(settingsEx, "An exception occured while fetching settings on Avalonia exception.");
+                    Settings? settings = null;
+                    try
+                    {
+                        using Database db = new();
+                        settings = db.GetSettings();
+                    }
+                    catch (Exception settingsEx)
+                    {
+                        CoreManager.Logger.Fatal(settingsEx, "An exception occured while fetching settings on Avalonia exception.");
+                    }
+
+                    CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}", settings);
                 }
-                
-                CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}", settings);
+                finally
+                {
+                    CoreManager.DisposeLogger();
+                }
             }
-            finally
+            else
             {
                 CoreManager.DisposeLogger();
             }

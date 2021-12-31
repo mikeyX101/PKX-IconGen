@@ -28,6 +28,7 @@ using PKXIconGen.Core;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using System;
+using System.Linq;
 
 namespace PKXIconGen.AvaloniaUI
 {
@@ -48,7 +49,7 @@ namespace PKXIconGen.AvaloniaUI
                 {
                     desktop.MainWindow = new MainWindow()
                     {
-                        DataContext = new MainWindowViewModel(db.GetSettings())
+                        DataContext = new MainWindowViewModel(db.GetSettings(), db.GetPokemonRenderData().OrderBy(prd => prd.Name).ToList())
                     };
                 }
             }

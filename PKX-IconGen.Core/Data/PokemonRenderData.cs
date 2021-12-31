@@ -17,34 +17,42 @@
 */
 #endregion
 
+using Microsoft.EntityFrameworkCore;
 using PKXIconGen.Core.Data.Blender;
 using System;
+using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data
 {
-    /// <summary>
-    /// Data for one Pokemon render.
-    /// </summary>
-    public struct PokemonRenderData
+    [Table("PokemonRenderData"), Index(nameof(InternalID), IsUnique = true, Name = "IDX_ID")]
+    public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>
     {
-        [JsonPropertyName("name")]
+        [Column("ID"), Key, JsonIgnore]
+        public uint InternalID { get; private set; }
+
+        [Column, JsonPropertyName("name")]
         public string Name { get; set; }
-        [JsonPropertyName("model")]
+        /// <summary>
+        /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
+        /// </summary>
+        [Column, JsonPropertyName("model")]
         public string Model { get; set; }
-        [JsonPropertyName("builtIn")]
+        [Column, JsonPropertyName("builtIn")]
         public bool BuiltIn { get; set; }
 
-        [JsonPropertyName("camera")]
-        internal Camera Camera { get; set; }
-        [JsonPropertyName("lights")]
-        internal Light[] Lights { get; set; }
+        [Column, JsonPropertyName("camera")]
+        internal Camera Camera { get; private set; }
+        [Column, JsonPropertyName("lights")]
+        internal Light[] Lights { get; private set; }
 
-        public PokemonRenderData(string name, string model, bool builtIn)
+        internal PokemonRenderData()
         {
-            Name = name;
-            Model = model;
-            BuiltIn = builtIn;
+            Name = "";
+            Model = "";
+            BuiltIn = false;
 
             Camera = Camera.GetDefaultCamera();
             Lights = Array.Empty<Light>();
@@ -55,8 +63,29 @@ namespace PKXIconGen.Core.Data
             Name = name;
             Model = model;
             BuiltIn = builtIn;
+
             Camera = camera;
             Lights = lights;
+        }
+
+        public PokemonRenderData(string name, string model, bool builtIn)
+        {
+            Name = name;
+            Model = model;
+            BuiltIn = builtIn;
+
+            Camera = Camera.GetDefaultCamera();
+            Lights = Array.Empty<Light>();
+        }
+
+        public bool Equals(PokemonRenderData? other)
+        {
+            return other != null &&
+                Name == other.Name &&
+                Model == other.Model &&
+                BuiltIn == other.BuiltIn &&
+                Camera.Equals(other.Camera) &&
+                Lights.SequenceEqual(other.Lights);
         }
     }
 }

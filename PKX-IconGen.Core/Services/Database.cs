@@ -19,17 +19,28 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PKXIconGen.Core.Data;
+using PKXIconGen.Core.Data.Blender;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace PKXIconGen.Core.Services
 {
     public class Database : DbContext
     {
         private const uint SettingsId = 1;
+
+        private static Exception IfNullTable(string propertyName)
+        {
+            Exception ex = new InvalidOperationException($"{propertyName} was somehow null?");
+            CoreManager.Logger.Fatal(new InvalidOperationException($"{propertyName} was somehow null?"), "{TableName} was somehow null?", propertyName);
+            return ex;
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -48,25 +59,39 @@ namespace PKXIconGen.Core.Services
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Settings>().HasData(new Settings());
+
+            EntityTypeBuilder<PokemonRenderData> pokemonRenderDataEntityBuilder = modelBuilder.Entity<PokemonRenderData>();
+            pokemonRenderDataEntityBuilder.Property(e => e.Camera)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<Camera>(v, (JsonSerializerOptions?)null));
+            pokemonRenderDataEntityBuilder.Property(e => e.Lights)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<Light[]>(v, (JsonSerializerOptions?)null) ?? Array.Empty<Light>(),
+                    new ValueComparer<Light[]>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToArray()));
         }
 
-        public bool RunMigrations()
+        public void RunMigrations()
         {
             try
             {
                 CoreManager.Logger.Information("Running Database migrations...");
                 Database.Migrate();
                 CoreManager.Logger.Information("Database migration successful");
-                return true;
             }
             catch (Exception e)
             {
                 CoreManager.Logger.Error(e, "Database migration failed");
-                return false;
+                throw;
             }
         }
 
         public DbSet<Settings>? SettingsTable { get; set; }
+        public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; set; }
 
         #region Settings
         public Settings GetSettings()
@@ -77,7 +102,7 @@ namespace PKXIconGen.Core.Services
             }
             else
             {
-                throw new InvalidOperationException("SettingsTable was somehow null?");
+                throw IfNullTable(nameof(SettingsTable));
             }
         }
 
@@ -89,7 +114,7 @@ namespace PKXIconGen.Core.Services
             }
             else
             {
-                throw new InvalidOperationException("SettingsTable was somehow null?");
+                throw IfNullTable(nameof(SettingsTable));
             }
         }
 
@@ -108,7 +133,79 @@ namespace PKXIconGen.Core.Services
             }
             else
             {
-                throw new InvalidOperationException("SettingsTable was somehow null?");
+                throw IfNullTable(nameof(SettingsTable));
+            }
+        }
+        #endregion
+
+        #region Pokemon Render Data
+        public int AddPokemonRenderData(PokemonRenderData pokemonRenderData)
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                PokemonRenderDataTable.Add(pokemonRenderData);
+
+                return SaveChanges();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+
+        public List<PokemonRenderData> GetPokemonRenderData()
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                return PokemonRenderDataTable.ToList();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+
+        public int DeletePokemonRenderData(uint id)
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                PokemonRenderData pokemonRenderData = PokemonRenderDataTable
+                    .Where(prd => prd.InternalID == id && !prd.BuiltIn)
+                    .First();
+
+                PokemonRenderDataTable.RemoveRange(pokemonRenderData);
+
+                return SaveChanges();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+        public int DeletePokemonRenderData(PokemonRenderData renderData)
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                PokemonRenderDataTable.RemoveRange(renderData);
+
+                return SaveChanges();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+        public int DeletePokemonRenderData(IEnumerable<PokemonRenderData> renderData)
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                PokemonRenderDataTable.RemoveRange(renderData);
+
+                return SaveChanges();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
             }
         }
         #endregion

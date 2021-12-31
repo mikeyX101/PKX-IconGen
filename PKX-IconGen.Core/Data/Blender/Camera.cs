@@ -17,6 +17,7 @@
 */
 #endregion
 
+using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -25,12 +26,12 @@ namespace PKXIconGen.Core.Data.Blender
     /// <summary>
     /// Data for a Camera in a Blender scene.
     /// </summary>
-    internal readonly struct Camera : ISerializableBlenderObject
+    internal readonly struct Camera : IJsonSerializableBlenderObject, IEquatable<Camera>
     {
         [JsonPropertyName("pos")]
-        public JSONSerializableVector3 Position { get; init; }
+        public JsonSerializableVector3 Position { get; init; }
         [JsonPropertyName("rot")]
-        public JSONSerializableVector3 RotationEulerXYZ { get; init; }
+        public JsonSerializableVector3 RotationEulerXYZ { get; init; }
 
         [JsonPropertyName("fov")]
         public int FieldOfView { get; init; }
@@ -43,5 +44,13 @@ namespace PKXIconGen.Core.Data.Blender
         }
 
         public static Camera GetDefaultCamera() => new();
+
+        public bool Equals(Camera other)
+        {
+            return
+                Position.Equals(other.Position) &&
+                RotationEulerXYZ.Equals(other.RotationEulerXYZ) &&
+                FieldOfView == other.FieldOfView;
+        }
     }
 }

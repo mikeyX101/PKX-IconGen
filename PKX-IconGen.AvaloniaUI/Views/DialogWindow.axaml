@@ -44,11 +44,18 @@
     </ExperimentalAcrylicBorder>
     <DockPanel>
 
-      <Panel DockPanel.Dock="Bottom">
-        <Button Width="50" HorizontalAlignment="Right" Margin="8" Click="Ok_Click">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Bottom">
+        <Button IsVisible="{Binding OkButtonVisible}" Width="50" Margin="8" Click="Close" Command="{Binding SetPositiveReturnValue}">
           <TextBlock TextAlignment="Center">OK</TextBlock>
         </Button>
-      </Panel>
+
+        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="Close" Command="{Binding SetPositiveReturnValue}">
+          <TextBlock TextAlignment="Center">Yes</TextBlock>
+        </Button>
+        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="Close">
+          <TextBlock TextAlignment="Center">No</TextBlock>
+        </Button>
+      </StackPanel>
 
       <StackPanel Name="IconPanel" Orientation="Horizontal">
         <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}"  />

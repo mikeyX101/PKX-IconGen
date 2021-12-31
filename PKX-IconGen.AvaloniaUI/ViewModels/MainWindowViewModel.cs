@@ -24,6 +24,7 @@ using PKXIconGen.Core.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -131,6 +132,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
+        #region Pokemon Render Data
+        public IList<PokemonRenderData> PokemonRenderDataItems { get; }
+        public IList<PokemonRenderData> SelectedPokemonRenderData { get; }
+        #endregion
+
         #region Assets Path
         private string assetsPath;
         public string AssetsPath
@@ -190,7 +196,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
-        public MainWindowViewModel(Settings settings) : base()
+        public MainWindowViewModel(Settings settings, IList<PokemonRenderData> renderData) : base()
         {
             // VMs
             MenuVM = new();
@@ -210,14 +216,25 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             RenderScaleItems = Enum.GetValues<RenderScale>();
             SelectedRenderScale = settings.RenderScale;
 
+            PokemonRenderData[] data = new PokemonRenderData[]
+            {
+                new("1", "pkx_1.dat", true),
+                new("2", "pkx_2.dat", true),
+                new("3", "pkx_3.dat", true),
+                new("4", "pkx_4.dat", true),
+                new("5", "pkx_5.dat", false)
+            };
+            PokemonRenderDataItems = renderData;
+            SelectedPokemonRenderData = new ObservableCollection<PokemonRenderData>();
+
             assetsPath = settings.AssetsPath;
 
             currentlyRendering = false;
 
             // Reactive
             IObservable<bool> renderEnabled = this.WhenAnyValue(
-                vm => vm.IsBlenderValid, vm => vm.OutputPath, vm => vm.SelectedIconStyle.Game, 
-                (blenderValid, outputPath, game) => blenderValid && !string.IsNullOrWhiteSpace(outputPath) && game != Game.Undefined
+                vm => vm.IsBlenderValid, vm => vm.OutputPath, vm => vm.SelectedIconStyle, 
+                (blenderValid, outputPath, iconStyle) => blenderValid && !string.IsNullOrWhiteSpace(outputPath) && iconStyle.Game != Game.Undefined
             );
 
             RenderCommand = ReactiveCommand.Create(Render, renderEnabled);
@@ -285,6 +302,36 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             {
                 AssetsPath = folder;
             }
+        }
+        #endregion
+
+        #region Pokemon DataGrid
+        public void NewRenderData()
+        {
+
+        }
+
+        public void DeleteSelectedRenderData()
+        {
+            //TODO Fix, see: https://docs.avaloniaui.net/docs/controls/listbox#selection
+            DoDBQuery(db => db.DeletePokemonRenderData(SelectedPokemonRenderData));
+            foreach (PokemonRenderData renderData in SelectedPokemonRenderData)
+            {
+                PokemonRenderDataItems.Remove(renderData);
+            }
+            SelectedPokemonRenderData.Clear();
+        }
+
+        public void SelectAllRenderData()
+        {
+            foreach (PokemonRenderData renderData in PokemonRenderDataItems)
+            {
+                SelectedPokemonRenderData.Add(renderData);
+            }
+        }
+        public void DeselectAllRenderData()
+        {
+            SelectedPokemonRenderData.Clear();
         }
         #endregion
 
