@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PKX-IconGen.AvaloniaUI", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PKX-IconGen.Core", "PKX-IconGen.Core\PKX-IconGen.Core.csproj", "{56B429C5-1BE6-4786-883E-5F58395F9CF5}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PKX-IconGen.BlenderAddon", "PKX-IconGen.BlenderAddon\PKX-IconGen.BlenderAddon.pyproj", "{B8478039-9E85-4170-A7D0-4F52F847717E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,8 @@ Global
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8478039-9E85-4170-A7D0-4F52F847717E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8478039-9E85-4170-A7D0-4F52F847717E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

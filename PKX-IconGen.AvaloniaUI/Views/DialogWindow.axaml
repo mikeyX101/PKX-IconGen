@@ -25,7 +25,6 @@
         x:Class="PKXIconGen.AvaloniaUI.Views.DialogWindow"
         Title="{Binding DialogTitle}"
         Icon="/Assets/gen-icon.ico"
-
         
         Width="500" Height="200" CanResize="False" >
   <Window.Resources>
@@ -45,14 +44,14 @@
     <DockPanel>
 
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Bottom">
-        <Button IsVisible="{Binding OkButtonVisible}" Width="50" Margin="8" Click="Close" Command="{Binding SetPositiveReturnValue}">
+        <Button IsVisible="{Binding OkButtonVisible}" Width="50" Margin="8" Click="CloseTrue">
           <TextBlock TextAlignment="Center">OK</TextBlock>
         </Button>
 
-        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="Close" Command="{Binding SetPositiveReturnValue}">
+        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="CloseTrue">
           <TextBlock TextAlignment="Center">Yes</TextBlock>
         </Button>
-        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="Close">
+        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="CloseFalse">
           <TextBlock TextAlignment="Center">No</TextBlock>
         </Button>
       </StackPanel>

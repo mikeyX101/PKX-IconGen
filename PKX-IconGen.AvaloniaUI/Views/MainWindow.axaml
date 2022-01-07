@@ -76,7 +76,7 @@
           </Button>
         </Grid>
         <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
-          <i:Icon FontSize="16" Value="fas fa-exclamation-triangle" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
+          <i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
           <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText}" Grid.Column="1" Grid.Row="0" />
         </Grid>
 
@@ -146,7 +146,7 @@
             <Button Content="+" Command="{Binding NewRenderData}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
-            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}" />
+            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}" IsEnabled="{Binding EnableDeleteButton}"/>
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0">
             <Button Content="Select All" Command="{Binding SelectAllRenderData}" />
@@ -156,7 +156,14 @@
           </Panel>
         </Grid>
         <!--Pokemon-->
-        <ListBox Items="{Binding PokemonRenderDataItems}" SelectedItems="{Binding SelectedPokemonRenderData}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="9" Grid.RowSpan="9">
+        <TextBlock Text="Hide Built-Ins" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="10" />
+        <CheckBox IsChecked="{Binding BuiltInsHidden}" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="11" />
+        <Grid VerticalAlignment="Center" ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
+          <TextBlock Text="Name" Grid.Column="0" />
+          <TextBlock Text="Model" Grid.Column="1" />
+          <TextBlock Text="BuiltIn" Grid.Column="2" />
+        </Grid>
+        <ListBox Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="6"/>
@@ -164,10 +171,10 @@
           </ListBox.Styles>
           <ListBox.ItemTemplate>
               <DataTemplate>
-                <Grid ColumnDefinitions="0.65*, *, 0.15*" RowDefinitions="*">
+                <Grid ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*">
                   <TextBlock Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock Text="{Binding Model}" Grid.Column="1" />
-                  <i:Icon IsVisible="{Binding BuiltIn}" FontSize="16" Value="fas fa-check" Grid.Column="2" />
+                  <i:Icon IsVisible="{Binding BuiltIn}" FontSize="16" Value="mdi-check" Grid.Column="2" />
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>

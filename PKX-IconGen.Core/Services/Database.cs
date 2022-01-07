@@ -38,7 +38,7 @@ namespace PKXIconGen.Core.Services
         private static Exception IfNullTable(string propertyName)
         {
             Exception ex = new InvalidOperationException($"{propertyName} was somehow null?");
-            CoreManager.Logger.Fatal(new InvalidOperationException($"{propertyName} was somehow null?"), "{TableName} was somehow null?", propertyName);
+            CoreManager.Logger.Fatal(ex, "{TableName} was somehow null?", propertyName);
             return ex;
         }
 
@@ -60,15 +60,34 @@ namespace PKXIconGen.Core.Services
         {
             modelBuilder.Entity<Settings>().HasData(new Settings());
 
+            JsonSerializerOptions? serializerOptions = null;
             EntityTypeBuilder<PokemonRenderData> pokemonRenderDataEntityBuilder = modelBuilder.Entity<PokemonRenderData>();
-            pokemonRenderDataEntityBuilder.Property(e => e.Camera)
+            pokemonRenderDataEntityBuilder.Property(e => e.Shiny)
                 .HasConversion(
-                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => JsonSerializer.Deserialize<Camera>(v, (JsonSerializerOptions?)null));
-            pokemonRenderDataEntityBuilder.Property(e => e.Lights)
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions));
+
+            pokemonRenderDataEntityBuilder.Property(e => e.MainCamera)
                 .HasConversion(
-                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => JsonSerializer.Deserialize<Light[]>(v, (JsonSerializerOptions?)null) ?? Array.Empty<Light>(),
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<Camera>(v, serializerOptions));
+            pokemonRenderDataEntityBuilder.Property(e => e.SecondaryCamera)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<Camera>(v, serializerOptions));
+
+            pokemonRenderDataEntityBuilder.Property(e => e.MainLights)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<Light[]>(v, serializerOptions) ?? Array.Empty<Light>(),
+                    new ValueComparer<Light[]>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToArray()));
+            pokemonRenderDataEntityBuilder.Property(e => e.SecondaryLights)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<Light[]>(v, serializerOptions) ?? Array.Empty<Light>(),
                     new ValueComparer<Light[]>(
                         (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                         c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -186,8 +205,10 @@ namespace PKXIconGen.Core.Services
         {
             if (PokemonRenderDataTable != null)
             {
-                PokemonRenderDataTable.RemoveRange(renderData);
-
+                if (!renderData.BuiltIn)
+                {
+                    PokemonRenderDataTable.Remove(renderData);
+                }
                 return SaveChanges();
             }
             else
@@ -199,7 +220,7 @@ namespace PKXIconGen.Core.Services
         {
             if (PokemonRenderDataTable != null)
             {
-                PokemonRenderDataTable.RemoveRange(renderData);
+                PokemonRenderDataTable.RemoveRange(renderData.Where(prd => !prd.BuiltIn));
 
                 return SaveChanges();
             }

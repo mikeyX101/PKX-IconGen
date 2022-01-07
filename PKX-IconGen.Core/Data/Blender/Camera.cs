@@ -26,12 +26,12 @@ namespace PKXIconGen.Core.Data.Blender
     /// <summary>
     /// Data for a Camera in a Blender scene.
     /// </summary>
-    internal readonly struct Camera : IJsonSerializableBlenderObject, IEquatable<Camera>
+    public readonly struct Camera : IJsonSerializableBlenderObject, IEquatable<Camera>
     {
         [JsonPropertyName("pos")]
         public JsonSerializableVector3 Position { get; init; }
         [JsonPropertyName("rot")]
-        public JsonSerializableVector3 RotationEulerXYZ { get; init; }
+        public JsonSerializableVector3 RotationEuler { get; init; }
 
         [JsonPropertyName("fov")]
         public int FieldOfView { get; init; }
@@ -39,7 +39,7 @@ namespace PKXIconGen.Core.Data.Blender
         public Camera(Vector3 position, Vector3 rotationEulerXYZ, int fieldOfView)
         {
             Position = new(position);
-            RotationEulerXYZ = new(rotationEulerXYZ);
+            RotationEuler = new(rotationEulerXYZ);
             FieldOfView = fieldOfView;
         }
 
@@ -49,7 +49,7 @@ namespace PKXIconGen.Core.Data.Blender
         {
             return
                 Position.Equals(other.Position) &&
-                RotationEulerXYZ.Equals(other.RotationEulerXYZ) &&
+                RotationEuler.Equals(other.RotationEuler) &&
                 FieldOfView == other.FieldOfView;
         }
     }

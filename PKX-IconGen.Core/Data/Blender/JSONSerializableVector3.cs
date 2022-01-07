@@ -27,10 +27,10 @@ namespace PKXIconGen.Core.Data.Blender
     /// Wrapper for Vector3 so that it can be serialized with the JSONSerializer.
     /// The original Vector3 struct can be accessed with the Vector property.
     /// </summary>
-    internal struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
+    public readonly struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
     {
         [JsonIgnore]
-        public Vector3 Vector { get; set; }
+        public Vector3 Vector { get; init; }
 
         [JsonPropertyName("x")]
         public readonly float X => Vector.X;

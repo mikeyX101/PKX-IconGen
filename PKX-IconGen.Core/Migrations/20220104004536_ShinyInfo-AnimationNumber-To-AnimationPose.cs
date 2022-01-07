@@ -17,10 +17,22 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace PKXIconGen.Migrations
 {
-    /// <summary>
-    /// Types implementing this interface should be able to serialize and deserialize with the <see cref="System.Text.Json.JsonSerializer"/>.
-    /// </summary>
-    public interface IJsonSerializable { }
+    public partial class ShinyInfoAnimationNumberToAnimationPose : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+
+        }
+    }
 }

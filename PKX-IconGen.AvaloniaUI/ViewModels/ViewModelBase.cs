@@ -20,10 +20,43 @@
 using PKXIconGen.Core.Services;
 using ReactiveUI;
 using System;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class ViewModelBase : ReactiveObject
+    {
+        public ViewModelBase()
+        {
+            
+        }
+
+        private protected static void DoDBQuery(Action<Database> action)
+        {
+            using Database db = new();
+            action(db);
+        }
+
+        private protected static T DoDBQuery<T>(Func<Database, T> func)
+        {
+            using Database db = new();
+            return func(db);
+        }
+
+        private protected async static Task DoDBQueryAsync(Func<Database, Task> func)
+        {
+            using Database db = new();
+            await func(db);
+        }
+
+        private protected async static Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
+        {
+            using Database db = new();
+            return await func(db);
+        }
+    }
+
+    public class WindowViewModelBase : ViewModelBase
     {
         #region Misc
         private bool isWindows;
@@ -37,21 +70,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
-        public ViewModelBase()
+        public WindowViewModelBase() : base()
         {
             isWindows = OperatingSystem.IsWindows();
-        }
-
-        private protected static void DoDBQuery(Action<Database> action)
-        {
-            using Database db = new();
-            action(db);
-        }
-
-        private protected static T DoDBQuery<T>(Func<Database, T> func)
-        {
-            using Database db = new();
-            return func(db);
         }
     }
 }

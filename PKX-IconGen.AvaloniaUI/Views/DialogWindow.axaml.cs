@@ -21,10 +21,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
+using PKXIconGen.AvaloniaUI.ViewModels;
 
 namespace PKXIconGen.AvaloniaUI.Views
 {
-    public partial class DialogWindow : Window
+    public partial class DialogWindow : ReactiveWindow<DialogWindowViewModel>
     {
         public DialogWindow()
         {
@@ -39,9 +41,13 @@ namespace PKXIconGen.AvaloniaUI.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        public void Close(object sender, RoutedEventArgs e)
+        public void CloseFalse(object sender, RoutedEventArgs e)
         {
-            Close();
+            Close(false);
+        }
+        public void CloseTrue(object sender, RoutedEventArgs e)
+        {
+            Close(true);
         }
     }
 }

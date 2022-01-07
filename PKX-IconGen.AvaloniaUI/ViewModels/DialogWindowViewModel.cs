@@ -19,10 +19,11 @@
 
 using Avalonia.Media;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
-    public class DialogWindowViewModel : ViewModelBase
+    public class DialogWindowViewModel : WindowViewModelBase
     {
         public string DialogText { get; set; }
         public string DialogTitle { get; set; }
@@ -36,8 +37,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public bool OkButtonVisible { get; set; } = false;
         public bool YesNoButtonsVisible { get; set; } = false;
-
-        public bool ReturnValue { get; set; } = false;
 
         private DialogWindowViewModel(string text, string title, DialogButtons dialogButtons)
         {
@@ -79,17 +78,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             ImageVisible = true;
         }
 
-        public void SetPositiveReturnValue()
-        {
-            ReturnValue = true;
-        }
-
         private static string GetFontAwesomeIcon(DialogType dialogType)
         {
             return dialogType switch
             {
-                DialogType.Warning      => "fa-exclamation-triangle",
-                DialogType.Error        => "fa-exclamation-circle",
+                DialogType.Warning      => "mdi-alert",
+                DialogType.Error        => "mdi-close-circle",
                 DialogType.Text or _    => ""
             };
         }

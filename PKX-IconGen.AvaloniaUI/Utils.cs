@@ -22,7 +22,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 
 namespace PKXIconGen.AvaloniaUI
 {
-    public static class Utils
+    internal static class Utils
     {
         public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
         {

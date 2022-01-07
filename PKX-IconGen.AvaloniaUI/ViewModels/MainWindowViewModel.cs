@@ -18,6 +18,7 @@
 #endregion
 
 using Avalonia.Controls;
+using Avalonia.Controls.Selection;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
@@ -29,10 +30,11 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : WindowViewModelBase, IBlenderRunnerInfo
     {
         #region ViewModels
         public MenuViewModel MenuVM { get; set; }
@@ -40,6 +42,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Blender Path
+        public string Path => BlenderPath;
         private string blenderPath;
         public string BlenderPath {
             get => blenderPath;
@@ -85,6 +88,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Blender Optional Arguments
+        public string OptionalArguments => BlenderOptionalArguments;
         private string blenderOptionalArguments;
         public string BlenderOptionalArguments {
             get => blenderOptionalArguments;
@@ -133,8 +137,43 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Pokemon Render Data
+        private IList<PokemonRenderData> AllPokemonRenderDataItems { get; }
         public IList<PokemonRenderData> PokemonRenderDataItems { get; }
-        public IList<PokemonRenderData> SelectedPokemonRenderData { get; }
+        public SelectionModel<PokemonRenderData> PokemonRenderDataSelection { get; }
+        private bool enableDeleteButton;
+        public bool EnableDeleteButton
+        {
+            get => enableDeleteButton;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref enableDeleteButton, value);
+            }
+        }
+
+        private bool builtInsHidden;
+        public bool BuiltInsHidden
+        {
+            get => builtInsHidden;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref builtInsHidden, value);
+                PokemonRenderDataItems.Clear();
+                if (value)
+                {
+                    foreach (PokemonRenderData renderData in AllPokemonRenderDataItems.Where(prd => !prd.BuiltIn))
+                    {
+                        PokemonRenderDataItems.Add(renderData);
+                    }
+                }
+                else
+                {
+                    foreach (PokemonRenderData renderData in AllPokemonRenderDataItems)
+                    {
+                        PokemonRenderDataItems.Add(renderData);
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Assets Path
@@ -216,16 +255,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             RenderScaleItems = Enum.GetValues<RenderScale>();
             SelectedRenderScale = settings.RenderScale;
 
-            PokemonRenderData[] data = new PokemonRenderData[]
+            AllPokemonRenderDataItems = renderData;
+            PokemonRenderDataItems = new ObservableCollection<PokemonRenderData>(renderData);
+            PokemonRenderDataSelection = new()
             {
-                new("1", "pkx_1.dat", true),
-                new("2", "pkx_2.dat", true),
-                new("3", "pkx_3.dat", true),
-                new("4", "pkx_4.dat", true),
-                new("5", "pkx_5.dat", false)
+                SingleSelect = false,
+                Source = PokemonRenderDataItems
             };
-            PokemonRenderDataItems = renderData;
-            SelectedPokemonRenderData = new ObservableCollection<PokemonRenderData>();
+            PokemonRenderDataSelection.SelectionChanged += PokemonRenderDataSelection_SelectionChanged;
+            enableDeleteButton = false;
+            builtInsHidden = false;
 
             assetsPath = settings.AssetsPath;
 
@@ -270,9 +309,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public async void BrowseBlenderPath()
         {
-            List<FileDialogFilter> filters = new();
+            List<FileDialogFilter>? filters = null;
             if (IsWindows)
             {
+                filters = new();
                 List<string> extensions = new() {
                     "exe"
                 };
@@ -306,49 +346,53 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Pokemon DataGrid
-        public void NewRenderData()
+        private void PokemonRenderDataSelection_SelectionChanged(object? sender, SelectionModelSelectionChangedEventArgs<PokemonRenderData> e)
         {
-
+            EnableDeleteButton = PokemonRenderDataSelection.SelectedItems.Count > 0 && PokemonRenderDataSelection.SelectedItems.All(prd => !prd.BuiltIn);
         }
 
-        public void DeleteSelectedRenderData()
+        public async Task NewRenderData()
         {
-            //TODO Fix, see: https://docs.avaloniaui.net/docs/controls/listbox#selection
-            DoDBQuery(db => db.DeletePokemonRenderData(SelectedPokemonRenderData));
-            foreach (PokemonRenderData renderData in SelectedPokemonRenderData)
+            PokemonRenderData renderData = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, PokemonRenderData>(new PokemonRenderDataWindowViewModel(this));
+        }
+
+        public async void DeleteSelectedRenderData()
+        {
+            if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemon render data?\nThis operation is irreversible."))
             {
-                PokemonRenderDataItems.Remove(renderData);
+                if (DoDBQuery(db => db.DeletePokemonRenderData(PokemonRenderDataSelection.SelectedItems)) > 0)
+                {
+                    List<PokemonRenderData> temp = PokemonRenderDataItems.Where(prd => !PokemonRenderDataSelection.SelectedItems.Contains(prd)).ToList();
+                    PokemonRenderDataItems.Clear();
+                    foreach (PokemonRenderData renderData in temp)
+                    {
+                        PokemonRenderDataItems.Add(renderData);
+                    }
+                    PokemonRenderDataSelection.Clear();
+                }
             }
-            SelectedPokemonRenderData.Clear();
+
         }
 
-        public void SelectAllRenderData()
-        {
-            foreach (PokemonRenderData renderData in PokemonRenderDataItems)
-            {
-                SelectedPokemonRenderData.Add(renderData);
-            }
-        }
-        public void DeselectAllRenderData()
-        {
-            SelectedPokemonRenderData.Clear();
-        }
+        public void SelectAllRenderData() => PokemonRenderDataSelection.SelectAll();
+        public void DeselectAllRenderData() => PokemonRenderDataSelection.Clear();
+
         #endregion
 
         #region Render
         private CancellationTokenSource? renderCancelTokenSource = null;
         public ReactiveCommand<Unit, Unit> RenderCommand { get; }
-        public void Render()
+        public async void Render()
         {
             DisposeCancelToken();
             renderCancelTokenSource = new();
 
-            BlenderRunner runner = new(BlenderPath);
+            BlenderRunner runner = new(this, new string[] { "--background" });
             runner.OnOutput += LogVM.Write;
             runner.OnFinish += EndRender;
 
             CurrentlyRendering = true;
-            runner.RunRenderAsync(renderCancelTokenSource.Token);
+            await runner.RunRenderAsync(renderCancelTokenSource.Token);
         }
         public void EndRender()
         {

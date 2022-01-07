@@ -26,12 +26,12 @@ namespace PKXIconGen.Core.Data.Blender
     /// <summary>
     /// Data for one light in a Blender scene.
     /// </summary>
-    internal readonly struct Light : IJsonSerializableBlenderObject, IEquatable<Light>
+    public readonly struct Light : IJsonSerializableBlenderObject, IEquatable<Light>
     {
         [JsonPropertyName("pos")]
         public JsonSerializableVector3 Position { get; init; }
         [JsonPropertyName("rot")]
-        public JsonSerializableVector3 RotationEulerXYZ { get; init; }
+        public JsonSerializableVector3 RotationEuler { get; init; }
 
         [JsonPropertyName("lightType")]
         public LightType Type { get; init; }
@@ -43,7 +43,7 @@ namespace PKXIconGen.Core.Data.Blender
         public Light(Vector3 position, Vector3 rotationEulerXYZ, LightType type, float strength, Color color)
         {
             Position = new(position);
-            RotationEulerXYZ = new(rotationEulerXYZ);
+            RotationEuler = new(rotationEulerXYZ);
             Type = type;
             Strength = strength;
             Color = color;
@@ -51,12 +51,11 @@ namespace PKXIconGen.Core.Data.Blender
 
         public static Light GetDefaultLight() => new();
 
-
         public bool Equals(Light other)
         {
             return 
                 Position.Equals(other.Position) &&
-                RotationEulerXYZ.Equals(other.RotationEulerXYZ) &&
+                RotationEuler.Equals(other.RotationEuler) &&
                 Type == other.Type &&
                 Strength == other.Strength &&
                 Color.Equals(other.Color);

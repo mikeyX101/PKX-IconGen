@@ -29,6 +29,7 @@ using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using System;
 using System.Linq;
+using AvaloniaColorPicker;
 
 namespace PKXIconGen.AvaloniaUI
 {
@@ -61,6 +62,8 @@ namespace PKXIconGen.AvaloniaUI
 
                 GC.KeepAlive(typeof(Icon));
                 GC.KeepAlive(typeof(Attached));
+
+                GC.KeepAlive(typeof(ColorPicker));
             }
 
             base.OnFrameworkInitializationCompleted();

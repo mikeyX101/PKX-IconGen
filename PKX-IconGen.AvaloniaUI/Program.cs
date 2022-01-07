@@ -23,7 +23,7 @@ using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.FontAwesome;
+using Projektanker.Icons.Avalonia.MaterialDesign;
 using System;
 
 namespace PKXIconGen.AvaloniaUI
@@ -35,7 +35,7 @@ namespace PKXIconGen.AvaloniaUI
         // yet and stuff might break.
         [STAThread]
         public static void Main(string[] args) {
-            IconProvider.Register<FontAwesomeIconProvider>();
+            IconProvider.Register<MaterialDesignIconProvider>();
             CoreManager.Initiate();
             if (CoreManager.Initiated)
             {

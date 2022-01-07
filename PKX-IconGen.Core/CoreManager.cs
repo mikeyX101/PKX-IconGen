@@ -77,13 +77,14 @@ namespace PKXIconGen.Core
                 .WriteTo.Async(config => 
                     config.File(textFormatter, logFilePath, 
                         buffered: true,
-                        rollOnFileSizeLimit: false
+                        rollOnFileSizeLimit: false,
+                        flushToDiskInterval: TimeSpan.FromSeconds(15)
                     )
                 )     
 #if DEBUG
                 .WriteTo.Debug(textFormatter)
-                .WriteTo.Console(textFormatter)
 #endif
+                .WriteTo.Console(textFormatter)
                 .CreateLogger();
 
             try
@@ -102,6 +103,7 @@ namespace PKXIconGen.Core
 
         public static void OnApplicationEnd(object? sender, EventArgs eventArgs)
         {
+            Logger.Information("PKX-IconGen Core shuting down gracefully...");
             DisposeLogger();
         }
         public static void DisposeLogger()

@@ -19,10 +19,12 @@
 
 using CliWrap;
 using CliWrap.EventStream;
+using PKXIconGen.Core.Data;
 using System;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.Core.Services
 {
@@ -30,13 +32,17 @@ namespace PKXIconGen.Core.Services
     {
         private const string LogTemplate = "[CLIWrap] -> [{ExecutableName}] {Output}";
 
-        public string BlenderPath { get; private set; }
+        private string BlenderPath { get; set; }
+        private string[] Arguments { get; set; }
+        private string OptionalArguments { get; set; }
         private string ExecutableName { get; }
-        
-        public BlenderRunner(string blenderPath)
+
+        public BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string[]? arguments = null)
         {
-            BlenderPath = blenderPath;
-            ExecutableName = Path.GetFileName(blenderPath);
+            BlenderPath = blenderRunnerInfo.Path;
+            Arguments = arguments ?? Array.Empty<string>();
+            OptionalArguments = blenderRunnerInfo.OptionalArguments;
+            ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
 
             OnOutput += Log;
             OnFinish += () => { };
@@ -53,15 +59,13 @@ namespace PKXIconGen.Core.Services
             CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
         }
 
-        public async void RunRenderAsync(CancellationToken? cancellationToken = null)
+        public async Task RunRenderAsync(CancellationToken? cancellationToken = null)
         {
             CancellationToken token = cancellationToken ?? CancellationToken.None;
 
             Command cmd = Cli.Wrap(BlenderPath)
-                .WithArguments(new string[]
-                {
-                    "--background"
-                });
+                .WithArguments(Arguments)
+                .WithArguments(OptionalArguments);
 
             try
             {

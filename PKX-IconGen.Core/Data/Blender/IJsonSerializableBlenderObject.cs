@@ -22,9 +22,9 @@ namespace PKXIconGen.Core.Data.Blender
     /// <summary>
     /// Blender object in a 3D space with Serializable Vector3s.
     /// </summary>
-    internal interface IJsonSerializableBlenderObject : IJsonSerializable
+    public interface IJsonSerializableBlenderObject : IJsonSerializable
     {
         public JsonSerializableVector3 Position { get; }
-        public JsonSerializableVector3 RotationEulerXYZ { get; }
+        public JsonSerializableVector3 RotationEuler { get; }
     }
 }

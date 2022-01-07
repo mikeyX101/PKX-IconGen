@@ -1,5 +1,5 @@
-﻿#region License
-/*  PKX-IconGen.Core - Pokemon Icon Generator for GCN/WII Pokemon games
+#region License
+/*  PKX-IconGen.AvaloniaUI - Avalonia user interface for PKX-IconGen.Core
     Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,27 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
+
+namespace PKXIconGen.AvaloniaUI.Views
 {
-    /// <summary>
-    /// Types implementing this interface should be able to serialize and deserialize with the <see cref="System.Text.Json.JsonSerializer"/>.
-    /// </summary>
-    public interface IJsonSerializable { }
+    public partial class PokemonRenderDataWindow : Window
+    {
+        public PokemonRenderDataWindow()
+        {
+            InitializeComponent();
+#if DEBUG
+            this.AttachDevTools();
+#endif
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
+
+    }
 }

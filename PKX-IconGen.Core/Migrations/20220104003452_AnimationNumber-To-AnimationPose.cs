@@ -17,10 +17,29 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data
+
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace PKXIconGen.Migrations
 {
-    /// <summary>
-    /// Types implementing this interface should be able to serialize and deserialize with the <see cref="System.Text.Json.JsonSerializer"/>.
-    /// </summary>
-    public interface IJsonSerializable { }
+    public partial class AnimationNumberToAnimationPose : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.RenameColumn(
+                name: "AnimationNumber",
+                table: "PokemonRenderData",
+                newName: "AnimationPose");
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.RenameColumn(
+                name: "AnimationPose",
+                table: "PokemonRenderData",
+                newName: "AnimationNumber");
+        }
+    }
 }
