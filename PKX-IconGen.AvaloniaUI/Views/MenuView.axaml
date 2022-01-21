@@ -20,31 +20,43 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
              x:Class="PKXIconGen.AvaloniaUI.Views.MenuView">
   <Menu>
     <MenuItem Header="_File">
-      <MenuItem Header="_Import...">
+      <MenuItem Header="_Import..." Command="{Binding Import}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-import" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="_Export Selected...">
+      <MenuItem Header="_Export Selected..." Command="{Binding ExportCommand}">
         <MenuItem.Icon>
-          <i:Icon Value="mdi-export"></i:Icon>
+          <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="Quit" Command="{Binding QuitCommand}">
+      <MenuItem Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
         <MenuItem.Icon>
-          <i:Icon Value="mdi-close-thick"></i:Icon>
+          <i:Icon Value="mdi-blender-software" />
+        </MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem Header="Quit" Command="{Binding Quit}">
+        <MenuItem.Icon>
+          <i:Icon Value="mdi-close-thick" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Help">
-      <MenuItem Header="About" IsEnabled="True" Command="{Binding AboutCommand}">
+      <MenuItem Header="Link to SysDolphin Addon" Command="{Binding SysDolphinAddon}">
         <MenuItem.Icon>
-          <i:Icon Value="mdi-help-circle"></i:Icon>
+          <i:Icon Value="mdi-github" />
+        </MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem Header="About" Command="{Binding About}">
+        <MenuItem.Icon>
+          <i:Icon Value="mdi-help-circle" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>

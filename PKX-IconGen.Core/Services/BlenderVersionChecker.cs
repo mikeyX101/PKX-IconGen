@@ -49,6 +49,7 @@ namespace PKXIconGen.Core.Services
             {
                 if (!OperatingSystem.IsWindows())
                 {
+                    // Ask with "blender.exe --version"?
                     return new(true, true, "Unknown");
                 }
                 else if (File.Exists(path))

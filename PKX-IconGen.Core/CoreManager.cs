@@ -101,9 +101,10 @@ namespace PKXIconGen.Core
             }
         }
 
-        public static void OnApplicationEnd(object? sender, EventArgs eventArgs)
+        public static void OnClose()
         {
             Logger.Information("PKX-IconGen Core shuting down gracefully...");
+            Database.OnClose();
             DisposeLogger();
         }
         public static void DisposeLogger()

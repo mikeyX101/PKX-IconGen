@@ -16,6 +16,7 @@
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <FileVersion>0.0.1.0</FileVersion>
     <Version>0.0.1.0</Version>
+    <StartupObject></StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -53,4 +54,13 @@
   <ItemGroup>
     <ProjectReference Include="..\PKX-IconGen.Core\PKX-IconGen.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <!--Copy Python files on builds-->
+    <Exec Condition="'$(SystemRoot)' == 'C:\Windows' And '$(Configuration)' != 'Debug'" Command="cd &quot;$(ProjectDir)..&quot;&#xD;&#xA;call PostBuildWindows.bat &quot;$(PublishDir)/&quot; &quot;$(ProjectDir)&quot;" />
+    <Exec Condition="'$(SystemRoot)' == 'C:\Windows' And '$(Configuration)' == 'Debug'" Command="cd &quot;$(ProjectDir)..&quot;&#xD;&#xA;call PostBuildWindows.bat &quot;$(TargetDir)&quot; &quot;$(ProjectDir)&quot;" />
+
+    <Exec Condition="'$(SHELL)' == '/bin/bash' And '$(Configuration)' != 'Debug'" Command="cd $(ProjectDir)..;chmod +x ./PostBuildBash.sh;./PostBuildBash.sh &quot;$(PublishDir)/&quot; &quot;$(ProjectDir)&quot;" />
+    <Exec Condition="'$(SHELL)' == '/bin/bash' And '$(Configuration)' == 'Debug'" Command="cd $(ProjectDir)..;chmod +x ./PostBuildBash.sh;./PostBuildBash.sh &quot;$(TargetDir)&quot; &quot;$(ProjectDir)&quot;" />
+  </Target>
 </Project>

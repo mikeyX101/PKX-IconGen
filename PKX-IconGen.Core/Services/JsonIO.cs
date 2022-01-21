@@ -37,15 +37,12 @@ namespace PKXIconGen.Core.Services
     {
         public static readonly JsonSerializerOptions defaultOptions = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
-        public static async Task ExportAsync<T>(T data, string path, bool humanReadable = false) where T : IJsonSerializable
+        public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
         {
             try
             {
-                JsonSerializerOptions options = defaultOptions;
-                options.WriteIndented = humanReadable;
-
-                using FileStream jsonFile = File.Create(path);
-                await JsonSerializer.SerializeAsync(jsonFile, data, typeof(T), options);
+                using FileStream file = File.Create(path);
+                await JsonSerializer.SerializeAsync(file, data, defaultOptions);
             }
             catch (Exception ex)
             {
@@ -58,8 +55,8 @@ namespace PKXIconGen.Core.Services
         {
             try
             {
-                using FileStream jsonFile = File.OpenRead(path);
-                return await JsonSerializer.DeserializeAsync<T>(jsonFile, defaultOptions);
+                using FileStream file = File.OpenRead(path);
+                return await JsonSerializer.DeserializeAsync<T>(file, defaultOptions);
             }
             catch (Exception ex)
             {
@@ -72,13 +69,22 @@ namespace PKXIconGen.Core.Services
         {
             try
             {
-                using FileStream jsonFile = File.OpenRead(path);
-                return JsonSerializer.DeserializeAsyncEnumerable<T>(jsonFile, defaultOptions);
+                using FileStream file = File.OpenRead(path);
+                return JsonSerializer.DeserializeAsyncEnumerable<T>(file, defaultOptions);
             }
             catch (Exception ex)
             {
                 CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}.", path);
                 throw;
+            }
+        }
+
+        public async static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string[] paths) where T : IJsonSerializable?
+        {
+            foreach (string path in paths)
+            {
+                using FileStream file = File.OpenRead(path);
+                yield return await JsonSerializer.DeserializeAsync<T>(file, defaultOptions);
             }
         }
     }

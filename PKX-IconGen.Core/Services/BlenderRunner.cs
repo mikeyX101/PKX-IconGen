@@ -59,7 +59,7 @@ namespace PKXIconGen.Core.Services
             CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
         }
 
-        public async Task RunRenderAsync(CancellationToken? cancellationToken = null)
+        public async Task RunAsync(CancellationToken? cancellationToken = null)
         {
             CancellationToken token = cancellationToken ?? CancellationToken.None;
 
@@ -86,7 +86,7 @@ namespace PKXIconGen.Core.Services
 
                         case ExitedCommandEvent exited:
                             OnOutput($"Process exited; Code: {exited.ExitCode}");
-                            OnOutput("Render has finished.");
+                            OnOutput("Operation has finished.");
                             break;
 
                         default:
@@ -96,7 +96,7 @@ namespace PKXIconGen.Core.Services
             }
             catch (OperationCanceledException)
             {
-                OnOutput("Render was canceled.");
+                OnOutput("Operation was canceled.");
             }
             catch (Win32Exception e)
             {

@@ -34,6 +34,8 @@ using System.Reactive;
 using System.IO;
 using PKXIconGen.Core.Services;
 using System.Threading;
+using System.Numerics;
+using PKXIconGen.Core;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
@@ -125,7 +127,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref secondaryCamera, value);
-                //TODO This is discusting, must be a better way to do this
+                //TODO This is discusting, must be a better way to do this. Although this is not going to happen too often at least.
                 this.RaisePropertyChanged(nameof(SCPosX));
                 this.RaisePropertyChanged(nameof(SCPosY));
                 this.RaisePropertyChanged(nameof(SCPosZ));
@@ -151,9 +153,31 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
 
         private IBlenderRunnerInfo BlenderRunnerInfo { get; }
-
-        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo)
+        private bool useFilter;
+        public bool UseFilter
         {
+            get => useFilter;
+            set => this.RaiseAndSetIfChanged(ref useFilter, value);
+        }
+
+#pragma warning disable CS8618 // Nullable field
+        private PokemonRenderDataWindowViewModel()
+#pragma warning restore CS8618 // Nullable field
+        {
+            // Reactive
+            IObservable<bool> canModifyOrSave = this.WhenAnyValue(
+                vm => vm.Name, vm => vm.Model,
+                (name, model) => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(model) && File.Exists(model)
+            );
+
+            ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyOrSave);
+            CancelCommand = ReactiveCommand.Create(Cancel);
+            SaveCommand = ReactiveCommand.Create(Save, canModifyOrSave);
+        }
+        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo) : this()
+        {
+            useFilter = true;
+
             name = "";
             model = "";
 
@@ -172,17 +196,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             SecondaryLights = new ObservableCollection<Light>();
 
             BlenderRunnerInfo = blenderRunnerInfo;
-
-            // Reactive
-            IObservable<bool> canModifyInBlender = this.WhenAnyValue(
-                vm => vm.Name, vm => vm.Model,
-                (name, model) => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(model) && File.Exists(model)
-            );
-
-            ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyInBlender);
         }
-        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData renderData)
+        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData renderData) : this()
         {
+            useFilter = renderData.Shiny.Filter != null;
+
             name = renderData.Name;
             model = renderData.Model;
 
@@ -201,17 +219,27 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             SecondaryLights = new ObservableCollection<Light>(renderData.SecondaryLights);
 
             BlenderRunnerInfo = blenderRunnerInfo;
-
-            // Reactive
-            IObservable<bool> canModifyInBlender = this.WhenAnyValue(
-                vm => vm.Name, vm => vm.Model,
-                (name, model) => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(model) && File.Exists(model)
-            );
-
-            ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyInBlender);
         }
 
         public async void BrowseModelPath()
+        {
+            string? path = await SelectModel();
+            if (path != null)
+            {
+                Model = path;
+            }
+        }
+
+        public async void BrowseShinyModelPath()
+        {
+            string? path = await SelectModel();
+            if (path != null)
+            {
+                ShinyModel = path;
+            }
+        }
+
+        private async Task<string?> SelectModel()
         {
             List<FileDialogFilter>? filters = null;
             if (IsWindows)
@@ -224,13 +252,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 filters.Add(new FileDialogFilter { Extensions = extensions, Name = "GCN/WII Pokemon Model" });
             }
 
-            string? path = await FileDialogHelper.GetFile("Select a model...", filters);
-            if (path != null)
-            {
-                Model = path;
-            }
+            return await FileDialogHelper.GetFile("Select a model...", filters);
         }
 
+        #region Modify in Blender
         private CancellationTokenSource? modifyBlenderDataCancelTokenSource = null;
         public ReactiveCommand<Unit, Unit> ModifyBlenderDataCommand { get; }
         public async void ModifyBlenderData()
@@ -240,12 +265,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             BlenderRunner blenderRunner = new(BlenderRunnerInfo, new string[]
             {
-
+                "--enable-autoexec",
+                $"--python ${BlenderPythonScripts.SceneGenerator}"
             });
             blenderRunner.OnFinish += EndModifyBlenderData;
 
             CurrentlyModifying = true;
-            await blenderRunner.RunRenderAsync(modifyBlenderDataCancelTokenSource.Token);
+            await blenderRunner.RunAsync(modifyBlenderDataCancelTokenSource.Token);
         }
         public void EndModifyBlenderData()
         {
@@ -262,5 +288,18 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 modifyBlenderDataCancelTokenSource = null;
             }
         }
+        #endregion
+
+        #region Save
+        public ReactiveCommand<Unit, object?> CancelCommand { get; }
+        public static object? Cancel() => null;
+        public ReactiveCommand<Unit, PokemonRenderData> SaveCommand { get; }
+        public PokemonRenderData Save() => 
+            new(
+                Name, Model, NormalAnimPose, NormalAnimFrame,
+                UseFilter ? new ShinyInfo(Color.FromRgbInt(ShinyColor.ToUint32()), ShinyAnimPose, ShinyAnimFrame) : new ShinyInfo(ShinyModel, ShinyAnimPose, ShinyAnimFrame),
+                MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray()
+            );
+        #endregion
     }
 }

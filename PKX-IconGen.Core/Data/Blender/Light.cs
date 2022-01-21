@@ -33,7 +33,7 @@ namespace PKXIconGen.Core.Data.Blender
         [JsonPropertyName("rot")]
         public JsonSerializableVector3 RotationEuler { get; init; }
 
-        [JsonPropertyName("lightType")]
+        [JsonPropertyName("light_type")]
         public LightType Type { get; init; }
         [JsonPropertyName("strength")]
         public float Strength { get; init; }

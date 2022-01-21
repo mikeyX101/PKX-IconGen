@@ -20,10 +20,14 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
+using PKXIconGen.AvaloniaUI.ViewModels;
+using ReactiveUI;
+using System;
 
 namespace PKXIconGen.AvaloniaUI.Views
 {
-    public partial class PokemonRenderDataWindow : Window
+    public partial class PokemonRenderDataWindow : ReactiveWindow<PokemonRenderDataWindowViewModel>
     {
         public PokemonRenderDataWindow()
         {
@@ -31,6 +35,8 @@ namespace PKXIconGen.AvaloniaUI.Views
 #if DEBUG
             this.AttachDevTools();
 #endif
+            this.WhenActivated(d => d(ViewModel!.CancelCommand.Subscribe(Close)));
+            this.WhenActivated(d => d(ViewModel!.SaveCommand.Subscribe(Close)));
         }
 
         private void InitializeComponent()

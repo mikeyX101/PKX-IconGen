@@ -7,7 +7,7 @@ using PKXIconGen.Core.Services;
 
 #nullable disable
 
-namespace PKXIconGen.Migrations
+namespace PKXIconGen.Core.Migrations
 {
     [DbContext(typeof(Database))]
     [Migration("20220104004536_ShinyInfo-AnimationNumber-To-AnimationPose")]

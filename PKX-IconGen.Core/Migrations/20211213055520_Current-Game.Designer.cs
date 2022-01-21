@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PKXIconGen.Core.Services;
 
-namespace PKXIconGen.Migrations
+namespace PKXIconGen.Core.Migrations
 {
     [DbContext(typeof(Database))]
     [Migration("20211213055520_Current-Game")]

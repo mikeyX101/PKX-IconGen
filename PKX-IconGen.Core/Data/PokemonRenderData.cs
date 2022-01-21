@@ -43,21 +43,21 @@ namespace PKXIconGen.Core.Data
         [Column, JsonPropertyName("builtIn")]
         public bool BuiltIn { get; internal set; }
 
-        [Column, JsonPropertyName("animationPose")]
+        [Column, JsonPropertyName("animation_pose")]
         public ushort AnimationPose { get; internal set; }
-        [Column, JsonPropertyName("animationFrame")]
+        [Column, JsonPropertyName("animation_frame")]
         public ushort AnimationFrame { get; internal set; }
 
         [Column, JsonPropertyName("shiny")]
         public ShinyInfo Shiny { get; internal set; }
 
-        [Column, JsonPropertyName("mainCamera")]
+        [Column, JsonPropertyName("main_camera")]
         public Camera MainCamera { get; internal set; }
-        [Column, JsonPropertyName("secondaryCamera")]
+        [Column, JsonPropertyName("secondary_camera")]
         public Camera? SecondaryCamera { get; internal set; }
-        [Column, JsonPropertyName("mainLights")]
+        [Column, JsonPropertyName("main_lights")]
         public Light[] MainLights { get; internal set; }
-        [Column, JsonPropertyName("secondaryLights")]
+        [Column, JsonPropertyName("secondary_lights")]
         public Light[] SecondaryLights { get; internal set; }
 
         internal PokemonRenderData()
@@ -71,31 +71,29 @@ namespace PKXIconGen.Core.Data
             MainLights = Array.Empty<Light>();
             SecondaryLights = Array.Empty<Light>();
         }
-        [JsonConstructor]
-        internal PokemonRenderData(string name, string model, bool builtIn, ShinyInfo shiny, Camera rightCamera, Light[] rightLights, Camera? leftCamera, Light[] leftLights)
+        
+        internal PokemonRenderData(string name, string model, bool builtIn, ushort animationPose, ushort animationFrame, ShinyInfo shiny, Camera mainCamera, Light[] mainLights, Camera? secondaryCamera, Light[] secondaryLights)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Model = model;
             BuiltIn = builtIn;
 
+            AnimationPose = animationPose;
+            AnimationFrame = animationFrame;
+
             Shiny = shiny;
 
-            MainCamera = rightCamera;
-            SecondaryCamera = leftCamera;
-            MainLights = rightLights;
-            SecondaryLights = leftLights;
+            MainCamera = mainCamera;
+            SecondaryCamera = secondaryCamera;
+            MainLights = mainLights;
+            SecondaryLights = secondaryLights;
         }
 
-        public PokemonRenderData(string name, string model)
+        [JsonConstructor]
+        public PokemonRenderData(string name, string model, ushort animationPose, ushort animationFrame, ShinyInfo shiny, Camera mainCamera, Light[] mainLights, Camera? secondaryCamera, Light[] secondaryLights) 
+            : this(name, model, false, animationPose, animationFrame, shiny, mainCamera, mainLights, secondaryCamera, secondaryLights)
         {
-            Name = name;
-            Model = model;
-            BuiltIn = false;
 
-            MainCamera = Camera.GetDefaultCamera();
-            SecondaryCamera = null;
-            MainLights = Array.Empty<Light>();
-            SecondaryLights = Array.Empty<Light>();
         }
 
         public bool Equals(PokemonRenderData? other)

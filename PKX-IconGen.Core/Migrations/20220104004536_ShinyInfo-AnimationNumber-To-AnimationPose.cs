@@ -21,7 +21,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PKXIconGen.Migrations
+namespace PKXIconGen.Core.Migrations
 {
     public partial class ShinyInfoAnimationNumberToAnimationPose : Migration
     {

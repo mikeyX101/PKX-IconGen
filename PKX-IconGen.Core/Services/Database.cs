@@ -28,11 +28,33 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.Core.Services
 {
     public class Database : DbContext
     {
+        private static Database? instance;
+        public static Database Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new Database();
+                }
+                return instance;
+            }
+        }
+        internal static void OnClose()
+        {
+            if (instance != null)
+            {
+                instance.Dispose();
+                instance = null;
+            }
+        }
+
         private const uint SettingsId = 1;
 
         private static Exception IfNullTable(string propertyName)
@@ -113,23 +135,11 @@ namespace PKXIconGen.Core.Services
         public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; set; }
 
         #region Settings
-        public Settings GetSettings()
+        public async Task<Settings> GetSettingsAsync()
         {
             if (SettingsTable != null)
             {
-                return SettingsTable.FirstOrDefault() ?? new Settings();
-            }
-            else
-            {
-                throw IfNullTable(nameof(SettingsTable));
-            }
-        }
-
-        public void SaveSettings(Settings settings)
-        {
-            if (SettingsTable != null)
-            {
-                SettingsTable.Update(settings);
+                return await SettingsTable.FirstOrDefaultAsync() ?? new Settings();
             }
             else
             {
@@ -158,11 +168,11 @@ namespace PKXIconGen.Core.Services
         #endregion
 
         #region Pokemon Render Data
-        public int AddPokemonRenderData(PokemonRenderData pokemonRenderData)
+        public async Task<int> AddPokemonRenderDataAsync(PokemonRenderData pokemonRenderData)
         {
             if (PokemonRenderDataTable != null)
             {
-                PokemonRenderDataTable.Add(pokemonRenderData);
+                await PokemonRenderDataTable.AddAsync(pokemonRenderData);
 
                 return SaveChanges();
             }
@@ -172,11 +182,12 @@ namespace PKXIconGen.Core.Services
             }
         }
 
-        public List<PokemonRenderData> GetPokemonRenderData()
+        public async Task<List<PokemonRenderData>> GetPokemonRenderDataAsync(bool orderedByName = true)
         {
             if (PokemonRenderDataTable != null)
             {
-                return PokemonRenderDataTable.ToList();
+                List<PokemonRenderData> data = await PokemonRenderDataTable.ToListAsync();
+                return orderedByName ? data.OrderBy(prd => prd.Name).ToList() : data;
             }
             else
             {
@@ -184,7 +195,7 @@ namespace PKXIconGen.Core.Services
             }
         }
 
-        public int DeletePokemonRenderData(uint id)
+        public async Task<int> DeletePokemonRenderDataAsync(uint id)
         {
             if (PokemonRenderDataTable != null)
             {
@@ -194,14 +205,14 @@ namespace PKXIconGen.Core.Services
 
                 PokemonRenderDataTable.RemoveRange(pokemonRenderData);
 
-                return SaveChanges();
+                return await SaveChangesAsync();
             }
             else
             {
                 throw IfNullTable(nameof(PokemonRenderDataTable));
             }
         }
-        public int DeletePokemonRenderData(PokemonRenderData renderData)
+        public async Task<int> DeletePokemonRenderDataAsync(PokemonRenderData renderData)
         {
             if (PokemonRenderDataTable != null)
             {
@@ -209,20 +220,20 @@ namespace PKXIconGen.Core.Services
                 {
                     PokemonRenderDataTable.Remove(renderData);
                 }
-                return SaveChanges();
+                return await SaveChangesAsync();
             }
             else
             {
                 throw IfNullTable(nameof(PokemonRenderDataTable));
             }
         }
-        public int DeletePokemonRenderData(IEnumerable<PokemonRenderData> renderData)
+        public async Task<int> DeletePokemonRenderDataAsync(IEnumerable<PokemonRenderData> renderData)
         {
             if (PokemonRenderDataTable != null)
             {
                 PokemonRenderDataTable.RemoveRange(renderData.Where(prd => !prd.BuiltIn));
 
-                return SaveChanges();
+                return await SaveChangesAsync();
             }
             else
             {

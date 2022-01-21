@@ -25,16 +25,17 @@ using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.MaterialDesign;
 using System;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI
 {
-    class Program
+    public class Program
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static void Main(string[] args) {
+        public static async Task Main(string[] args) {
             IconProvider.Register<MaterialDesignIconProvider>();
             CoreManager.Initiate();
             if (CoreManager.Initiated)
@@ -51,7 +52,7 @@ namespace PKXIconGen.AvaloniaUI
                     try
                     {
                         using Database db = new();
-                        settings = db.GetSettings();
+                        settings = await db.GetSettingsAsync();
                     }
                     catch (Exception settingsEx)
                     {
@@ -62,14 +63,14 @@ namespace PKXIconGen.AvaloniaUI
                 }
                 finally
                 {
-                    CoreManager.DisposeLogger();
+                    CoreManager.OnClose();
                 }
             }
             else
             {
-                CoreManager.DisposeLogger();
+                CoreManager.OnClose();
             }
-    }
+        }
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()

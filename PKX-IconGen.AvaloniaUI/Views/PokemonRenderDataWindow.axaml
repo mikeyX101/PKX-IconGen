@@ -29,7 +29,7 @@
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="850"
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
         Icon="/Assets/gen-icon.ico"
-        Title="Add new Pokemon..."
+        Title="Add a new Pokemon..."
 
   MinWidth="1000" Width="1200" MinHeight="850" Height="900" CanResize="True">
   <Window.Resources>
@@ -86,7 +86,7 @@
             Path to the Pokemon model. 
             
             If it is in the asset folder, you can specify {{AssetPath}} instead of manually going in the folder.
-            Example: {{AssetPath}}/pkx_lugia/pkx_lugia.dat
+            Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
           </ToolTip.Tip>
         </TextBox>
         <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
@@ -99,26 +99,29 @@
         <ToolTip.Tip>
           Filter or different model for the shiny version of the Pokemon.
           Filters cannot be transparent or have transparency.
+
+          If your shiny model is in the asset folder, you can specify {{AssetPath}} instead of manually going in the folder.
+          Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
         </ToolTip.Tip>
         
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <RadioButton IsChecked="True" Content="Filter: " Name="ShinyFilter" GroupName="Shiny" />
+          <RadioButton IsChecked="{Binding UseFilter}" Content="Filter: " Name="ShinyFilter" GroupName="Shiny" />
           <color:ColorButton IsEnabled="{Binding #ShinyFilter.IsChecked}" Color="{Binding ShinyColor, Mode=TwoWay}" />
           <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
           <TextBlock Text="{Binding ShinyColor, Converter={StaticResource avaloniaColorHexStringConverter}}" Margin="8" VerticalAlignment="Center" />
         </StackPanel>
 
-        <RadioButton Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" />
+        <RadioButton IsChecked="{Binding !UseFilter}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" />
         <Grid Grid.Column="1" Grid.Row="2" ColumnDefinitions="*,30" RowDefinitions="*">
           <TextBox IsEnabled="{Binding #ShinyModel.IsChecked}" Text="{Binding ShinyModel, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" />
-          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
+          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseShinyModelPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
       </StackPanel>
 
       <Border CornerRadius="10" Background="#ff4f4f4f" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
-        <Grid ShowGridLines="True" ColumnDefinitions="100,50,*,50,*,50,*,50,*,50,*,50,*" RowDefinitions="20,*,*,20,*,*,20,*,*,50">
+        <Grid ShowGridLines="False" ColumnDefinitions="100,50,*,50,*,50,*,50,*,50,*,50,*" RowDefinitions="20,*,*,20,*,*,20,*,*,50">
           
           <TextBlock Text="Pose:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="1" />
           
@@ -254,10 +257,10 @@
         </Grid>
       </Border>
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Grid.Column="1" Grid.Row="5">
-        <Button Margin="64,0,64,0" Width="60" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
+        <Button Margin="64,0,64,0" Width="60" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding SaveCommand}" Grid.Column="1" Grid.Row="0">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Save</TextBlock>
         </Button>
-        <Button Margin="64,0,64,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
+        <Button Margin="64,0,64,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding CancelCommand}" Grid.Column="1" Grid.Row="0">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Cancel</TextBlock>
         </Button>
       </StackPanel>

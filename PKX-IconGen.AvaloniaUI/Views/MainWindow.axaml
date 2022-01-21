@@ -19,6 +19,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
+        xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
@@ -38,6 +39,9 @@
   <Window.Styles>
     <StyleInclude Source="/Assets/Styles.axaml" />
   </Window.Styles>
+  <Window.Resources>
+    <conv:PathStringFileNameStringConverter x:Key="pathStringFileNameStringConverter" />
+  </Window.Resources>
 
   <Panel>
     <ExperimentalAcrylicBorder IsHitTestVisible="False">
@@ -60,15 +64,15 @@
         <!--Blender Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox Text="{Binding BlenderPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+          <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
             <ToolTip.Tip>
-              Path to the Blender executable.
+Path to the Blender executable. Make sure you already installed the Blender SysDolphin addon. If not, it is available in the Help menu.
 
-              On Windows: Path to the Blender 2.83 executable.
+On Windows: Path to the Blender 2.83 executable.
 
-              On MacOS: The default path is included, if any aliases have been made for Blender for different versions, you can specify that alias for Blender 2.83 here. I also have no idea how OSX works exactly to be honest. 😂
+On MacOS: The default path is included, if any aliases have been made for Blender for different versions, you can specify that alias for Blender 2.83 here. I also have no idea how OSX works exactly to be honest. 😂
 
-              On Linux: Path to the Blender 2.83 executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_283".
+On Linux: Path to the Blender 2.83 executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_283".
             </ToolTip.Tip>
           </TextBox>
           <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseBlenderPath}" Grid.Column="1" Grid.Row="0">
@@ -82,22 +86,22 @@
 
         <!--Blender Optional Arguments-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Blender Args:</TextBlock>
-        <TextBox Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3">
+        <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3">
           <ToolTip.Tip>
-            Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
+Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
 
-            USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
+USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
 
-            &lt;List used args here&gt;
+&lt;List used args here&gt;
           </ToolTip.Tip>
         </TextBox>
 
         <!--Output Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4">Output Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="4" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox Text="{Binding OutputPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+          <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding OutputPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
             <ToolTip.Tip>
-              Output path for the generated icons.
+Output path for the generated icons.
             </ToolTip.Tip>
           </TextBox>
           <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseOutputPath}" Grid.Column="1" Grid.Row="0">
@@ -107,7 +111,7 @@
 
         <!--Icon Style-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
-        <ComboBox Items="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
           <ComboBox.ItemTemplate>
             <DataTemplate>
               <Panel VerticalAlignment="Center" Height="30">
@@ -117,25 +121,25 @@
           </ComboBox.ItemTemplate>
 
           <ToolTip.Tip>
-            Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Battle Revolution.
+Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Battle Revolution.
 
-            Pokémon Colosseum has no cropping.
+Pokémon Colosseum has no cropping.
 
-            Pokémon XD uses the same rendering as Colosseum, but circle crops are used for each icon.
+Pokémon XD uses the same rendering as Colosseum, but circle crops are used for each icon.
 
-            Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline.
+Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline.
           </ToolTip.Tip>
         </ComboBox>
 
         <!--Render Scale-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6">Render Scale:</TextBlock>
-        <ComboBox Items="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
           <ToolTip.Tip>
-            Integer scale used to know at what resolution the icons are going to be rendered.
+Integer scale used to know at what resolution the icons are going to be rendered.
 
-            Use x1 for making new pokemon icons.
+Use x1 for making new pokemon icons.
 
-            Use the others for texture packs or higher resolution needs.
+Use the others for texture packs or higher resolution needs.
           </ToolTip.Tip>
         </ComboBox>
 
@@ -143,16 +147,23 @@
         <!--Pokemon Buttons-->
         <Grid ShowGridLines="False" ColumnDefinitions="0.30*,1.15*,0.75*,0.90*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
           <Panel HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0">
-            <Button Content="+" Command="{Binding NewRenderData}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="+" Command="{Binding NewRenderDataCommand}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
-            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}" IsEnabled="{Binding EnableDeleteButton}"/>
+            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}">
+              <Button.IsEnabled>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="!CurrentlyRendering"/>
+                    <Binding Path="EnableDeleteButton"/>
+                  </MultiBinding>
+              </Button.IsEnabled>
+            </Button>
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0">
-            <Button Content="Select All" Command="{Binding SelectAllRenderData}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Select All" Command="{Binding SelectAllRenderData}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="3" Grid.Row="0">
-            <Button Content="Unselect All" Command="{Binding DeselectAllRenderData}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Unselect All" Command="{Binding DeselectAllRenderData}" />
           </Panel>
         </Grid>
         <!--Pokemon-->
@@ -173,7 +184,7 @@
               <DataTemplate>
                 <Grid ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*">
                   <TextBlock Text="{Binding Name}" Grid.Column="0" />
-                  <TextBlock Text="{Binding Model}" Grid.Column="1" />
+                  <TextBlock Text="{Binding Model, Converter={StaticResource pathStringFileNameStringConverter}}" Grid.Column="1" />
                   <i:Icon IsVisible="{Binding BuiltIn}" FontSize="16" Value="mdi-check" Grid.Column="2" />
                 </Grid>
               </DataTemplate>
@@ -185,13 +196,13 @@
         <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
           <TextBox Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
             <ToolTip.Tip>
-              Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
-              Make sure to "export" everything containing "pkx".
+Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
+Make sure to "export" everything containing "pkx".
               
-              In Colosseum/GoD Tool:
-              Go in 4. Import/Export files
-              Filter with "pkx"
-              Enter "export"
+In Colosseum/GoD Tool:
+Go in 4. Import/Export files
+Filter with "pkx"
+Enter "export"
             </ToolTip.Tip>
           </TextBox>
           <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">

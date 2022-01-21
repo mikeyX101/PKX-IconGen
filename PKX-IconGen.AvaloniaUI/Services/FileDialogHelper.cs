@@ -46,6 +46,22 @@ namespace PKXIconGen.AvaloniaUI.Services
             return null;
         }
 
+        public static async Task<string?> SaveFile(string title, List<FileDialogFilter>? filters = null, string? initialFileName = null)
+        {
+            SaveFileDialog fileDialog = new()
+            {
+                Title = title,
+                Filters = filters ?? new(),
+                InitialFileName = initialFileName
+            };
+            string? file = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
+            if (file != null)
+            {
+                return file;
+            }
+            return null;
+        }
+
         public static async Task<string[]?> GetFiles(string title, List<FileDialogFilter>? filters = null)
         {
             OpenFileDialog fileDialog = new()

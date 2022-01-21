@@ -26,53 +26,45 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {
+        #region OS
+        public bool IsWindows { get; init; }
+        public bool IsMacOS { get; init; }
+        public bool IsLinux { get; init; }
+        #endregion
+
         public ViewModelBase()
         {
-            
+            IsWindows = OperatingSystem.IsWindows();
+            IsMacOS = OperatingSystem.IsMacOS();
+            IsLinux = OperatingSystem.IsLinux();
         }
 
         private protected static void DoDBQuery(Action<Database> action)
         {
-            using Database db = new();
-            action(db);
+            action(Database.Instance);
         }
 
         private protected static T DoDBQuery<T>(Func<Database, T> func)
         {
-            using Database db = new();
-            return func(db);
+            return func(Database.Instance);
         }
 
         private protected async static Task DoDBQueryAsync(Func<Database, Task> func)
         {
-            using Database db = new();
-            await func(db);
+            await func(Database.Instance);
         }
 
         private protected async static Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
         {
-            using Database db = new();
-            return await func(db);
+            return await func(Database.Instance);
         }
     }
 
     public class WindowViewModelBase : ViewModelBase
     {
-        #region Misc
-        private bool isWindows;
-        public bool IsWindows
-        {
-            get => isWindows;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref isWindows, value);
-            }
-        }
-        #endregion
-
         public WindowViewModelBase() : base()
         {
-            isWindows = OperatingSystem.IsWindows();
+            
         }
     }
 }

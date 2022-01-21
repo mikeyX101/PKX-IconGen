@@ -50,36 +50,24 @@ namespace PKXIconGen.Core.Data.Blender
                 Blue == other.Blue;
         }
 
-		//TODO Double check bit shifts
+        public static Color FromRgbInt(uint rgb)
+        {
+            return FromRgbInt(checked((int)(rgb & 0x00FFFFFF)));
+        }
         public static Color FromRgbInt(int rgb)
         {
-            int red = rgb >> 8 & 0x0000FF;
-            int green = rgb >> 16 & 0x0000FF;
-            int blue = rgb >> 24 & 0x0000FF;
+            int red = rgb >> 16 & 0x0000FF;
+            int green = rgb >> 8 & 0x0000FF;
+            int blue = rgb & 0x0000FF;
 
             return FromInts(red, green, blue);
         }
-        public static Color FromArgbInt(uint argb)
-        {
-            // No need
-            //uint alpha = argb >> 8 & 0x000000FF;
-
-            uint red = argb >> 16 & 0x000000FF;
-            uint green = argb >> 24 & 0x000000FF;
-            uint blue = argb >> 32 & 0x000000FF;
-
-            return FromUInts(red, green, blue);
-        }
         public static Color FromInts(int red, int green, int blue)
         {
-            float rangeR = Utils.ConvertRange(0, 255, 0, 1, red);
-            float rangeG = Utils.ConvertRange(0, 255, 0, 1, green);
-            float rangeB = Utils.ConvertRange(0, 255, 0, 1, blue);
+            red = Math.Clamp(red, 0, 255);
+            green = Math.Clamp(green, 0, 255);
+            blue = Math.Clamp(blue, 0, 255);
 
-            return new Color(rangeR, rangeG, rangeB);
-        }
-        public static Color FromUInts(uint red, uint green, uint blue)
-        {
             float rangeR = Utils.ConvertRange(0, 255, 0, 1, red);
             float rangeG = Utils.ConvertRange(0, 255, 0, 1, green);
             float rangeB = Utils.ConvertRange(0, 255, 0, 1, blue);

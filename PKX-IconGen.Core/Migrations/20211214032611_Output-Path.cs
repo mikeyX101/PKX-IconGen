@@ -19,7 +19,7 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace PKXIconGen.Migrations
+namespace PKXIconGen.Core.Migrations
 {
     public partial class OutputPath : Migration
     {

@@ -32,29 +32,29 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("filter")]
         public Color? Filter { get; init; }
 
-        [JsonPropertyName("altModel")]
+        [JsonPropertyName("alt_model")]
         public string? AltModel { get; init; }
 
-        [JsonPropertyName("animationPose")]
+        [JsonPropertyName("animation_pose")]
         public ushort AnimationPose { get; init; }
-        [JsonPropertyName("animationFrame")]
+        [JsonPropertyName("animation_frame")]
         public ushort AnimationFrame { get; init; }
 
-        public ShinyInfo(Color color, ushort animationNumber, ushort animationFrame)
+        public ShinyInfo(Color color, ushort animationPose, ushort animationFrame)
         {
             Filter = color;
             AltModel = null;
 
-            AnimationPose = animationNumber;
+            AnimationPose = animationPose;
             AnimationFrame = animationFrame;
         }
 
-        public ShinyInfo(string altModel, ushort animationNumber, ushort animationFrame)
+        public ShinyInfo(string altModel, ushort animationPose, ushort animationFrame)
         {
             Filter = null;
             AltModel = altModel;
 
-            AnimationPose = animationNumber;
+            AnimationPose = animationPose;
             AnimationFrame = animationFrame;
         }
 

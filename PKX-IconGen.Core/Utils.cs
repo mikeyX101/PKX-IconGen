@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 */
+#endregion
 
 using PKXIconGen.Core.Data.Blender;
 using System;
@@ -25,13 +26,21 @@ using System.Threading.Tasks;
 
 namespace PKXIconGen.Core
 {
-    internal static class Utils
+    public static class Utils
     {
         public static float ConvertRange(
             int originalStart, int originalEnd, // original range
             float newStart, float newEnd, // desired range
             int value) // value to convert
         {
+            if (originalStart > value) {
+                throw new ArgumentException("Value was smaller than the original range.", nameof(value));
+            }
+            else if (originalEnd < value)
+            {
+                throw new ArgumentException("Value was greater than the original range.", nameof(value));
+            }
+
             float scale = (float)(newEnd - newStart) / (originalEnd - originalStart);
             return newStart + ((value - originalStart) * scale);
         }
@@ -41,6 +50,14 @@ namespace PKXIconGen.Core
             float newStart, float newEnd, // desired range
             uint value) // value to convert
         {
+            if (originalStart > value) {
+                throw new ArgumentException("Value was smaller than the original range.", nameof(value));
+            }
+            else if (originalEnd < value)
+            {
+                throw new ArgumentException("Value was greater than the original range.", nameof(value));
+            }
+
             float scale = (float)(newEnd - newStart) / (originalEnd - originalStart);
             return newStart + ((value - originalStart) * scale);
         }

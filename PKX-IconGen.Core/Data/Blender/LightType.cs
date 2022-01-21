@@ -25,10 +25,10 @@ namespace PKXIconGen.Core.Data.Blender
     /// </summary>
     public enum LightType : byte
     {
-        Point,
-        Sun,
-        Spot,
-        Area
+        Point = 0,
+        Sun = 1,
+        Spot = 2,
+        Area = 3
     }
 
     public static class LightTypeExtensions

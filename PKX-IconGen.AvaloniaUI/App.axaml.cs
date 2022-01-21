@@ -40,19 +40,15 @@ namespace PKXIconGen.AvaloniaUI
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public async override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.Exit += CoreManager.OnApplicationEnd;
-
-                using (Database db = new())
+                Database db = Database.Instance;
+                desktop.MainWindow = new MainWindow()
                 {
-                    desktop.MainWindow = new MainWindow()
-                    {
-                        DataContext = new MainWindowViewModel(db.GetSettings(), db.GetPokemonRenderData().OrderBy(prd => prd.Name).ToList())
-                    };
-                }
+                    DataContext = new MainWindowViewModel(await db.GetSettingsAsync(), await db.GetPokemonRenderDataAsync())
+                };
             }
             else
             {
