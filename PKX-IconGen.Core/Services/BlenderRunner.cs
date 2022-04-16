@@ -23,38 +23,112 @@ using PKXIconGen.Core.Data;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PKXIconGen.Core.Services
 {
-    public class BlenderRunner
+    public interface IBlenderRunner
+    {
+        Task RunAsync(CancellationToken? cancellationToken = null);
+
+        delegate void OutDel(ReadOnlyMemory<char> output);
+        event OutDel OnOutput;
+
+        delegate void FinishDel(PokemonRenderData? prd);
+        event FinishDel OnFinish;
+    }
+
+    public static class BlenderRunners
+    {
+        public static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
+            new BlenderRunner(blenderRunnerInfo, prd, new string[]
+            {
+                "--background",
+                "--python", Paths.SceneGenerator
+            });
+
+        public static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
+            new BlenderRunner(blenderRunnerInfo, prd, new string[]
+            {
+                $"--python", Paths.ModifyData
+            }, $"{JsonIO.ToJsonString(prd)}");
+    }
+
+    internal class BlenderRunner : IBlenderRunner
     {
         private const string LogTemplate = "[CLIWrap] -> [{ExecutableName}] {Output}";
 
-        private string BlenderPath { get; set; }
-        private string[] Arguments { get; set; }
-        private string OptionalArguments { get; set; }
-        private string ExecutableName { get; }
+        private string TemplateName { get; init; }
+        private bool LogBlender { get; init; }
+        private string BlenderPath { get; init; }
+        private string[] Arguments { get; init; }
+        private string OptionalArguments { get; init; }
+        private byte[]? Input { get; init; } = null;
+        private string ExecutableName { get; init; }
 
-        public BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string[]? arguments = null)
+        internal BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd, string[] arguments, string? input = null)
         {
+            TemplateName = prd.Name;
+            LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
-            Arguments = arguments ?? Array.Empty<string>();
+            Arguments = arguments;
             OptionalArguments = blenderRunnerInfo.OptionalArguments;
+            if (input != null)
+            {
+                Input = Encoding.UTF8.GetBytes(input);
+            }
             ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
 
             OnOutput += Log;
-            OnFinish += () => { };
         }
 
-        public delegate void OutDel(string output);
-        public event OutDel OnOutput;
+        #region Event
+        private static object ObjectLock => new();
+        
+        public event IBlenderRunner.OutDel? OnOutput;
+        event IBlenderRunner.OutDel IBlenderRunner.OnOutput
+        {
+            add
+            {
+                lock (ObjectLock)
+                {
+                    OnOutput += value;
+                }
+            }
 
-        public delegate void FinishDel();
-        public event FinishDel OnFinish;
+            remove
+            {
+                lock (ObjectLock)
+                {
+                    OnOutput -= value;
+                }
+            }
+        }
 
-        private void Log(string s)
+        public event IBlenderRunner.FinishDel? OnFinish;
+        event IBlenderRunner.FinishDel IBlenderRunner.OnFinish
+        {
+            add
+            {
+                lock (ObjectLock)
+                {
+                    OnFinish += value;
+                }
+            }
+
+            remove
+            {
+                lock (ObjectLock)
+                {
+                    OnFinish -= value;
+                }
+            }
+        }
+        #endregion
+
+        private void Log(ReadOnlyMemory<char> s)
         {
             CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
         }
@@ -63,10 +137,41 @@ namespace PKXIconGen.Core.Services
         {
             CancellationToken token = cancellationToken ?? CancellationToken.None;
 
-            Command cmd = Cli.Wrap(BlenderPath)
-                .WithArguments(Arguments)
-                .WithArguments(OptionalArguments);
+            if (!Directory.Exists(Paths.BlenderLogsFolder))
+            {
+                Directory.CreateDirectory(Paths.BlenderLogsFolder);
+            }
 
+            Command cmd = Cli.Wrap(BlenderPath)
+                .WithWorkingDirectory(Paths.PythonFolder)
+                .WithArguments(args =>
+                {
+                    if (LogBlender)
+                    {
+                        args
+                            .Add("--log").Add("*")
+                            .Add($"--log-file").Add(Paths.BlenderLog);
+                    }
+
+                    args
+                        .Add("--debug-python")
+                        .Add("--enable-autoexec")
+                        .Add("--python-exit-code").Add("200")
+                        .Add(Paths.GetTemplateCopy(TemplateName))
+                        .Add(Arguments);
+
+                    if (!string.IsNullOrWhiteSpace(OptionalArguments))
+                    {
+                        args.Add(OptionalArguments);
+                    }
+                });
+            
+            if (Input != null)
+            {
+                cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
+            }
+
+            PokemonRenderData? prd = null;
             try
             {
                 await foreach (var cmdEvent in cmd.ListenAsync(token))
@@ -74,19 +179,26 @@ namespace PKXIconGen.Core.Services
                     switch (cmdEvent)
                     {
                         case StartedCommandEvent started:
-                            OnOutput($"Process started; ID: {started.ProcessId}");
+                            OnOutput?.Invoke($"Process started; ID: {started.ProcessId}; Arguments: {cmd.Arguments}".AsMemory());
                             break;
 
                         case StandardOutputCommandEvent stdOut:
-                            OnOutput($"Out> {stdOut.Text}");
+                            OnOutput?.Invoke($"Out> {stdOut.Text}".AsMemory());
                             break;
                         case StandardErrorCommandEvent stdErr:
-                            OnOutput($"Err> {stdErr.Text}");
+                            OnOutput?.Invoke($"Err> {stdErr.Text}".AsMemory());
                             break;
 
                         case ExitedCommandEvent exited:
-                            OnOutput($"Process exited; Code: {exited.ExitCode}");
-                            OnOutput("Operation has finished.");
+                            string jsonPath = Path.Combine(Paths.TempFolder, TemplateName + ".json");
+                            if (File.Exists(jsonPath))
+                            {
+                                prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
+                                File.Delete(jsonPath);
+                            }
+
+                            OnOutput?.Invoke($"Process exited; Code: {exited.ExitCode}".AsMemory());
+                            OnOutput?.Invoke("Operation has finished.".AsMemory());
                             break;
 
                         default:
@@ -96,20 +208,31 @@ namespace PKXIconGen.Core.Services
             }
             catch (OperationCanceledException)
             {
-                OnOutput("Operation was canceled.");
+                OnOutput?.Invoke("Operation was canceled.".AsMemory());
             }
             catch (Win32Exception e)
             {
-                OnOutput("EXCEPTION> An error occured : " + e.Message);
-                OnOutput("Check Blender Path, it is probably invalid.");
+                OnOutput?.Invoke(("EXCEPTION> An error occured :\n" + e.StackTrace).AsMemory());
+                OnOutput?.Invoke("Check Blender Path, it is probably invalid.".AsMemory());
+            }
+            catch (CliWrap.Exceptions.CommandExecutionException e)
+            {
+                if (e.ExitCode == 200)
+                {
+                    OnOutput?.Invoke(("EXCEPTION> An error occured in a python script, see logs for further details :\n" + e.StackTrace).AsMemory());
+                }
+                else
+                {
+                    OnOutput?.Invoke(("EXCEPTION> An error occured in Blender, see logs for further details :\n" + e.StackTrace).AsMemory());
+                }
             }
             catch (Exception e)
             {
-                OnOutput("EXCEPTION> An unknown error occured : " + e.Message);
+                OnOutput?.Invoke(("EXCEPTION> An unknown error occured :\n" + e.StackTrace).AsMemory());
             }
             finally
             {
-                OnFinish();
+                OnFinish?.Invoke(prd);
             }
         }
     }

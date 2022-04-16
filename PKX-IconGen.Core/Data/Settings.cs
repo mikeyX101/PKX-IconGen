@@ -44,6 +44,9 @@ namespace PKXIconGen.Core.Data
         [Column]
         public string AssetsPath { get; set; }
 
+        [Column]
+        public bool LogBlender { get; set; }
+
         public Settings()
         {
             if (OperatingSystem.IsMacOS())
@@ -60,6 +63,7 @@ namespace PKXIconGen.Core.Data
             CurrentGame = Game.Undefined;
             RenderScale = RenderScale.x1;
             AssetsPath = "";
+            LogBlender = false;
         }
     }
 }

@@ -47,8 +47,15 @@
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
+    <MenuItem Header="_Settings">
+      <MenuItem Header="Log Blender to Logs folder" Command="{Binding ToggleLogBlender}">
+        <MenuItem.Icon>
+          <i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />
+        </MenuItem.Icon>
+      </MenuItem>
+    </MenuItem>
     <MenuItem Header="_Help">
-      <MenuItem Header="Link to SysDolphin Addon" Command="{Binding SysDolphinAddon}">
+      <MenuItem Header="Link to Importer Addon" Command="{Binding ImporterAddon}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-github" />
         </MenuItem.Icon>

@@ -87,5 +87,35 @@ namespace PKXIconGen.Core.Services
                 yield return await JsonSerializer.DeserializeAsync<T>(file, defaultOptions);
             }
         }
+
+        public static string ToJsonString<T>(T data) where T : IJsonSerializable
+        {
+            try
+            {
+                using MemoryStream memoryStream = new(2048);
+                JsonSerializer.Serialize(memoryStream, data, defaultOptions);
+                return Encoding.UTF8.GetString(memoryStream.ToArray());
+            }
+            catch (Exception ex)
+            {
+                CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+                throw;
+            }
+        }
+
+        public static async Task<string> ToJsonStringAsync<T>(T data) where T : IJsonSerializable
+        {
+            try
+            {
+                using MemoryStream memoryStream = new(2048);
+                await JsonSerializer.SerializeAsync(memoryStream, data, defaultOptions);
+                return Encoding.UTF8.GetString(memoryStream.ToArray());
+            }
+            catch (Exception ex)
+            {
+                CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+                throw;
+            }
+        }
     }
 }

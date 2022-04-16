@@ -27,49 +27,52 @@ using System.Threading.Tasks;
 
 namespace PKXIconGen.Core.Data
 {
-    public readonly struct ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>
+    public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>
     {
         [JsonPropertyName("filter")]
-        public Color? Filter { get; init; }
+        public Color? Filter { get; set; }
 
-        [JsonPropertyName("alt_model")]
-        public string? AltModel { get; init; }
+        [JsonPropertyName("render")]
+        public RenderData Render { get; set; }
 
-        [JsonPropertyName("animation_pose")]
-        public ushort AnimationPose { get; init; }
-        [JsonPropertyName("animation_frame")]
-        public ushort AnimationFrame { get; init; }
-
-        public ShinyInfo(Color color, ushort animationPose, ushort animationFrame)
-        {
-            Filter = color;
-            AltModel = null;
-
-            AnimationPose = animationPose;
-            AnimationFrame = animationFrame;
-        }
-
-        public ShinyInfo(string altModel, ushort animationPose, ushort animationFrame)
+        public ShinyInfo() : this(new RenderData())
         {
             Filter = null;
-            AltModel = altModel;
-
-            AnimationPose = animationPose;
-            AnimationFrame = animationFrame;
         }
 
-        public bool Equals(ShinyInfo other)
+        public ShinyInfo(Color? color, RenderData renderData)
         {
-            return Filter.Equals(other.Filter) &&
-                (
-                    (AltModel == null && other.AltModel == null) || 
-                    (
-                        AltModel != null && other.AltModel != null &&
-                        AltModel.Equals(other.AltModel)
-                    )
-                ) &&
-                AnimationPose == other.AnimationPose &&
-                AnimationFrame == other.AnimationFrame;
+            Filter = color;
+            Render = renderData;
         }
+
+        public ShinyInfo(RenderData renderData)
+        {
+            Filter = null;
+            Render = renderData;
+        }
+
+        public bool Equals(ShinyInfo? other)
+        {
+            return other is not null &&
+                Filter.Equals(other.Filter) &&
+                Render.Equals(other.Render);
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is ShinyInfo shiny && Equals(shiny);
+        }
+
+        public static bool operator ==(ShinyInfo? left, ShinyInfo? right)
+        {
+            return left?.Equals(right) ?? left is null && right is null;;
+        }
+
+        public static bool operator !=(ShinyInfo left, ShinyInfo right)
+        {
+            return !(left == right);
+        }
+
+        public override int GetHashCode() => (Filter, Render).GetHashCode();
     }
 }

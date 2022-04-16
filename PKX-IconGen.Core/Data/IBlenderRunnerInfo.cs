@@ -8,6 +8,7 @@ namespace PKXIconGen.Core.Data
 {
     public interface IBlenderRunnerInfo
     {
+        public bool LogBlender { get; }
         public string Path { get; }
         public string OptionalArguments { get; }
     }

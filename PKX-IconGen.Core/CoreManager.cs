@@ -62,11 +62,19 @@ namespace PKXIconGen.Core
                 return;
             }
 
-            string logDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-            string logFilePath = Path.Combine(logDirectoryPath, $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.txt");
-            if (!Directory.Exists(logDirectoryPath))
+            if (!Directory.Exists(Paths.TempFolder))
             {
-                Directory.CreateDirectory(logDirectoryPath);
+                Directory.CreateDirectory(Paths.TempFolder);
+            }
+
+            if (!Directory.Exists(Paths.TempBlendFolder))
+            {
+                Directory.CreateDirectory(Paths.TempBlendFolder);
+            }
+
+            if (!Directory.Exists(Paths.LogFolder))
+            {
+                Directory.CreateDirectory(Paths.LogFolder);
             }
 
             Serilog.Formatting.ITextFormatter textFormatter = new LogTemplateFormatter();
@@ -75,7 +83,7 @@ namespace PKXIconGen.Core
                 .Enrich.WithExceptionDetails()
                 .Enrich.FromLogContext()
                 .WriteTo.Async(config => 
-                    config.File(textFormatter, logFilePath, 
+                    config.File(textFormatter, Paths.Log, 
                         buffered: true,
                         rollOnFileSizeLimit: false,
                         flushToDiskInterval: TimeSpan.FromSeconds(15)
@@ -89,7 +97,7 @@ namespace PKXIconGen.Core
 
             try
             {
-                using Database db = new();
+                Database db = Database.Instance;
                 db.RunMigrations();
 
                 Initiated = true;

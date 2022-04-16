@@ -36,7 +36,6 @@ namespace PKXIconGen.AvaloniaUI
         // yet and stuff might break.
         [STAThread]
         public static async Task Main(string[] args) {
-            IconProvider.Register<MaterialDesignIconProvider>();
             CoreManager.Initiate();
             if (CoreManager.Initiated)
             {
@@ -51,7 +50,7 @@ namespace PKXIconGen.AvaloniaUI
                     Settings? settings = null;
                     try
                     {
-                        using Database db = new();
+                        Database db = Database.Instance;
                         settings = await db.GetSettingsAsync();
                     }
                     catch (Exception settingsEx)
@@ -77,6 +76,7 @@ namespace PKXIconGen.AvaloniaUI
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
-                .UseReactiveUI();
+                .UseReactiveUI()
+                .WithIcons(container => container.Register<MaterialDesignIconProvider>());
     }
 }

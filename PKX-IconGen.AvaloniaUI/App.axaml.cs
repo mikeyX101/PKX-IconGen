@@ -59,6 +59,7 @@ namespace PKXIconGen.AvaloniaUI
                 GC.KeepAlive(typeof(Icon));
                 GC.KeepAlive(typeof(Attached));
 
+                GC.KeepAlive(typeof(ColorButton));
                 GC.KeepAlive(typeof(ColorPicker));
             }
 

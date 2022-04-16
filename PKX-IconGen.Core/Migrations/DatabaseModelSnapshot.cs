@@ -14,54 +14,46 @@ namespace PKXIconGen.Core.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
 
             modelBuilder.Entity("PKXIconGen.Core.Data.PokemonRenderData", b =>
                 {
-                    b.Property<uint>("InternalID")
+                    b.Property<uint>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
-                    b.Property<ushort>("AnimationFrame")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ushort>("AnimationPose")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("BuiltIn")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("MainCamera")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MainLights")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SecondaryCamera")
+                    b.Property<string>("OutputName")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SecondaryLights")
+                    b.Property<string>("RemovedObjects")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("Render")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("{\"model\":\"\",\"animation_pose\":0,\"animation_frame\":0,\"main_camera\":{\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},\"rot\":{\"x\":86.8,\"y\":0,\"z\":54},\"fov\":40},\"secondary_camera\":{\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},\"rot\":{\"x\":86.8,\"y\":0,\"z\":54},\"fov\":40},\"main_lights\":[],\"secondary_lights\":[]}");
 
                     b.Property<string>("Shiny")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("{\"filter\":null,\"render\":{\"model\":\"\",\"animation_pose\":0,\"animation_frame\":0,\"main_camera\":{\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},\"rot\":{\"x\":86.8,\"y\":0,\"z\":54},\"fov\":40},\"secondary_camera\":{\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},\"rot\":{\"x\":86.8,\"y\":0,\"z\":54},\"fov\":40},\"main_lights\":[],\"secondary_lights\":[]}}");
 
-                    b.HasKey("InternalID");
+                    b.HasKey("ID");
 
-                    b.HasIndex(new[] { "InternalID" }, "IDX_ID")
+                    b.HasIndex(new[] { "ID" }, "IDX_ID")
                         .IsUnique();
 
                     b.ToTable("PokemonRenderData");
@@ -89,6 +81,9 @@ namespace PKXIconGen.Core.Migrations
                     b.Property<byte>("CurrentGame")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("LogBlender")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("OutputPath")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -108,6 +103,7 @@ namespace PKXIconGen.Core.Migrations
                             BlenderOptionalArguments = "",
                             BlenderPath = "",
                             CurrentGame = (byte)0,
+                            LogBlender = false,
                             OutputPath = "",
                             RenderScale = (byte)0
                         });

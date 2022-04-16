@@ -34,16 +34,14 @@ namespace PKXIconGen.Core.Data.Blender
         public JsonSerializableVector3 RotationEuler { get; init; }
 
         [JsonPropertyName("fov")]
-        public int FieldOfView { get; init; }
+        public float FieldOfView { get; init; }
 
-        public Camera(Vector3 position, Vector3 rotationEulerXYZ, int fieldOfView)
+        public Camera(Vector3 position, Vector3 rotationEulerXYZ, float fieldOfView)
         {
             Position = new(position);
             RotationEuler = new(rotationEulerXYZ);
             FieldOfView = fieldOfView;
         }
-
-        public static Camera GetDefaultCamera() => new();
 
         public bool Equals(Camera other)
         {
@@ -52,5 +50,23 @@ namespace PKXIconGen.Core.Data.Blender
                 RotationEuler.Equals(other.RotationEuler) &&
                 FieldOfView == other.FieldOfView;
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is Camera camera && Equals(camera);
+        }
+
+        public static bool operator ==(Camera left, Camera right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Camera left, Camera right)
+        {
+            return !(left == right);
+        }
+
+        public readonly override int GetHashCode() => (Position, RotationEuler, FieldOfView).GetHashCode();
+
+        public static Camera GetDefaultCamera() => new(new(14f, -13.5f, 5.5f), new(86.8f, 0f, 54f), 40f);
     }
 }

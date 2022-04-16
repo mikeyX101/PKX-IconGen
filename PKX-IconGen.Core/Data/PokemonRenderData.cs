@@ -27,88 +27,95 @@ using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data
 {
-    [Table("PokemonRenderData"), Index(nameof(InternalID), IsUnique = true, Name = "IDX_ID")]
+    [Table("PokemonRenderData"), Index(nameof(ID), IsUnique = true, Name = "IDX_ID")]
     public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>
     {
-        [Column("ID"), Key, JsonIgnore]
-        public uint InternalID { get; private set; }
+        [Column("ID"), Key, Required, JsonIgnore]
+        public uint ID { get; internal set; }
 
         [Column, JsonPropertyName("name")]
         public string Name { get; internal set; }
-        /// <summary>
-        /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
-        /// </summary>
-        [Column, JsonPropertyName("model")]
-        public string Model { get; internal set; }
+        [Column, JsonPropertyName("output_name")]
+        public string? OutputName { get; internal set; }
         [Column, JsonPropertyName("builtIn")]
         public bool BuiltIn { get; internal set; }
 
-        [Column, JsonPropertyName("animation_pose")]
-        public ushort AnimationPose { get; internal set; }
-        [Column, JsonPropertyName("animation_frame")]
-        public ushort AnimationFrame { get; internal set; }
-
+        [Column, JsonPropertyName("render")]
+        public RenderData Render { get; internal set; }
         [Column, JsonPropertyName("shiny")]
         public ShinyInfo Shiny { get; internal set; }
 
-        [Column, JsonPropertyName("main_camera")]
-        public Camera MainCamera { get; internal set; }
-        [Column, JsonPropertyName("secondary_camera")]
-        public Camera? SecondaryCamera { get; internal set; }
-        [Column, JsonPropertyName("main_lights")]
-        public Light[] MainLights { get; internal set; }
-        [Column, JsonPropertyName("secondary_lights")]
-        public Light[] SecondaryLights { get; internal set; }
+        [Column, JsonPropertyName("removed_objects")]
+        public string[] RemovedObjects { get; internal set; }
 
-        internal PokemonRenderData()
+        public PokemonRenderData()
         {
             Name = "";
-            Model = "";
+            OutputName = "";
             BuiltIn = false;
 
-            MainCamera = Camera.GetDefaultCamera();
-            SecondaryCamera = null;
-            MainLights = Array.Empty<Light>();
-            SecondaryLights = Array.Empty<Light>();
+            Render = new();
+            Shiny = new();
+
+            RemovedObjects = Array.Empty<string>();
         }
         
-        internal PokemonRenderData(string name, string model, bool builtIn, ushort animationPose, ushort animationFrame, ShinyInfo shiny, Camera mainCamera, Light[] mainLights, Camera? secondaryCamera, Light[] secondaryLights)
+        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny, string[] removedObjects)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Model = model;
+            if (name.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            Name = name;
+            OutputName = !string.IsNullOrEmpty(outputName) ? outputName : null;
             BuiltIn = builtIn;
 
-            AnimationPose = animationPose;
-            AnimationFrame = animationFrame;
-
+            Render = render;
             Shiny = shiny;
 
-            MainCamera = mainCamera;
-            SecondaryCamera = secondaryCamera;
-            MainLights = mainLights;
-            SecondaryLights = secondaryLights;
+            RemovedObjects = removedObjects;
         }
 
         [JsonConstructor]
-        public PokemonRenderData(string name, string model, ushort animationPose, ushort animationFrame, ShinyInfo shiny, Camera mainCamera, Light[] mainLights, Camera? secondaryCamera, Light[] secondaryLights) 
-            : this(name, model, false, animationPose, animationFrame, shiny, mainCamera, mainLights, secondaryCamera, secondaryLights)
+        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny, string[] removedObjects) 
+            : this(name, outputName, false, render, shiny, removedObjects)
         {
 
         }
 
         public bool Equals(PokemonRenderData? other)
         {
-            return other != null && 
-                InternalID == other.InternalID &&
+            return other is not null && 
+                ID == other.ID &&
                 Name == other.Name &&
-                Model == other.Model &&
                 BuiltIn == other.BuiltIn &&
-                AnimationPose == other.AnimationPose &&
-                AnimationFrame == other.AnimationFrame &&
-                MainCamera.Equals(other.MainCamera) &&
-                SecondaryCamera.Equals(other.SecondaryCamera) &&
-                MainLights.SequenceEqual(other.MainLights) &&
-                SecondaryLights.SequenceEqual(other.SecondaryLights);
+                Render.Equals(other.Render) &&
+                Shiny.Equals(other.Shiny) &&
+                RemovedObjects.SequenceEqual(other.RemovedObjects);
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is PokemonRenderData prd && Equals(prd);
+        }
+
+        public static bool operator ==(PokemonRenderData? left, PokemonRenderData? right)
+        {
+            return left?.Equals(right) ?? left is null && right is null;
+        }
+
+        public static bool operator !=(PokemonRenderData? left, PokemonRenderData? right)
+        {
+            return !(left == right);
+        }
+
+        public override int GetHashCode() => 
+            (
+                ID, 
+                Name,
+                BuiltIn,
+                Render,
+                Shiny
+            ).GetHashCode();
     }
 }

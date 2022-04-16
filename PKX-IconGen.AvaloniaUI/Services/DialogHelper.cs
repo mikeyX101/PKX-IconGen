@@ -29,28 +29,28 @@ namespace PKXIconGen.AvaloniaUI.Services
 {
     public static class DialogHelper
     {
-        public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, string? title = null, Window? parent = null)
+        public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
         {
             if (parent == null)
             {
                 parent = Utils.GetApplicationLifetime().MainWindow;
             }
 
-            DialogWindowViewModel vm = new(dialogType, dialogButtons, message, title);
+            DialogWindowViewModel vm = new(dialogType, dialogButtons, message, height, title);
             return await new DialogWindow
             {
                 DataContext = vm
             }.ShowDialog<bool>(parent);
         }
 
-        public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, Window? parent = null)
+        public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, uint? height = null, Window? parent = null)
         {
             if (parent == null)
             {
                 parent = Utils.GetApplicationLifetime().MainWindow;
             }
 
-            DialogWindowViewModel vm = new(asset, dialogButtons, message, title);
+            DialogWindowViewModel vm = new(asset, dialogButtons, message, title, height);
             return await new DialogWindow
             {
                 DataContext = vm

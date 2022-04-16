@@ -1,15 +1,15 @@
-:: 1 is output folder
-:: 2 is project folder
 set output=%1
 set output=%output:"=%
 set project=%2
 set project=%project:"=%
 
-mkdir "%output%\Python\addon"
-mkdir "%output%\Python\core"
-mkdir "%output%\Python\core\data"
+rmdir /Q /S "%output%\Python"
 
-copy "%project%..\PKX-IconGen.Python.Addon\*.py" "%output%\Python\addon"
+mkdir "%output%\Python\data"
+mkdir "%output%\Python\importer"
 
-copy "%project%..\PKX-IconGen.Python.Core\*.py" "%output%\Python\core"
-copy "%project%..\PKX-IconGen.Python.Core\data\*.py" "%output%\Python\core\data"
+xcopy "%project%\..\PKX-IconGen.Python\data\*.py" "%output%\Python\data" /Y /E
+
+xcopy "%project%\..\PKX-IconGen.Python\*.py" "%output%\Python" /Y /E
+xcopy "%project%\..\PKX-IconGen.Python\template.blend" "%output%\Python" /Y /E
+xcopy "%project%\..\PKX-IconGen.Python\importer\*" "%output%\Python\importer" /Y /E

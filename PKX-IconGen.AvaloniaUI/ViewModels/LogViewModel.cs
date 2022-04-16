@@ -19,39 +19,49 @@
 
 using ReactiveUI;
 using System;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class LogViewModel : ViewModelBase
     {
-        private string logText;
-        public string LogText
-        {
-            get => logText;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref logText, value);
-            }
-        }
+        private readonly StringBuilder logBuilder;
+        public string LogText => logBuilder.ToString();
 
-        public string LogFont 
-        {
-            get => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
-        }
+        private const ushort updateRate = 1000;
+        private Task? updatePendingTask;
+
+        public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
 
         public LogViewModel()
         {
-            logText = "";
+            logBuilder = new(1024);
         }
 
         public void ClearLog()
         {
-            LogText = "";
+            logBuilder.Clear();
+            this.RaisePropertyChanged(nameof(LogText));
+        }
+        private const char newLine = '\n';
+        public void WriteLine(ReadOnlyMemory<char> line)
+        {
+            logBuilder.Append(line).Append(newLine);
+            ScheduleUpdate();
         }
 
-        public void Write(string line)
+        private async void ScheduleUpdate()
         {
-            LogText += line + "\n";
+            if (updatePendingTask == null)
+            {
+                updatePendingTask = Task.Run(async () => {
+                    await Task.Delay(updateRate);
+                    this.RaisePropertyChanged(nameof(LogText));
+                });
+                await updatePendingTask;
+                updatePendingTask = null;
+            }
         }
     }
 }

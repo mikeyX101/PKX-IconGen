@@ -25,4 +25,36 @@ namespace PKXIconGen.AvaloniaUI.Models.Dialog
         Warning = 1,
         Error   = 2
     }
+
+    public static class DialogTypeExtensions
+    {
+        public static string GetMaterialDesignIcon(this DialogType dialogType)
+        {
+            return dialogType switch
+            {
+                DialogType.Warning      => "mdi-alert",
+                DialogType.Error        => "mdi-close-circle",
+                DialogType.Text or _    => ""
+            };
+        }
+
+        public static uint GetColor(this DialogType dialogType)
+        {
+            return dialogType switch
+            {
+                DialogType.Warning      => 0xffffc107,
+                DialogType.Error        => 0xffff0000,
+                DialogType.Text or _    => 0xffffffff
+            };
+        }
+        public static string GetTitle(this DialogType dialogType)
+        {
+            return dialogType switch
+            {
+                DialogType.Warning      => "Warning",
+                DialogType.Error        => "Error",
+                DialogType.Text or _    => ""
+            };
+        }
+    }
 }

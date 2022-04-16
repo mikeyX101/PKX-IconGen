@@ -44,7 +44,7 @@ namespace PKX_IconGen.Core.Tests.Data
             Assert.Throws<ArgumentException>(() => Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
         }
 
-                [Test]
+        [Test]
         public void ConvertRangeThrowsOnValueGreater()
         {
             int rangeStart = 0;
@@ -54,6 +54,19 @@ namespace PKX_IconGen.Core.Tests.Data
             int value = 101;
 
             Assert.Throws<ArgumentException>(() => Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
+        }
+
+        [Test]
+        public void ConvertRangeFloatTest()
+        {
+            float rangeStart = 0;
+            float rangeEnd = 1;
+            float newRangeStart = 0;
+            float newRangeEnd = 100;
+            float value = 0.50f;
+            float expectedResult = 50;
+
+            Assert.AreEqual(expectedResult, Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
         }
     }
 }

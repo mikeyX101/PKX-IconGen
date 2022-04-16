@@ -24,13 +24,13 @@ using System.Text.Json.Serialization;
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
-    /// Wrapper for Vector3 so that it can be serialized with the JSONSerializer.
-    /// The original Vector3 struct can be accessed with the Vector property.
+    /// Wrapper for <see cref="Vector3"/> so that it can be serialized with the JSONSerializer.
+    /// The original <see cref="Vector3"/> struct can be accessed with the <see cref="Vector"/> property.
     /// </summary>
     public readonly struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
     {
         [JsonIgnore]
-        public Vector3 Vector { get; init; }
+        public readonly Vector3 Vector { get; init; }
 
         [JsonPropertyName("x")]
         public readonly float X => Vector.X;
@@ -49,12 +49,28 @@ namespace PKXIconGen.Core.Data.Blender
         [JsonConstructor]
         public JsonSerializableVector3(float x, float y, float z)
         {
-            Vector = new(x, y, z);
+            Vector = new((float)Math.Round(x, 3), (float)Math.Round(y, 3), (float)Math.Round(z, 3));
         }
 
         public bool Equals(JsonSerializableVector3 other)
         {
             return Vector.Equals(other.Vector);
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is JsonSerializableVector3 vector && Equals(vector);
+        }
+
+        public static bool operator ==(JsonSerializableVector3 left, JsonSerializableVector3 right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(JsonSerializableVector3 left, JsonSerializableVector3 right)
+        {
+            return !(left == right);
+        }
+
+        public readonly override int GetHashCode() => Vector.GetHashCode();
     }
 }

@@ -18,14 +18,15 @@
 #endregion
 
 using Avalonia.Controls;
-using PKXIconGen.AvaloniaUI.Interfaces;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.Services;
+using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,17 +38,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class MenuViewModel : ViewModelBase
     {
-        private IExportableDataProvider<PokemonRenderData> ExportProvider { get; }
+        private MainWindowViewModel MainWindow { get; }
 
-        public MenuViewModel(IExportableDataProvider<PokemonRenderData> exportProvider)
+        public MenuViewModel(MainWindowViewModel mainWindow)
         {
-            OnImport += data => { };
-
-            ExportProvider = exportProvider;
+            MainWindow = mainWindow;
 
             // Reactive
             IObservable<bool> exportEnabled = this.WhenAnyValue(
-                vm => vm.ExportProvider.ExportData,
+                vm => vm.MainWindow.SelectedPokemonRenderData,
                 data => data.Any());
 
             ExportCommand = ReactiveCommand.CreateFromTask(Export, exportEnabled);
@@ -73,7 +72,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 {
                     await foreach (PokemonRenderData? data in JsonIO.ImportAsyncEnumerable<PokemonRenderData>(paths))
                     {
-                        OnImport(data);
+                        OnImport?.Invoke(data);
                     }
                 }
                 catch (ArgumentNullException ex)
@@ -89,13 +88,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         public delegate void ImportDel(PokemonRenderData? data);
-        public event ImportDel OnImport;
+        public event ImportDel? OnImport;
 
         public ReactiveCommand<Unit, Unit> ExportCommand { get; }
         public async Task Export()
         {
-            IList<PokemonRenderData>? data = ExportProvider.ExportData?.Where(prd => prd != null).ToList();
-            if (data != null && data.Count == 1)
+            IEnumerable<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData;
+            if (data.Count() == 1)
             {
                 PokemonRenderData renderData = data.First();
 
@@ -109,7 +108,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     await JsonIO.ExportAsync(renderData, filePath);
                 }
             }
-            else if (data != null && data.Count > 1)
+            else if (data.Count() > 1)
             {
                 string? directory = await FileDialogHelper.GetFolder("Export Render Data");
                 if (directory != null)
@@ -128,7 +127,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             throw new NotImplementedException();
         }
 
-        public void SysDolphinAddon()
+        public void ToggleLogBlender()
+        {
+            MainWindow.LogBlender = !MainWindow.LogBlender;
+        }
+
+        public void ImporterAddon()
         {
             string url = "https://github.com/StarsMmd/Blender-Addon-Gamecube-Models";
 
@@ -155,14 +159,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             Assembly uiAssembly = Assembly.GetExecutingAssembly();
             Assembly avaloniaAssembly = Assembly.Load("Avalonia");
 
-            await DialogHelper.ShowDialog("/Assets/gen-icon-x512.png",
+            await DialogHelper.ShowDialog("/Assets/gen-icon-rounded-x512.png",
                 DialogButtons.Ok,
 @$"PKX-IconGen by mikeyX
 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"} 
 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}
 
+Importer: Commit {ImporterVersion.Commit[..7]} on the {ImporterVersion.Date:yyyy-MM-dd}
+
 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"} ",
-                "About");
+                height: 250, title: "About");
         }
 
         public void Quit()

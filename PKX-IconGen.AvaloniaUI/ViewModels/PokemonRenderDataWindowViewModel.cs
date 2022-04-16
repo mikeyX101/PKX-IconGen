@@ -23,8 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using AvaloniaColor = Avalonia.Media.Color;
-using AvaloniaColors = Avalonia.Media.Colors;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Data.Blender;
@@ -41,23 +39,21 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class PokemonRenderDataWindowViewModel : WindowViewModelBase
     {
-        #region General
-        public string Header
-        {
-            get
-            {
-                return $"Pokemon - {(string.IsNullOrWhiteSpace(Name) ? "???" : Name)}";
-            }
-        }
+        public string Title { get; init; }
 
+        #region General
         private string name;
         public string Name
         {
             get => name;
-            set {
-                this.RaiseAndSetIfChanged(ref name, value);
-                this.RaisePropertyChanged(nameof(Header));
-            }
+            set => this.RaiseAndSetIfChanged(ref name, value);
+        }
+
+        private string? outputName;
+        public string? OutputName
+        {
+            get => outputName;
+            set => this.RaiseAndSetIfChanged(ref outputName, value);
         }
 
         private string model;
@@ -69,17 +65,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Shiny
-        private AvaloniaColor? shinyColor;
-        public AvaloniaColor ShinyColor
+        
+        private Color? shinyColor;
+        public Color? ShinyColor
         {
-            get => shinyColor ?? AvaloniaColors.White;
+            get => shinyColor;
             set
             {
-                value = AvaloniaColor.FromArgb(255, value.R, value.G, value.B);
                 this.RaiseAndSetIfChanged(ref shinyColor, value);
             }
         }
-
         private string? shinyModel;
         public string ShinyModel
         {
@@ -120,7 +115,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             get => mainCamera;
             set => this.RaiseAndSetIfChanged(ref mainCamera, value);
         }
-        public IList<Light> MainLights { get; }
+        public IList<Light> MainLights { get; set; }
         private Camera? secondaryCamera;
         public Camera? SecondaryCamera {
             get => secondaryCamera;
@@ -142,7 +137,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public float? SCRotX => SecondaryCamera?.RotationEuler.X;
         public float? SCRotY => SecondaryCamera?.RotationEuler.X;
         public float? SCRotZ => SecondaryCamera?.RotationEuler.X;
-        public IList<Light> SecondaryLights { get; }
+        public IList<Light> SecondaryLights { get; set; }
+
+        private IList<string> removedObjects;
+        public IList<string> RemovedObjects
+        {
+            get => removedObjects;
+            set => this.RaiseAndSetIfChanged(ref removedObjects, value);
+        }
         #endregion
 
         public bool currentlyModifying = false;
@@ -160,65 +162,58 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref useFilter, value);
         }
 
-#pragma warning disable CS8618 // Nullable field
-        private PokemonRenderDataWindowViewModel()
-#pragma warning restore CS8618 // Nullable field
+#pragma warning disable CS8618
+        public PokemonRenderDataWindowViewModel(string title, IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData? renderData)
+#pragma warning restore CS8618
         {
+            Title = title;
+            useFilter = true;
+            BlenderRunnerInfo = blenderRunnerInfo;
+
+            PopulateViewModel(renderData ?? new());
+
             // Reactive
             IObservable<bool> canModifyOrSave = this.WhenAnyValue(
-                vm => vm.Name, vm => vm.Model,
-                (name, model) => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(model) && File.Exists(model)
+                vm => vm.Name, vm => vm.Model, vm => vm.ShinyModel,
+                (name, model, shinyModel) => 
+                    !string.IsNullOrWhiteSpace(name) && 
+                    !string.IsNullOrWhiteSpace(model) && 
+                    File.Exists(model) &&
+                    (   
+                        string.IsNullOrWhiteSpace(shinyModel) 
+                        ||
+                        File.Exists(shinyModel) 
+                    )
             );
 
             ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyOrSave);
             CancelCommand = ReactiveCommand.Create(Cancel);
             SaveCommand = ReactiveCommand.Create(Save, canModifyOrSave);
         }
-        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo) : this()
+
+        public void PopulateViewModel(PokemonRenderData renderData)
         {
-            useFilter = true;
-
-            name = "";
-            model = "";
-
-            shinyColor = null;
-            shinyModel = "";
-
-            normalAnimPose = 0;
-            normalAnimFrame = 0;
-
-            shinyAnimPose = 0;
-            shinyAnimFrame = 0;
-
-            MainCamera = Camera.GetDefaultCamera();
-            MainLights = new ObservableCollection<Light>();
-            SecondaryCamera = null;
-            SecondaryLights = new ObservableCollection<Light>();
-
-            BlenderRunnerInfo = blenderRunnerInfo;
-        }
-        public PokemonRenderDataWindowViewModel(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData renderData) : this()
-        {
-            useFilter = renderData.Shiny.Filter != null;
-
+            useFilter = renderData.Shiny.Filter.HasValue;
+            
             name = renderData.Name;
-            model = renderData.Model;
+            outputName = renderData.OutputName;
+            model = renderData.Render.Model;
 
-            shinyColor = AvaloniaColors.White; // Color.FromArgb(renderData.Shiny.Filter.);
-            shinyModel = renderData.Shiny.AltModel;
+            shinyColor = renderData.Shiny.Filter;
+            shinyModel = renderData.Shiny.Render.Model;
 
-            normalAnimPose = renderData.AnimationPose;
-            normalAnimFrame = renderData.AnimationFrame;
+            normalAnimPose = renderData.Render.AnimationPose;
+            normalAnimFrame = renderData.Render.AnimationFrame;
 
-            shinyAnimPose = renderData.Shiny.AnimationPose;
-            shinyAnimFrame = renderData.Shiny.AnimationFrame;
+            shinyAnimPose = renderData.Shiny.Render.AnimationPose;
+            shinyAnimFrame = renderData.Shiny.Render.AnimationFrame;
 
-            MainCamera = renderData.MainCamera;
-            MainLights = new ObservableCollection<Light>(renderData.MainLights);
-            SecondaryCamera = renderData.SecondaryCamera;
-            SecondaryLights = new ObservableCollection<Light>(renderData.SecondaryLights);
+            MainCamera = renderData.Render.MainCamera;
+            MainLights = new ObservableCollection<Light>(renderData.Render.MainLights);
+            SecondaryCamera = renderData.Render.SecondaryCamera;
+            SecondaryLights = new ObservableCollection<Light>(renderData.Render.SecondaryLights);
 
-            BlenderRunnerInfo = blenderRunnerInfo;
+            removedObjects = new ObservableCollection<string>(renderData.RemovedObjects);
         }
 
         public async void BrowseModelPath()
@@ -263,22 +258,23 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             DisposeCancelToken();
             modifyBlenderDataCancelTokenSource = new();
 
-            BlenderRunner blenderRunner = new(BlenderRunnerInfo, new string[]
-            {
-                "--enable-autoexec",
-                $"--python ${BlenderPythonScripts.SceneGenerator}"
-            });
+            IBlenderRunner blenderRunner = BlenderRunners.GetModifyDataRunner(BlenderRunnerInfo, GetPokemonRenderData());
             blenderRunner.OnFinish += EndModifyBlenderData;
 
             CurrentlyModifying = true;
             await blenderRunner.RunAsync(modifyBlenderDataCancelTokenSource.Token);
         }
-        public void EndModifyBlenderData()
+        public void EndModifyBlenderData(PokemonRenderData? newPrd)
         {
+            if (newPrd is not null)
+            {
+                PopulateViewModel(newPrd);
+            }
+
             DisposeCancelToken();
             CurrentlyModifying = false;
         }
-        private void DisposeCancelToken()
+        public void DisposeCancelToken()
         {
             // Make sure tokens are canceled
             if (modifyBlenderDataCancelTokenSource != null)
@@ -290,16 +286,24 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
+        #region Data
+        public PokemonRenderData GetPokemonRenderData() => 
+            new(
+                Name,
+                OutputName,
+                new RenderData(Model, NormalAnimPose, NormalAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray()),
+                UseFilter ? 
+                    new ShinyInfo(ShinyColor, new RenderData(Model, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())) : 
+                    new ShinyInfo(new RenderData(ShinyModel, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())),
+                RemovedObjects.ToArray()
+            );
+        #endregion
+
         #region Save
         public ReactiveCommand<Unit, object?> CancelCommand { get; }
         public static object? Cancel() => null;
         public ReactiveCommand<Unit, PokemonRenderData> SaveCommand { get; }
-        public PokemonRenderData Save() => 
-            new(
-                Name, Model, NormalAnimPose, NormalAnimFrame,
-                UseFilter ? new ShinyInfo(Color.FromRgbInt(ShinyColor.ToUint32()), ShinyAnimPose, ShinyAnimFrame) : new ShinyInfo(ShinyModel, ShinyAnimPose, ShinyAnimFrame),
-                MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray()
-            );
+        public PokemonRenderData Save() => GetPokemonRenderData();
         #endregion
     }
 }

@@ -26,15 +26,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         xmlns:color="clr-namespace:AvaloniaColorPicker;assembly=AvaloniaColorPicker"
-        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="850"
+        mc:Ignorable="d" d:DesignWidth="1300" d:DesignHeight="850"
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
+        x:DataType="vm:PokemonRenderDataWindowViewModel" x:CompileBindings="True"
         Icon="/Assets/gen-icon.ico"
-        Title="Add a new Pokemon..."
-
-  MinWidth="1000" Width="1200" MinHeight="850" Height="900" CanResize="True">
+        Title="{Binding Title, Mode=OneTime}"
+        
+        MinWidth="1300" Width="1300" MinHeight="850" Height="900" CanResize="True">
   <Window.Resources>
-    <conv:AvaloniaColorHexStringConverter x:Key="avaloniaColorHexStringConverter"/>
+    <conv:PKXColorHexStringConverter x:Key="pkxColorHexStringConverter"/>
     <conv:LightTypeMaterialDesignIconConverter x:Key="lightTypeMaterialDesignIconConverter"/>
+    <conv:EnumerableSemiColonStringConverter x:Key="enumerableSemiColonStringConverter"/>
+    <conv:PKXColorAvaloniaColorConverter x:Key="pkxColorAvaloniaColorConverter"/>
+    <conv:PKXHeaderConverter x:Key="pkxHeaderConverter"/>
   </Window.Resources>
   <Window.Styles>
     <Style Selector="TextBox[IsEnabled=false]">
@@ -63,21 +67,31 @@
 
     <Grid IsVisible="{Binding CurrentlyModifying}" Background="#dd000000" ZIndex="10" ColumnDefinitions="*" RowDefinitions="*,*">
       <TextBlock Text="Change data in Blender..." Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="0"/>
-      <Button Margin="8" Width="75" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding EndModifyBlenderData}" Grid.Column="0" Grid.Row="1">
+      <Button Margin="8" Width="75" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{ReflectionBinding EndModifyBlenderData}" Grid.Column="0" Grid.Row="1">
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Cancel</TextBlock>
       </Button>
       <TextBlock Text="(Cancelling will close Blender and all data in Blender will be lost.)" Margin="48" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="0" Grid.Row="1" />
     </Grid>
     
     <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="100,50,50,115,*,50" Margin="16">
-      <TextBlock Text="{Binding Header}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
+      <TextBlock Text="{Binding Name, Mode=OneWay, Converter={StaticResource pkxHeaderConverter}}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
+
+      <Grid ShowGridLines="False" ColumnDefinitions="100,*, 100,*" RowDefinitions="*" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
+        <TextBlock Text="Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
+        <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="0">
+          <ToolTip.Tip>
+            Name of the Pokemon
+          </ToolTip.Tip>
+        </TextBox>
+
+        <TextBlock Text="Output Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="2" Grid.Row="0" />
+        <TextBox Text="{Binding OutputName, Mode=TwoWay}" Height="32" Grid.Column="4" Grid.Row="0">
+          <ToolTip.Tip>
+            Output name for the rendered file. If unspecified, uses the Pokemon's name.
+          </ToolTip.Tip>
+        </TextBox>
+      </Grid>
       
-      <TextBlock Text="Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="1" />
-      <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="1">
-        <ToolTip.Tip>
-          Name of the Pokemon
-        </ToolTip.Tip>
-      </TextBox>
 
       <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="2" />
       <Grid Grid.Column="1" Grid.Row="2" ColumnDefinitions="*,30" RowDefinitions="*">
@@ -89,7 +103,7 @@
             Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
           </ToolTip.Tip>
         </TextBox>
-        <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
+        <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
         </Button>
       </Grid>
@@ -106,22 +120,28 @@
         
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
           <RadioButton IsChecked="{Binding UseFilter}" Content="Filter: " Name="ShinyFilter" GroupName="Shiny" />
-          <color:ColorButton IsEnabled="{Binding #ShinyFilter.IsChecked}" Color="{Binding ShinyColor, Mode=TwoWay}" />
+          <color:ColorButton IsEnabled="{Binding #ShinyFilter.IsChecked}" Color="{Binding ShinyColor, Mode=TwoWay, Converter={StaticResource pkxColorAvaloniaColorConverter}}" />
           <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding ShinyColor, Converter={StaticResource avaloniaColorHexStringConverter}}" Margin="8" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding ShinyColor, Mode=OneWay, Converter={StaticResource pkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
+          <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
+          <TextBlock Text="{ReflectionBinding ShinyColor.RValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
+          <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
+          <TextBlock Text="{ReflectionBinding ShinyColor.GValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
+          <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
+          <TextBlock Text="{ReflectionBinding ShinyColor.BValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
 
         <RadioButton IsChecked="{Binding !UseFilter}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" />
         <Grid Grid.Column="1" Grid.Row="2" ColumnDefinitions="*,30" RowDefinitions="*">
           <TextBox IsEnabled="{Binding #ShinyModel.IsChecked}" Text="{Binding ShinyModel, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" />
-          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseShinyModelPath}" Grid.Column="1" Grid.Row="0">
+          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseShinyModelPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
       </StackPanel>
 
       <Border CornerRadius="10" Background="#ff4f4f4f" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
-        <Grid ShowGridLines="False" ColumnDefinitions="100,50,*,50,*,50,*,50,*,50,*,50,*" RowDefinitions="20,*,*,20,*,*,20,*,*,50">
+        <Grid ShowGridLines="False" ColumnDefinitions="100,50,*,50,*,50,*,50,*,50,*,50,*,200" RowDefinitions="20,*,*,20,*,*,20,*,*,50">
           
           <TextBlock Text="Pose:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="1" />
           
@@ -158,7 +178,7 @@
           <TextBox Text="{Binding MainCamera.RotationEuler.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="6" Grid.Row="5" />
 
           <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="3" Grid.ColumnSpan="6" />
-          <ListBox Items="{Binding MainLights}"  Margin="8,0,8,0" Background="#ff202020" Grid.Column="7" Grid.Row="4" Grid.ColumnSpan="6" Grid.RowSpan="2">
+          <ListBox Items="{ReflectionBinding MainLights}"  Margin="8,0,8,0" Background="#ff202020" Grid.Column="7" Grid.Row="4" Grid.ColumnSpan="6" Grid.RowSpan="2">
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="6"/>
@@ -168,28 +188,28 @@
               <DataTemplate>
                 <Grid ShowGridLines="False" ColumnDefinitions="50,*,50,*,50,*" RowDefinitions="*,*,*">
                   <TextBlock Text="P X: " Classes="VectorLabel" Grid.Column="0" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="0" />
 
                   <TextBlock Text="P Y: " Classes="VectorLabel" Grid.Column="2" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="0" />
 
                   <TextBlock Text="P Z: " Classes="VectorLabel" Grid.Column="4" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="0" />
 
                   <TextBlock Text="R X: " Classes="VectorLabel" Grid.Column="0" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="1" />
 
                   <TextBlock Text="R Y: " Classes="VectorLabel" Grid.Column="2" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="1" />
 
                   <TextBlock Text="R Z: " Classes="VectorLabel" Grid.Column="4" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="1" />
 
                   <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="0" Grid.Row="2" />
-                  <TextBox Text="{Binding Strength, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="2" />
+                  <TextBox Text="{ReflectionBinding Strength, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="2" />
 
                   <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="3" Grid.Row="2" />
-                  <i:Icon Value="{Binding Type, Mode=OneWay, Converter={StaticResource lightTypeMaterialDesignIconConverter}}" Grid.Column="4" Grid.Row="2" />
+                  <i:Icon Value="{ReflectionBinding Type, Mode=OneWay, Converter={StaticResource lightTypeMaterialDesignIconConverter}}" Grid.Column="4" Grid.Row="2" />
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
@@ -199,20 +219,20 @@
           
           <TextBlock Text="Camera" HorizontalAlignment="Center" Margin="8" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="6" />
           <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="7" />
-          <TextBox Text="{Binding SCPosX, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="2" Grid.Row="7" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="2" Grid.Row="7" />
           <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="7" />
-          <TextBox Text="{Binding SCPosY, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="7" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="7" />
           <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="7" />
-          <TextBox Text="{Binding SCPosZ, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="7" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="7" />
           <TextBlock Text="Rot X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="8" />
-          <TextBox Text="{Binding SCRotX, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="2" Grid.Row="8" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.RotationEuler.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="2" Grid.Row="8" />
           <TextBlock Text="Rot Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="8" />
-          <TextBox Text="{Binding SCRotY, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="8" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.RotationEuler.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="8" />
           <TextBlock Text="Rot Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="8" />
-          <TextBox Text="{Binding SCRotZ, Mode=OneWay, TargetNullValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="8" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.RotationEuler.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="8" />
           
           <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="6" Grid.ColumnSpan="6" />
-          <ListBox Items="{Binding SecondaryLights}"  Margin="8,0,8,0" Background="#ff202020" Grid.Column="7" Grid.Row="7" Grid.ColumnSpan="6" Grid.RowSpan="2">
+          <ListBox Items="{ReflectionBinding SecondaryLights}"  Margin="8,0,8,0" Background="#ff202020" Grid.Column="7" Grid.Row="7" Grid.ColumnSpan="6" Grid.RowSpan="2">
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="6"/>
@@ -222,45 +242,55 @@
               <DataTemplate>
                 <Grid ShowGridLines="False" ColumnDefinitions="50,*,50,*,50,*" RowDefinitions="*,*,*">
                   <TextBlock Text="P X: " Classes="VectorLabel" Grid.Column="0" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="0" />
 
                   <TextBlock Text="P Y: " Classes="VectorLabel" Grid.Column="2" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="0" />
 
                   <TextBlock Text="P Z: " Classes="VectorLabel" Grid.Column="4" Grid.Row="0" />
-                  <TextBox Text="{Binding Position.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="0" />
+                  <TextBox Text="{ReflectionBinding Position.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="0" />
 
                   <TextBlock Text="R X: " Classes="VectorLabel" Grid.Column="0" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.X, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="1" />
 
                   <TextBlock Text="R Y: " Classes="VectorLabel" Grid.Column="2" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.Y, Mode=OneWay}" IsEnabled="False" Grid.Column="3" Grid.Row="1" />
 
                   <TextBlock Text="R Z: " Classes="VectorLabel" Grid.Column="4" Grid.Row="1" />
-                  <TextBox Text="{Binding RotationEuler.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="1" />
+                  <TextBox Text="{ReflectionBinding RotationEuler.Z, Mode=OneWay}" IsEnabled="False" Grid.Column="5" Grid.Row="1" />
 
                   <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="0" Grid.Row="2" />
-                  <TextBox Text="{Binding Strength, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="2" />
+                  <TextBox Text="{ReflectionBinding Strength, Mode=OneWay}" IsEnabled="False" Grid.Column="1" Grid.Row="2" />
 
                   <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="3" Grid.Row="2" />
-                  <i:Icon Value="{Binding Type, Mode=OneWay, Converter={StaticResource lightTypeMaterialDesignIconConverter}}" Grid.Column="4" Grid.Row="2" />
+                  <i:Icon Value="{ReflectionBinding Type, Mode=OneWay, Converter={StaticResource lightTypeMaterialDesignIconConverter}}" Grid.Column="4" Grid.Row="2" />
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
 
-          <Panel Grid.Column="1" Grid.Row="9" Grid.ColumnSpan="12">
-            <Button Margin="64,0,64,0" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding ModifyBlenderDataCommand}">
+          <TextBlock Text="Extras" HorizontalAlignment="Center" Margin="8" Grid.Column="13" Grid.Row="0" />
+          <ScrollViewer FontSize="10" Background="#ff202020" Margin="8,0,8,0" Grid.Column="13" Grid.Row="1" Grid.RowSpan="8">
+            <Grid ShowGridLines="True" ColumnDefinitions="*,*" RowDefinitions="50, *">
+              
+              <TextBlock Text="Removed Objs:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
+              <TextBox Text="{Binding RemovedObjects, Mode=OneWay, Converter={StaticResource enumerableSemiColonStringConverter}}" IsEnabled="False" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+            
+            </Grid>
+          </ScrollViewer>
+          
+          <Panel Grid.Column="1" Grid.Row="9" Grid.ColumnSpan="13">
+            <Button Margin="64,0,64,0" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ModifyBlenderDataCommand}">
               <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Modify in Blender</TextBlock>
             </Button>
           </Panel>
         </Grid>
       </Border>
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Grid.Column="1" Grid.Row="5">
-        <Button Margin="64,0,64,0" Width="60" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding SaveCommand}" Grid.Column="1" Grid.Row="0">
+        <Button Margin="64,0,64,0" Width="60" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding SaveCommand}" Grid.Column="1" Grid.Row="0">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Save</TextBlock>
         </Button>
-        <Button Margin="64,0,64,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding CancelCommand}" Grid.Column="1" Grid.Row="0">
+        <Button Margin="64,0,64,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding CancelCommand}" Grid.Column="1" Grid.Row="0">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Cancel</TextBlock>
         </Button>
       </StackPanel>

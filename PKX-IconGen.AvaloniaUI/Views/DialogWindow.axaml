@@ -26,7 +26,7 @@
         Title="{Binding DialogTitle}"
         Icon="/Assets/gen-icon.ico"
         
-        Width="500" Height="200" CanResize="False" >
+        Width="500" Height="{Binding Height}" CanResize="False" >
   <Window.Resources>
     <conv:BitmapAssetValueConverter x:Key="stringToBitmap"/>
   </Window.Resources>
@@ -58,7 +58,7 @@
 
       <StackPanel Name="IconPanel" Orientation="Horizontal">
         <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}"  />
-        <Image IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource stringToBitmap}}" Margin="32" />
+        <Image Width="75" Height="75" IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource stringToBitmap}}" Margin="32" />
         <TextBlock Margin="32" TextWrapping="Wrap" MaxWidth="350" Text="{Binding DialogText}" />
       </StackPanel>
     </DockPanel>

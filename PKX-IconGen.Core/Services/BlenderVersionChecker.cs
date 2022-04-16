@@ -19,19 +19,20 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 
 namespace PKXIconGen.Core.Services
 {
-    public class BlenderCheckResult
+    public readonly struct BlenderCheckResult
     {
-        public bool IsBlender { get; private set; }
+        public readonly bool IsBlender { get; init; }
 
-        public bool IsValidVersion { get; private set; }
+        public readonly bool IsValidVersion { get; init; }
 
-        public string Version { get; private set; }
+        public readonly float Version { get; init; }
 
-        public BlenderCheckResult(bool isBlender, bool isValidVersion, string version)
+        public BlenderCheckResult(bool isBlender, bool isValidVersion, float version)
         {
             IsBlender = isBlender;
             IsValidVersion = isValidVersion;
@@ -39,31 +40,31 @@ namespace PKXIconGen.Core.Services
         }
     }
 
-    public class BlenderVersionChecker
+    public static class BlenderVersionChecker
     {
-        private const string SupportedBlenderVersion = "2.83";
+        private const float MinimumBlenderVersion = 2.93f;
 
-        public BlenderCheckResult? CheckExecutable(string path)
+        public static BlenderCheckResult? CheckExecutable(string? path)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 if (!OperatingSystem.IsWindows())
                 {
                     // Ask with "blender.exe --version"?
-                    return new(true, true, "Unknown");
+                    return new(true, true, 0);
                 }
                 else if (File.Exists(path))
                 {
                     // Windows has metadata we can use.
                     FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(path);
                     string? name = fileVersionInfo.ProductName;
-                    string? version = fileVersionInfo.ProductVersion;
+                    float? version = fileVersionInfo.ProductVersion != null ? float.Parse(fileVersionInfo.ProductVersion, CultureInfo.InvariantCulture) : null;
 
                     if (name != null && version != null)
                     {
-                        bool isBlender = name.Contains("Blender");
-                        bool isValidVersion = version.Contains(SupportedBlenderVersion);
-                        return new(isBlender, isValidVersion, version);    
+                        bool isBlender = name.Equals("Blender");
+                        bool isValidVersion = version.Value >= MinimumBlenderVersion;
+                        return new(isBlender, isValidVersion, version.Value);    
                     }
                 }
             }

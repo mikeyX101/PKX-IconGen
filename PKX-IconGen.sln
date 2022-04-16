@@ -10,11 +10,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PKX-IconGen.AvaloniaUI", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PKX-IconGen.Core", "PKX-IconGen.Core\PKX-IconGen.Core.csproj", "{56B429C5-1BE6-4786-883E-5F58395F9CF5}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PKX-IconGen.Python.Addon", "PKX-IconGen.Python.Addon\PKX-IconGen.Python.Addon.pyproj", "{B8478039-9E85-4170-A7D0-4F52F847717E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PKX-IconGen.Core.Tests", "PKX-IconGen.Core.Tests\PKX-IconGen.Core.Tests.csproj", "{F4371E33-9F10-4315-90AE-D124CAA8F88A}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PKX-IconGen.Python.Core", "PKX-IconGen.Python.Core\PKX-IconGen.Python.Core.pyproj", "{BB7F4004-C72E-413F-B239-0DBC3822A179}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PKX-IconGen.Python", "PKX-IconGen.Python\PKX-IconGen.Python.pyproj", "{0B1B815E-52F7-4DDA-843E-3922C2CC7D19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,14 +28,12 @@ Global
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56B429C5-1BE6-4786-883E-5F58395F9CF5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B8478039-9E85-4170-A7D0-4F52F847717E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B8478039-9E85-4170-A7D0-4F52F847717E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4371E33-9F10-4315-90AE-D124CAA8F88A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F4371E33-9F10-4315-90AE-D124CAA8F88A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4371E33-9F10-4315-90AE-D124CAA8F88A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4371E33-9F10-4315-90AE-D124CAA8F88A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BB7F4004-C72E-413F-B239-0DBC3822A179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BB7F4004-C72E-413F-B239-0DBC3822A179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B1B815E-52F7-4DDA-843E-3922C2CC7D19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B1B815E-52F7-4DDA-843E-3922C2CC7D19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

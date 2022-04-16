@@ -49,8 +49,6 @@ namespace PKXIconGen.Core.Data.Blender
             Color = color;
         }
 
-        public static Light GetDefaultLight() => new();
-
         public bool Equals(Light other)
         {
             return 
@@ -60,5 +58,23 @@ namespace PKXIconGen.Core.Data.Blender
                 Strength == other.Strength &&
                 Color.Equals(other.Color);
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is Light light && Equals(light);
+        }
+
+        public static bool operator ==(Light left, Light right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Light left, Light right)
+        {
+            return !(left == right);
+        }
+
+        public readonly override int GetHashCode() => (Position, RotationEuler, Type, Strength, Color).GetHashCode();
+
+        public static Light GetDefaultLight() => new();
     }
 }

@@ -19,6 +19,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Data.Blender;
@@ -34,12 +35,17 @@ namespace PKXIconGen.Core.Services
 {
     public class Database : DbContext
     {
+        internal class DatabaseDesignTimeFactory : IDesignTimeDbContextFactory<Database>
+        {
+            public Database CreateDbContext(string[] args) => new();
+        }
+
         private static Database? instance;
         public static Database Instance
         {
             get
             {
-                if (instance == null)
+                if (instance == null || instance.Disposed)
                 {
                     instance = new Database();
                 }
@@ -57,6 +63,8 @@ namespace PKXIconGen.Core.Services
 
         private const uint SettingsId = 1;
 
+        private Database() : base() { }
+
         private static Exception IfNullTable(string propertyName)
         {
             Exception ex = new InvalidOperationException($"{propertyName} was somehow null?");
@@ -68,13 +76,11 @@ namespace PKXIconGen.Core.Services
         {
             if (!optionsBuilder.IsConfigured)
             {
-                string dataDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-                
-                if (!Directory.Exists(dataDirectoryPath))
+                if (!Directory.Exists(Paths.DataFolder))
                 {
-                    Directory.CreateDirectory(dataDirectoryPath);
+                    Directory.CreateDirectory(Paths.DataFolder);
                 }
-                optionsBuilder.UseSqlite($"Data Source={dataDirectoryPath}/DB.db;");
+                optionsBuilder.UseSqlite($"Data Source={Paths.DataFolder}/DB.db;");
             }
         }
 
@@ -84,39 +90,33 @@ namespace PKXIconGen.Core.Services
 
             JsonSerializerOptions? serializerOptions = null;
             EntityTypeBuilder<PokemonRenderData> pokemonRenderDataEntityBuilder = modelBuilder.Entity<PokemonRenderData>();
-            pokemonRenderDataEntityBuilder.Property(e => e.Shiny)
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions));
 
-            pokemonRenderDataEntityBuilder.Property(e => e.MainCamera)
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<Camera>(v, serializerOptions));
-            pokemonRenderDataEntityBuilder.Property(e => e.SecondaryCamera)
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<Camera>(v, serializerOptions));
+            pokemonRenderDataEntityBuilder.Property(nameof(PokemonRenderData.OutputName)).IsRequired(false);
 
-            pokemonRenderDataEntityBuilder.Property(e => e.MainLights)
+            pokemonRenderDataEntityBuilder.Property<RenderData>(nameof(PokemonRenderData.Render))
+                .HasDefaultValue(new RenderData())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<Light[]>(v, serializerOptions) ?? Array.Empty<Light>(),
-                    new ValueComparer<Light[]>(
-                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToArray()));
-            pokemonRenderDataEntityBuilder.Property(e => e.SecondaryLights)
+                    v => JsonSerializer.Deserialize<RenderData>(v, serializerOptions) ?? new RenderData());
+
+            pokemonRenderDataEntityBuilder.Property<ShinyInfo>(nameof(PokemonRenderData.Shiny))
+                .HasDefaultValue(new ShinyInfo())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<Light[]>(v, serializerOptions) ?? Array.Empty<Light>(),
-                    new ValueComparer<Light[]>(
+                    v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions) ?? new ShinyInfo());
+
+            pokemonRenderDataEntityBuilder.Property<string[]>(nameof(PokemonRenderData.RemovedObjects))
+                .HasDefaultValue(Array.Empty<string>())
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<string[]>(v, serializerOptions) ?? Array.Empty<string>(),
+                    new ValueComparer<string[]>(
                         (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                         c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                         c => c.ToArray()));
         }
 
-        public void RunMigrations()
+        internal void RunMigrations()
         {
             try
             {
@@ -129,6 +129,13 @@ namespace PKXIconGen.Core.Services
                 CoreManager.Logger.Error(e, "Database migration failed");
                 throw;
             }
+        }
+
+        public bool Disposed { get; private set; } = false;
+        public override void Dispose()
+        {
+            Disposed = true;
+            base.Dispose();
         }
 
         public DbSet<Settings>? SettingsTable { get; set; }
@@ -174,7 +181,48 @@ namespace PKXIconGen.Core.Services
             {
                 await PokemonRenderDataTable.AddAsync(pokemonRenderData);
 
-                return SaveChanges();
+                return await SaveChangesAsync();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+
+        public async Task<int> EditPokemonRenderDataAsync(uint id, PokemonRenderData newData)
+        {
+            if (PokemonRenderDataTable != null)
+            {
+                newData.ID = id;
+                PokemonRenderData? data = PokemonRenderDataTable.Find(id);
+                
+                if (data is not null)
+                {
+                    EntityEntry<PokemonRenderData> prd = Entry(data);
+                    prd.CurrentValues.SetValues(newData);
+                    prd.Property(prd => prd.ID).IsModified = false;
+                }
+
+                return await SaveChangesAsync();
+            }
+            else
+            {
+                throw IfNullTable(nameof(PokemonRenderDataTable));
+            }
+        }
+
+        private static List<PokemonRenderData>? BuiltInPRDs;
+        public List<PokemonRenderData> GetPokemonRenderDataBuiltIns()
+        {
+            if (BuiltInPRDs != null)
+            {
+                return BuiltInPRDs;
+            }
+
+            if (PokemonRenderDataTable != null)
+            {
+                BuiltInPRDs = PokemonRenderDataTable.Where(prd => prd.BuiltIn).ToList();
+                return BuiltInPRDs;
             }
             else
             {
@@ -200,7 +248,7 @@ namespace PKXIconGen.Core.Services
             if (PokemonRenderDataTable != null)
             {
                 PokemonRenderData pokemonRenderData = PokemonRenderDataTable
-                    .Where(prd => prd.InternalID == id && !prd.BuiltIn)
+                    .Where(prd => prd.ID == id && !prd.BuiltIn)
                     .First();
 
                 PokemonRenderDataTable.RemoveRange(pokemonRenderData);

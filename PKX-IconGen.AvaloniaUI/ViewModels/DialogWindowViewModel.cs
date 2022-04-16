@@ -25,21 +25,25 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class DialogWindowViewModel : WindowViewModelBase
     {
-        public string DialogText { get; set; }
-        public string DialogTitle { get; set; }
+        private const uint DefaultHeight = 200;
+        public uint Height { get; init; }
 
-        public string? Icon { get; set; }
-        public Brush? IconColor { get; set; }
-        public bool IconVisible { get; set; } = false;
+        public string DialogText { get; init; }
+        public string DialogTitle { get; init; }
+
+        public string? Icon { get; init; }
+        public Brush? IconColor { get; init; }
+        public bool IconVisible { get; init; } = false;
         
-        public string? ImageAsset { get; set; }
-        public bool ImageVisible { get; set; } = false;
+        public string? ImageAsset { get; init; }
+        public bool ImageVisible { get; init; } = false;
 
-        public bool OkButtonVisible { get; set; } = false;
-        public bool YesNoButtonsVisible { get; set; } = false;
+        public bool OkButtonVisible { get; init; } = false;
+        public bool YesNoButtonsVisible { get; init; } = false;
 
-        private DialogWindowViewModel(string text, string title, DialogButtons dialogButtons)
+        private DialogWindowViewModel(uint? height, string text, string title, DialogButtons dialogButtons)
         {
+            Height = height ?? DefaultHeight;
             DialogText = text;
             DialogTitle = title;
 
@@ -55,20 +59,22 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
 
-        public DialogWindowViewModel(DialogType dialogType, DialogButtons dialogButtons, string text, string? title = null)
+        public DialogWindowViewModel(DialogType dialogType, DialogButtons dialogButtons, string text, uint? height = DefaultHeight, string? title = null)
             : this(
+                  height,
                   text,
-                  title ?? GetTitle(dialogType),
+                  title ?? dialogType.GetTitle(),
                   dialogButtons
             )
         {
-            Icon = "fas " + GetFontAwesomeIcon(dialogType);
-            IconColor = new SolidColorBrush(Color.FromUInt32(GetIconColor(dialogType)));
+            Icon = dialogType.GetMaterialDesignIcon();
+            IconColor = new SolidColorBrush(Color.FromUInt32(dialogType.GetColor()));
             IconVisible = true;
         }
 
-        public DialogWindowViewModel(string asset, DialogButtons dialogButtons, string text, string title)
+        public DialogWindowViewModel(string asset, DialogButtons dialogButtons, string text, string title, uint? height = DefaultHeight)
             : this(
+                  height,
                   text,
                   title,
                   dialogButtons
@@ -76,36 +82,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             ImageAsset = asset;
             ImageVisible = true;
-        }
-
-        private static string GetFontAwesomeIcon(DialogType dialogType)
-        {
-            return dialogType switch
-            {
-                DialogType.Warning      => "mdi-alert",
-                DialogType.Error        => "mdi-close-circle",
-                DialogType.Text or _    => ""
-            };
-        }
-
-        private static uint GetIconColor(DialogType dialogType)
-        {
-            return dialogType switch
-            {
-                DialogType.Warning      => 0xffffc107,
-                DialogType.Error        => 0xffff0000,
-                DialogType.Text or _    => 0xffffffff
-            };
-        }
-
-        private static string GetTitle(DialogType dialogType)
-        {
-            return dialogType switch
-            {
-                DialogType.Warning      => "Warning",
-                DialogType.Error        => "Error",
-                DialogType.Text or _    => ""
-            };
         }
     }
 }

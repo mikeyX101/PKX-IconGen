@@ -28,13 +28,20 @@ namespace PKXIconGen.Core.Data.Blender
     public readonly struct Color : IJsonSerializable, IEquatable<Color>
     {
         [JsonPropertyName("r")]
-        public float Red { get; init; }
+        public readonly float Red { get; init; }
         [JsonPropertyName("g")]
-        public float Green { get; init; }
+        public readonly float Green { get; init; }
         [JsonPropertyName("b")]
-        public float Blue { get; init; }
+        public readonly float Blue { get; init; }
 
-        // Float should be between 0 and 1. Otherwise they will be clamped to that range.
+        [JsonIgnore]
+        public readonly byte RValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Red));
+        [JsonIgnore]
+        public readonly byte GValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Green));
+        [JsonIgnore]
+        public readonly byte BValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Blue));
+
+        // Floats should be between 0 and 1. Otherwise they will be clamped to that range.
         public Color(float red, float green, float blue)
         {
             Red = Math.Clamp(red, 0, 1);
@@ -48,6 +55,31 @@ namespace PKXIconGen.Core.Data.Blender
                 Red == other.Red &&
                 Green == other.Green &&
                 Blue == other.Blue;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is Color color && Equals(color);
+        }
+
+        public static bool operator ==(Color left, Color right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Color left, Color right)
+        {
+            return !(left == right);
+        }
+
+        public readonly override int GetHashCode() => (Red, Green, Blue).GetHashCode();
+
+        public uint ToUInt()
+        {
+            byte red = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Red));
+            byte green = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Green));
+            byte blue = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Blue));
+
+            return (uint)(0xFF << 24 | red << 16 | green << 8 | blue);
         }
 
         public static Color FromRgbInt(uint rgb)

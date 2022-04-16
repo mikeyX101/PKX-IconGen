@@ -1,4 +1,23 @@
-﻿using NUnit.Framework;
+﻿#region License
+/*  PKX-IconGen.Core.Tests - PKX-IconGen Core Unit Tests
+    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+*/
+#endregion
+
+using NUnit.Framework;
 using PKXIconGen.Core.Data.Blender;
 using System;
 
@@ -86,6 +105,24 @@ namespace PKX_IconGen.Core.Tests.Data
             ColorShouldEqualValues(ref teal, 0.40000004f, 1, 0.8000001f, nameof(teal));
             Color tealAlpha = Color.FromRgbInt(0xFF66FFCC);
             ColorShouldEqualValues(ref tealAlpha, 0.40000004f, 1, 0.8000001f, nameof(tealAlpha));
+        }
+
+        [Test, Order(4)]
+        public void ColorToUInt()
+        {
+            Color white = new(0, 0, 0);
+            Assert.AreEqual(0xFF000000, white.ToUInt());
+            Color black = new(1, 1, 1);
+            Assert.AreEqual(0xFFFFFFFF, black.ToUInt());
+            Color red = new(1, 0, 0);
+            Assert.AreEqual(0xFFFF0000, red.ToUInt());
+            Color green = new(0, 1, 0);
+            Assert.AreEqual(0xFF00FF00, green.ToUInt());
+            Color blue = new(0, 0, 1);
+            Assert.AreEqual(0xFF0000FF, blue.ToUInt());
+
+            Color teal = new(0.40000004f, 1, 0.8000001f);
+            Assert.AreEqual(0xFF66FFCC, teal.ToUInt());
         }
     }
 }
