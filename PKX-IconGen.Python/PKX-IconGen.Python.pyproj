@@ -37,6 +37,7 @@
     <Compile Include="importer\import_hsd.py" />
     <Compile Include="importer\util.py" />
     <Compile Include="importer\__init__.py" />
+    <Compile Include="json_set_encoder.py" />
     <Compile Include="modify_data.py" />
     <Compile Include="scene_generator.py" />
   </ItemGroup>
@@ -46,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="importer\.gitignore" />
+    <Content Include="importer\changes.txt" />
     <Content Include="importer\github.txt" />
     <Content Include="importer\LICENSE" />
     <Content Include="importer\README.md" />

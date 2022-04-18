@@ -39,3 +39,10 @@ class Camera(object):
             Vector.parse_obj(obj.pos),
             Vector.parse_obj(obj.rot),
             obj.fov)
+
+    @staticmethod
+    def default() -> 'Camera':
+        return Camera(
+            Vector(14, -13.5, 5.5), 
+            Vector(86.8, 0, 54), 
+            40)

@@ -49,7 +49,7 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("secondary_lights")]
         public Light[] SecondaryLights { get; init; }
 
-        public RenderData() : this("", 0, 0, Camera.GetDefaultCamera(), Array.Empty<Light>(), Camera.GetDefaultCamera(), Array.Empty<Light>()) {
+        public RenderData() : this("", 0, 0, Camera.GetDefaultCamera(), Array.Empty<Light>(), null, Array.Empty<Light>()) {
 
         }
 

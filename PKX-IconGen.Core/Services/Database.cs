@@ -105,15 +105,15 @@ namespace PKXIconGen.Core.Services
                     v => JsonSerializer.Serialize(v, serializerOptions),
                     v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions) ?? new ShinyInfo());
 
-            pokemonRenderDataEntityBuilder.Property<string[]>(nameof(PokemonRenderData.RemovedObjects))
-                .HasDefaultValue(Array.Empty<string>())
+            pokemonRenderDataEntityBuilder.Property<HashSet<string>>(nameof(PokemonRenderData.RemovedObjects))
+                .HasDefaultValue(new HashSet<string>())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<string[]>(v, serializerOptions) ?? Array.Empty<string>(),
-                    new ValueComparer<string[]>(
+                    v => JsonSerializer.Deserialize<HashSet<string>>(v, serializerOptions) ?? new HashSet<string>(),
+                    new ValueComparer<HashSet<string>>(
                         (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                         c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToArray()));
+                        c => c.ToHashSet()));
         }
 
         internal void RunMigrations()

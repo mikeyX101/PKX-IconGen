@@ -17,6 +17,7 @@
 -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:data="using:PKXIconGen.Core.Data"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
         xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
@@ -25,8 +26,11 @@
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         xmlns:ai="using:Avalonia.Xaml.Interactivity"
         xmlns:aic="using:Avalonia.Xaml.Interactions.Core"
+        
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="780"
         x:Class="PKXIconGen.AvaloniaUI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel" x:CompileBindings="True"
+        
         Icon="/Assets/gen-icon.ico"
         Title="PKX-IconGen"
         
@@ -79,7 +83,7 @@ On MacOS: The default path is included, if any aliases have been made for Blende
 On Linux: Path to the Blender executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_293".
             </ToolTip.Tip>
           </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseBlenderPath}" Grid.Column="1" Grid.Row="0">
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseBlenderPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
@@ -108,7 +112,7 @@ USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
 Output path for the generated icons.
             </ToolTip.Tip>
           </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseOutputPath}" Grid.Column="1" Grid.Row="0">
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseOutputPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
@@ -119,7 +123,7 @@ Output path for the generated icons.
           <ComboBox.ItemTemplate>
             <DataTemplate>
               <Panel VerticalAlignment="Center" Height="30">
-                <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}" />
+                <TextBlock VerticalAlignment="Center" Text="{ReflectionBinding DisplayName}" />
               </Panel>
             </DataTemplate>
           </ComboBox.ItemTemplate>
@@ -151,10 +155,10 @@ Use the others for texture packs or higher resolution needs.
         <!--Pokemon Buttons-->
         <Grid ShowGridLines="False" ColumnDefinitions="0.75*,1.15*,0.75*,0.90*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
           <Panel HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0">
-            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Add New" Command="{Binding NewRenderDataCommand}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Add New" Command="{ReflectionBinding NewRenderDataCommand}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
-            <Button Content="Delete Selected" Command="{Binding DeleteSelectedRenderData}">
+            <Button Content="Delete Selected" Command="{ReflectionBinding DeleteSelectedRenderData}">
               <Button.IsEnabled>
                   <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="!CurrentlyRendering"/>
@@ -164,10 +168,10 @@ Use the others for texture packs or higher resolution needs.
             </Button>
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0">
-            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Select All" Command="{Binding SelectAllRenderData}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Select All" Command="{ReflectionBinding SelectAllRenderData}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="3" Grid.Row="0">
-            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Unselect All" Command="{Binding DeselectAllRenderData}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Unselect All" Command="{ReflectionBinding DeselectAllRenderData}" />
           </Panel>
         </Grid>
         <!--Pokemon-->
@@ -178,20 +182,20 @@ Use the others for texture packs or higher resolution needs.
           <TextBlock Text="Model" Grid.Column="1" />
           <TextBlock Text="Built In" HorizontalAlignment="Center" Grid.Column="2" />
         </Grid>
-        <ListBox Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
+        <ListBox Items="{ReflectionBinding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="6"/>
             </Style>
           </ListBox.Styles>
           <ListBox.ItemTemplate>
-              <DataTemplate>
+              <DataTemplate DataType="{x:Type data:PokemonRenderData}}">
                 <Grid ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource pathStringFileNameStringConverter}}" Grid.Column="1" />
                   <i:Icon IsVisible="{Binding BuiltIn}" VerticalAlignment="Center" FontSize="16" Value="mdi-check" Grid.Column="2" />
                   <Panel HorizontalAlignment="Right" Grid.Column="3">
-                    <Button IsVisible="{Binding !BuiltIn}" HorizontalAlignment="Center" Command="{Binding $parent[ListBox].DataContext.EditRenderDataCommand}" CommandParameter="{Binding .}">
+                    <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand}" CommandParameter="{Binding .}">
                       <i:Icon FontSize="16" Value="mdi-pencil" />
                     </Button>
                   </Panel>
@@ -214,7 +218,7 @@ Filter with "pkx"
 Enter "export"
             </ToolTip.Tip>
           </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
@@ -232,11 +236,11 @@ Enter "export"
             <TextBlock Text="{Binding DisplayPokemonRendered}" Width="50" TextAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" />
           </Grid>
 
-          <ProgressBar Height="20" Margin="5" Grid.Column="1" Grid.Row="0" />
-          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{Binding RenderCommand}" Grid.Column="2" Grid.Row="0">
+          <ProgressBar Minimum="0" Maximum="{Binding NbOfRenders}" Value="{Binding NbOfPokemonRendered}" Height="20" Margin="5" Grid.Column="1" Grid.Row="0" />
+          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{ReflectionBinding RenderCommand}" Grid.Column="2" Grid.Row="0">
             <TextBlock TextAlignment="Center">Render</TextBlock>
           </Button>
-          <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{Binding EndRender}" Grid.Column="2" Grid.Row="0">
+          <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{ReflectionBinding EndRender}" Grid.Column="2" Grid.Row="0">
             <TextBlock TextAlignment="Center">Cancel</TextBlock>
           </Button>
         </Grid>

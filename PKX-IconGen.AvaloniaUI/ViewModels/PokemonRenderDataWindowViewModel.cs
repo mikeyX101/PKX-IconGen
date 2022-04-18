@@ -34,11 +34,14 @@ using PKXIconGen.Core.Services;
 using System.Threading;
 using System.Numerics;
 using PKXIconGen.Core;
+using System.Reactive.Disposables;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class PokemonRenderDataWindowViewModel : WindowViewModelBase
     {
+
+
         public string Title { get; init; }
 
         #region General
@@ -119,24 +122,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private Camera? secondaryCamera;
         public Camera? SecondaryCamera {
             get => secondaryCamera;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref secondaryCamera, value);
-                //TODO This is discusting, must be a better way to do this. Although this is not going to happen too often at least.
-                this.RaisePropertyChanged(nameof(SCPosX));
-                this.RaisePropertyChanged(nameof(SCPosY));
-                this.RaisePropertyChanged(nameof(SCPosZ));
-                this.RaisePropertyChanged(nameof(SCRotX));
-                this.RaisePropertyChanged(nameof(SCRotY));
-                this.RaisePropertyChanged(nameof(SCRotZ));
-            }
+            set => this.RaiseAndSetIfChanged(ref secondaryCamera, value);
         }
-        public float? SCPosX => SecondaryCamera?.Position.X;
-        public float? SCPosY => SecondaryCamera?.Position.X;
-        public float? SCPosZ => SecondaryCamera?.Position.X;
-        public float? SCRotX => SecondaryCamera?.RotationEuler.X;
-        public float? SCRotY => SecondaryCamera?.RotationEuler.X;
-        public float? SCRotZ => SecondaryCamera?.RotationEuler.X;
         public IList<Light> SecondaryLights { get; set; }
 
         private IList<string> removedObjects;
@@ -295,7 +282,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 UseFilter ? 
                     new ShinyInfo(ShinyColor, new RenderData(Model, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())) : 
                     new ShinyInfo(new RenderData(ShinyModel, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())),
-                RemovedObjects.ToArray()
+                RemovedObjects.ToHashSet()
             );
         #endregion
 

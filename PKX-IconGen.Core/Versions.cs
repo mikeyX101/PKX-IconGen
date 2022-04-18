@@ -21,9 +21,11 @@ using System;
 
 namespace PKXIconGen.Core
 {
-    public static class ImporterVersion
+    public static class Versions
     {
-        public static string Commit => "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
-        public static DateTime Date => new(2021, 08, 27);
+        public static string ImporterCommit => "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
+        public static DateTime ImporterDate => new(2021, 08, 27);
+
+        public static string AddonVersion => "0.1.0.0";
     }
 }

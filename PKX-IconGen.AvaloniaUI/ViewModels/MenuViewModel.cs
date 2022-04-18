@@ -18,6 +18,7 @@
 #endregion
 
 using Avalonia.Controls;
+using DynamicData.Binding;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core;
@@ -44,10 +45,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             MainWindow = mainWindow;
 
-            // Reactive
+            // Reactive 
             IObservable<bool> exportEnabled = this.WhenAnyValue(
-                vm => vm.MainWindow.SelectedPokemonRenderData,
-                data => data.Any());
+                vm => vm.MainWindow.NbOfRenders,
+                nbOfRenders => nbOfRenders > 0);
 
             ExportCommand = ReactiveCommand.CreateFromTask(Export, exportEnabled);
             ExportBlenderCommand = ReactiveCommand.CreateFromTask(ExportBlender, exportEnabled);
@@ -102,7 +103,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     "json"
                 };
                 List<FileDialogFilter>? filters = new(new List<FileDialogFilter> { new FileDialogFilter { Extensions = extensions, Name = "PKX-IconGen Json" } });
-                string? filePath = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Name.ToLower() + ".json");
+                string? filePath = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.OutputName ?? renderData.Name + ".json");
                 if (filePath != null)
                 {
                     await JsonIO.ExportAsync(renderData, filePath);
@@ -115,7 +116,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 {
                     foreach (PokemonRenderData prd in data)
                     {
-                        await JsonIO.ExportAsync(prd, Path.Combine(directory, prd.Name + ".json"));
+                        await JsonIO.ExportAsync(prd, Path.Combine(directory, prd.OutputName ?? prd.Name + ".json"));
                     }
                 }
             }
@@ -164,8 +165,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 @$"PKX-IconGen by mikeyX
 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"} 
 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}
-
-Importer: Commit {ImporterVersion.Commit[..7]} on the {ImporterVersion.Date:yyyy-MM-dd}
+Blender Addon: {Versions.AddonVersion}
+Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
 
 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"} ",
                 height: 250, title: "About");

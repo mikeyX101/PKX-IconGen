@@ -69,7 +69,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
                 return null;
             }
 
-            if (value is string s && targetType.IsAssignableFrom(typeof(Array)))
+            if (value is string s && targetType.IsAssignableFrom(typeof(IEnumerable)))
             {
                 return s.Split(';', options: StringSplitOptions.None);
             }

@@ -25,7 +25,7 @@ class ShinyInfo(object):
     def __init__(self, filter: Optional[Color], render: RenderData):
 
         self.filter = filter
-        self.render = render;
+        self.render = render
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['ShinyInfo']:

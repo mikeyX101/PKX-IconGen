@@ -37,7 +37,7 @@ namespace PKXIconGen.Core.Data
 
         public ShinyInfo() : this(new RenderData())
         {
-            Filter = null;
+            Filter = Color.GetDefaultColor();
         }
 
         public ShinyInfo(Color? color, RenderData renderData)

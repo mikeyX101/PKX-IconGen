@@ -21,6 +21,10 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
 
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -48,7 +52,7 @@
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.13.3" />
     <PackageReference Include="AvaloniaColorPicker" Version="1.3.2" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.3">
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -70,7 +70,7 @@ namespace PKXIconGen.Core.Services
 
         internal BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd, string[] arguments, string? input = null)
         {
-            TemplateName = prd.Name;
+            TemplateName = prd.OutputName ?? prd.Name;
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
             Arguments = arguments;

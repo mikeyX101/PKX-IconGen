@@ -32,7 +32,7 @@ def generate_scene(data: PokemonRenderData):
     camera = objs["PKXIconGen_Camera"]
     camera.location = main_render.main_camera.pos.to_mathutils_vector()
     camera.rotation_euler = main_render.main_camera.rot.to_mathutils_euler()
-
+    
     camera.data.lens_unit = "FOV"
     camera.data.angle = radians(main_render.main_camera.fov)
 

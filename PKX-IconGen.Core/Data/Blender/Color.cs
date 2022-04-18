@@ -106,5 +106,7 @@ namespace PKXIconGen.Core.Data.Blender
 
             return new Color(rangeR, rangeG, rangeB);
         }
+
+        public static Color GetDefaultColor() => new(255, 255, 255);
     }
 }

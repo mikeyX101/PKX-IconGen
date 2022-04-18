@@ -24,6 +24,7 @@ using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace PKXIconGen.Core.Data
 {
@@ -37,7 +38,7 @@ namespace PKXIconGen.Core.Data
         public string Name { get; internal set; }
         [Column, JsonPropertyName("output_name")]
         public string? OutputName { get; internal set; }
-        [Column, JsonPropertyName("builtIn")]
+        [Column, JsonIgnore]
         public bool BuiltIn { get; internal set; }
 
         [Column, JsonPropertyName("render")]
@@ -46,7 +47,7 @@ namespace PKXIconGen.Core.Data
         public ShinyInfo Shiny { get; internal set; }
 
         [Column, JsonPropertyName("removed_objects")]
-        public string[] RemovedObjects { get; internal set; }
+        public HashSet<string> RemovedObjects { get; internal set; }
 
         public PokemonRenderData()
         {
@@ -57,10 +58,10 @@ namespace PKXIconGen.Core.Data
             Render = new();
             Shiny = new();
 
-            RemovedObjects = Array.Empty<string>();
+            RemovedObjects = new();
         }
         
-        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny, string[] removedObjects)
+        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny, HashSet<string> removedObjects)
         {
             if (name.Length == 0)
             {
@@ -78,7 +79,7 @@ namespace PKXIconGen.Core.Data
         }
 
         [JsonConstructor]
-        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny, string[] removedObjects) 
+        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny, HashSet<string> removedObjects) 
             : this(name, outputName, false, render, shiny, removedObjects)
         {
 

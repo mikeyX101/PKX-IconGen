@@ -48,11 +48,12 @@ image_count = 0
 anim_max_frame = 1000
 
 def error_output(string):
-    print('Error: ' + string)
+    #print('Error: ' + string)
     return {'CANCELLED'}
 
 def notice_output(string):
-    print(string)
+    pass
+    #print(string)
 
 def load_hsd(filepath, context = None, offset = 0, scene_name = 'scene_data', data_type = 'SCENE', import_animation = True):
     data = None
@@ -66,7 +67,7 @@ def load_hsd(filepath, context = None, offset = 0, scene_name = 'scene_data', da
         error_output("Couldn't read file")
         return
 
-    print ("Read File " +  filepath)
+    #print ("Read File " +  filepath)
     hsd.HSD_reset_created_structs()
     if len(data) - offset < hsd.HSD_get_struct_size('HSD_ArchiveHeader'):
         error_output("Invalid data: Smaller than Header size")
@@ -95,8 +96,8 @@ def load_hsd(filepath, context = None, offset = 0, scene_name = 'scene_data', da
     extern_size = header.nb_extern * hsd.HSD_get_struct_size('HSD_ArchiveExternInfo')
     header_size = 32
     data_size = header.data_size + header_size + reloc_size + public_size + extern_size
-    print(header.file_size)
-    print(data_size)
+    #print(header.file_size)
+    #print(data_size)
     if not (header.file_size <= len(header_data) and  data_size <= header.file_size):
         return error_output("Invalid data: file_size greater than read data")
 
@@ -154,7 +155,7 @@ def load_scene(data, scene_info, rel, filepath, import_animation = True):
             n_m = len(modelset.matanimjoints) if modelset.matanimjoints else 0
             n_s = len(modelset.shapeanimjoints) if modelset.shapeanimjoints else 0
 
-            print('ANIMS: %d %d %d' % (n_a, n_m, n_s))
+            #print('ANIMS: %d %d %d' % (n_a, n_m, n_s))
 
             anim_count = max(n_a, n_m, n_s)
 
@@ -215,22 +216,28 @@ def trav_animjoints_total(joint, animjoint, action, pose):
     if joint.robj:
         robj = joint.robj
         if robj:
-            print(joint.temp_name + ':')
+            #print(joint.temp_name + ':')
             if joint.flags & hsd.JOBJ_TYPE_MASK == hsd.JOBJ_JOINT1:
-                print('JOBJ_JOINT1')
+                pass
+                #print('JOBJ_JOINT1')
             if joint.flags & hsd.JOBJ_TYPE_MASK == hsd.JOBJ_JOINT2:
-                print('JOBJ_JOINT2')
+                pass
+                #print('JOBJ_JOINT2')
             if joint.flags & hsd.JOBJ_TYPE_MASK == hsd.JOBJ_EFFECTOR:
-                print('JOBJ_EFFECTOR')
+                pass
+                #print('JOBJ_EFFECTOR')
         while robj:
-            print('ROBJ: %.8X TYPE: %.8X SUBTYPE: %.8X' % (robj.id, robj.flags & 0x70000000, robj.flags & 0x0FFFFFFF))
+            #print('ROBJ: %.8X TYPE: %.8X SUBTYPE: %.8X' % (robj.id, robj.flags & 0x70000000, robj.flags & 0x0FFFFFFF))
             if (robj.flags & 0x70000000 == 0x10000000):
-                print(' JointRef: ' + robj.u.temp_name)
+                pass
+                #print(' JointRef: ' + robj.u.temp_name)
             elif (robj.flags & 0x70000000 == 0x40000000):
-                print(' VAL0: %f VAL1: %f' % (robj.val0, robj.val1))
+                pass
+                #print(' VAL0: %f VAL1: %f' % (robj.val0, robj.val1))
             robj = robj.next
         if animjoint.robjanim:
-            print('ROBJANIM')
+            pass
+            #print('ROBJANIM')
 
     if animjoint.aobjdesc:
         add_jointanim_to_armature_total(joint, animjoint.aobjdesc, action, pose)
@@ -268,10 +275,10 @@ def add_jointanim_to_armature_total(joint, aobjdesc, action, pose):
     #invmtx = invmtx * Matrix.Translation(Vector((0.0,1.0,0.0)))
     transform_list = [0] * (TRANSFORMCOUNT)
     while fobj:
-        #print(hsd_a_j_dict[fobj.type])
+        ##print(hsd_a_j_dict[fobj.type])
         if fobj.type == hsd.HSD_A_J_PATH:
             pass #TODO: implement paths
-            print('HSD_A_J_PATH')
+            #print('HSD_A_J_PATH')
         elif fobj.type >= hsd.HSD_A_J_ROTX and fobj.type <= hsd.HSD_A_J_SCAZ:
             data_type, component = t_jointanim_type_dict[fobj.type]
             data_path = 'pose.bones["' + joint.temp_name + '"]' + '.' + data_type
@@ -286,7 +293,8 @@ def add_jointanim_to_armature_total(joint, aobjdesc, action, pose):
             if aobjdesc.flags & hsd.AOBJ_ANIM_LOOP:
                 curve.modifiers.new('CYCLES')
         else:
-            print('Unknown A Type: %.2X JOINT: %s' % (fobj.type, joint.temp_name))
+            pass
+            #print('Unknown A Type: %.2X JOINT: %s' % (fobj.type, joint.temp_name))
 
         fobj = fobj.next
 
@@ -374,7 +382,8 @@ def add_bone_animation(armature, root_joint, animation, action):
 
 def trav_animjoints(joint, animjoint, action):
     if animjoint.flags:
-        print('Joint: %s\t AnimJointFlags: %.8X' % (joint.temp_name, animjoint.flags))
+        pass
+        #print('Joint: %s\t AnimJointFlags: %.8X' % (joint.temp_name, animjoint.flags))
     if animjoint.aobjdesc:
         add_jointanim_to_armature(joint, animjoint.aobjdesc, action)
     if animjoint.child:
@@ -388,15 +397,17 @@ def add_jointanim_to_armature(joint, aobjdesc, action):
     #    return
     printd = (joint.temp_name == 'Bone57')
     if printd:
-        print(action.name)
-        print('AOBJ FLAGS: %.8X' % aobjdesc.flags)
+        pass
+        #print(action.name)
+        #print('AOBJ FLAGS: %.8X' % aobjdesc.flags)
     fobj = aobjdesc.fobjdesc
     transform_list = [0] * 10
     while fobj:
         #print(hsd_a_j_dict[fobj.type])
         if fobj.type == hsd.HSD_A_J_PATH:
             #TODO: implement paths
-            print('HSD_A_J_PATH')
+            pass
+            #print('HSD_A_J_PATH')
         elif (fobj.type >= hsd.HSD_A_J_ROTX and fobj.type <= hsd.HSD_A_J_SCAZ):
             data_type, component = jointanim_type_dict[fobj.type]
             data_path = 'pose.bones["' + joint.temp_name + '"]' + '.' + data_type
@@ -427,14 +438,15 @@ def add_jointanim_to_armature(joint, aobjdesc, action):
                 curve_scale = 1 / scale[2]
 
             if printd:
-                print(hsd_a_j_dict[fobj.type])
+                pass
+                #print(hsd_a_j_dict[fobj.type])
             read_fobjdesc(fobj, curve, curve_bias, curve_scale, printd)
             #read_fobjdesc(fobj, curve, 0, 1, printd)
 
             if aobjdesc.flags & hsd.AOBJ_ANIM_LOOP:
                 curve.modifiers.new('CYCLES')
         else:
-            print('Unknown A Type: %.2X' % fobj.type)
+            #print('Unknown A Type: %.2X' % fobj.type)
             if fobj.type in hsd_a_j_dict:
                 data_type = hsd_a_j_dict[fobj.type]
             else:
@@ -518,25 +530,29 @@ def read_fobjdesc(fobjdesc, curve, bias, scale, printd):
     cur_pos = 0
     ad = fobjdesc.ad
     if printd:
-        print('DATA: %s' % ''.join(['%.2X' % b for b in ad[:fobjdesc.length]]))
+        pass
+        #print('DATA: %s' % ''.join(['%.2X' % b for b in ad[:fobjdesc.length]]))
 
     value_type = (fobjdesc.frac_value & hsd.HSD_A_FRAC_TYPE_MASK)
     frac_value = (fobjdesc.frac_value & hsd.HSD_A_FRAC_MASK)
     slope_type = (fobjdesc.frac_slope & hsd.HSD_A_FRAC_TYPE_MASK)
     frac_slope = (fobjdesc.frac_slope & hsd.HSD_A_FRAC_MASK)
     if printa:
-        print('Value: %s %d' % (frac_type_dict[value_type], frac_value))
-        print('Slope: %s %d' % (frac_type_dict[slope_type], frac_slope))
+        pass
+        #print('Value: %s %d' % (frac_type_dict[value_type], frac_value))
+        #print('Slope: %s %d' % (frac_type_dict[slope_type], frac_slope))
 
     keyframes = []
     slopes = []
 
     cur_slope = 0
     if printd:
-        print('LENGTH %d' % fobjdesc.length)
+        pass
+        #print('LENGTH %d' % fobjdesc.length)
     while cur_pos < fobjdesc.length:
         if printd:
-            print('CURPOS %d' % cur_pos)
+            pass
+            #print('CURPOS %d' % cur_pos)
         opcode = ad[cur_pos] & hsd.HSD_A_OP_MASK
         node_count = (ad[cur_pos] & hsd.HSD_A_PACK0_MASK) >> hsd.HSD_A_PACK0_SHIFT
         shift = 0
@@ -555,13 +571,15 @@ def read_fobjdesc(fobjdesc, curve, bias, scale, printd):
             for i in range(node_count):
                 val, slope, cur_pos = read_node_values(opcode, value_type, frac_value, slope_type, frac_slope, ad, cur_pos)
                 if printd:
-                    print(val)
+                    pass
+                    #print(val)
                 slopes.append((cur_slope, slope))
                 cur_slope = slope
 
                 keyframe = curve.keyframe_points.insert(current_frame, (val + bias) * scale)
                 if printd:
-                    print(opcode)
+                    pass
+                    #print(opcode)
                 keyframe.interpolation = interpolation_dict[opcode]
                 keyframes.append(keyframe)
 
@@ -571,13 +589,15 @@ def read_fobjdesc(fobjdesc, curve, bias, scale, printd):
                     while True:
                         wait += (ad[cur_pos] & hsd.HSD_A_WAIT_MASK) << (hsd.HSD_A_WAIT_BIT * shift)
                         if printd:
-                            print('WaitByte %.2X' % ad[cur_pos])
+                            pass
+                            #print('WaitByte %.2X' % ad[cur_pos])
                         shift += 1
                         if not ad[cur_pos] & hsd.HSD_A_WAIT_EXT:
                             break
                         cur_pos += 1
                     if printd:
-                        print('WAIT %d' % wait)
+                        pass
+                        #print('WAIT %d' % wait)
                     cur_pos += 1
                     #TODO: Is there always at least one wait frame ?
                     current_frame += wait
@@ -748,7 +768,7 @@ def make_approx_cycles_material(mobj, image_dict):
     mat_diffuse_color = normcolor(material.diffuse)
 
     #XXX: Print material flags etc
-    print(mat.name)
+    #print(mat.name)
     notice_output('MOBJ FLAGS:\nrendermode: %.8X' % mobj.rendermode)
     if mobj.pedesc:
         pedesc = mobj.pedesc
@@ -780,7 +800,7 @@ active: %.8X' % ((tev.color_op, tev.alpha_op, tev.color_bias, tev.alpha_bias,\
                                             tuple(tev.konst) + tuple(tev.tev0) + tuple(tev.tev1) + \
                                             (tev.active,)))
 
-        print('%.8X' % texdesc.flag)
+        #print('%.8X' % texdesc.flag)
         #if texdesc.flag & (hsd.TEX_LIGHTMAP_DIFFUSE | hsd.TEX_LIGHTMAP_AMBIENT):
         if mobj.rendermode & (1 << (tex_num + 4)): #is this texture enabled in the material?
             textures.append(texdesc)
@@ -789,7 +809,7 @@ active: %.8X' % ((tev.color_op, tev.alpha_op, tev.color_bias, tev.alpha_bias,\
         if tex_num > 7:
             break
 
-    print('textures: %d' % len(textures))
+    #print('textures: %d' % len(textures))
 
     if mobj.rendermode & hsd.RENDER_DIFFUSE:
         color = nodes.new('ShaderNodeRGB')
@@ -857,7 +877,7 @@ active: %.8X' % ((tev.color_op, tev.alpha_op, tev.color_bias, tev.alpha_bias,\
             uv = nodes.new('ShaderNodeTexCoord')
             uv_output = uv.outputs[6]
         else:
-            print('UV Type not supported: %X' % (texdesc.flag & hsd.TEX_COORD_MASK))
+            #print('UV Type not supported: %X' % (texdesc.flag & hsd.TEX_COORD_MASK))
             uv_output = None
 
         mapping = nodes.new('ShaderNodeMapping')
@@ -1128,7 +1148,7 @@ active: %.8X' % ((tev.color_op, tev.alpha_op, tev.color_bias, tev.alpha_bias,\
         elif pedesc.type == gx.GX_BM_SUBTRACT:
             pass #not doable right now
         else:
-            error_log('Unknown Blend Mode: %X' % pedesc.type)
+            error_output('Unknown Blend Mode: %X' % pedesc.type)
     else:
         #TODO:
         #use the presets from the rendermode flags
@@ -1834,7 +1854,7 @@ def make_material(mobj, texture_dict):
     #TODO: add rendermode flags
 
     #XXX: Print material flags etc
-    print(mat.name)
+    #print(mat.name)
     notice_output('MOBJ FLAGS:\nrendermode: %.8X' % mobj.rendermode)
     if mobj.pedesc:
         pedesc = mobj.pedesc
@@ -1975,7 +1995,7 @@ def make_mesh_object(pobj, name):
     vtxdesclist = pobj.vtxdesclist
     displistsize = pobj.displistsize
 
-    print('POBJ FLAGS: %.8X' % pobj.flags)
+    #print('POBJ FLAGS: %.8X' % pobj.flags)
 
     i = 0 #index of the vtxdesc that holds vertex position data
     for vtxdesc in vtxdesclist:
@@ -2034,7 +2054,7 @@ def make_mesh_object(pobj, name):
 
 
     #me.calc_normals()
-    print(me.name)
+    #print(me.name)
     #print_primitives(pobj.vtxdesclist, pobj.displist, pobj.displistsize)
     pobj.normals = None
     for vtxnum, vtxdesc in enumerate(vtxdesclist):
@@ -2051,7 +2071,7 @@ def make_mesh_object(pobj, name):
     me.update(calc_edges = True, calc_edges_loose = False)
     #remove degenerate faces (These mostly occur due to triangle strips creating invisible faces when changing orientation)
 
-    print_primitives(pobj.vtxdesclist, pobj.displist, pobj.displistsize)
+    #print_primitives(pobj.vtxdesclist, pobj.displist, pobj.displistsize)
 
     return ob
 
@@ -2124,7 +2144,8 @@ def apply_bone_weights(mesh, hsd_mesh, hsd_bone, armature):
                 joint_groups[joint.id].add([vertex], weight, 'REPLACE')
 
         for matrix in matrices:
-            print(matrix)
+            pass
+            #print(matrix)
 
         if hsd_mesh.normals:
             #XXX: Is this actually needed?
@@ -2181,8 +2202,8 @@ def print_primitives(vtxdesclist, displist, displistsize):
     stride = 0
     for vtxdesc in vtxdesclist:
         stride += get_vtxdesc_element_size(vtxdesc)
-        print('INDEX_TYPE: ' + attr_type_dict[vtxdesc.attr_type])
-        print('ATTR: ' + attr_dict[vtxdesc.attr])
+        #print('INDEX_TYPE: ' + attr_type_dict[vtxdesc.attr_type])
+        #print('ATTR: ' + attr_dict[vtxdesc.attr])
         cnt = ''
         type = ''
         if vtxdesc.attr == gx.GX_VA_POS:
@@ -2197,15 +2218,17 @@ def print_primitives(vtxdesclist, displist, displistsize):
         if type == '':
             type = comp_type_dict[vtxdesc.comp_type]
         if not vtxdesc_is_mtx(vtxdesc):
-            print('COMP_TYPE: ' + type)
+            pass
+            #print('COMP_TYPE: ' + type)
         if cnt != '':
-            print('COMP_CNT: ' + cnt)
+            pass
+            #print('COMP_CNT: ' + cnt)
 
     c = 0
     opcode = displist[c] & gx.GX_OPCODE_MASK
     size_limit = displistsize * 0x20
     while opcode != gx.GX_NOP and c < size_limit:
-        print('PRIMITIVE: ' + op_dict[opcode])
+        #print('PRIMITIVE: ' + op_dict[opcode])
         c += 1
         vtxcount = struct.unpack('>H', displist[c:c + 2])[0]
         c += 2
@@ -2770,11 +2793,13 @@ def create_bone_rec(arm_data, hsd_bone, parent, hsd_parent, copy):
     hsd_bone.position[0], hsd_bone.position[1], hsd_bone.position[2], hsd_bone.flags))
 
     if hsd_bone.flags & hsd.JOBJ_PTCL:
-        print('JOBJ_PTCL ' + str(bone_count))
-        print('Address: %.8X' % hsd_bone.id)
+        pass
+        #print('JOBJ_PTCL ' + str(bone_count))
+        #print('Address: %.8X' % hsd_bone.id)
     if hsd_bone.flags & hsd.JOBJ_SPLINE:
-        print('JOBJ_SPLINE ' + str(bone_count))
-        print('Address: %.8X' % hsd_bone.id)
+        pass
+        #print('JOBJ_SPLINE ' + str(bone_count))
+        #print('Address: %.8X' % hsd_bone.id)
         # s0{ u8 flags?; u8; u8; u8 n; f32; * s1; f32; * s2; * s3; }
         """
         spline = hsd_bone.u

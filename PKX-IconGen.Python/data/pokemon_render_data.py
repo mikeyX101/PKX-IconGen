@@ -16,9 +16,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 
+from copy import deepcopy
 import json
+
 from types import SimpleNamespace
-from typing import List
+from typing import List, Set
 from typing import Optional
 
 from .render_data import RenderData
@@ -28,10 +30,10 @@ class PokemonRenderData(object):
 
     def __init__(self,
                  name: str,
-                 output_name: str,
+                 output_name: Optional[str],
                  render: RenderData,
                  shiny: ShinyInfo,
-                 removed_objects: List[str]):
+                 removed_objects: Set[str]):
 
         self.name = name
         self.output_name = output_name
@@ -40,7 +42,9 @@ class PokemonRenderData(object):
         self.removed_objects = removed_objects
 
     def to_json(self) -> str:
-        return json.dumps(self, default=vars, separators=(',', ':'))
+        copy = deepcopy(self)
+        copy.removed_objects = list(copy.removed_objects) # change set to list to serialize it
+        return json.dumps(copy, default=vars, separators=(',', ':'))
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['PokemonRenderData']:
