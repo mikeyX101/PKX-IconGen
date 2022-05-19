@@ -19,7 +19,7 @@ from enum import IntEnum
 from typing import Optional
 
 from .color import Color
-from .vector import Vector
+
 
 class LightType(IntEnum):
     POINT = 0
@@ -27,15 +27,14 @@ class LightType(IntEnum):
     SPOT = 2
     AREA = 3
 
+
 class Light(object):
     
-    def __init__(self, pos: Vector, rot: Vector, light_type: LightType, strength: float, color: Color):
-
-        self.pos = pos
-        self.rot = rot
-        self.light_type = light_type
+    def __init__(self, type: LightType, strength: float, color: Color, distance: float):
+        self.type = type
         self.strength = strength
         self.color = color
+        self.distance = distance
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Light']:
@@ -43,8 +42,15 @@ class Light(object):
             return None
 
         return Light(
-            Vector.parse_obj(obj.pos),
-            Vector.parse_obj(obj.rot),
-            LightType(obj.light_type),
+            LightType(obj.type),
             obj.strength,
-            Color.parse_obj(obj.color))
+            Color.parse_obj(obj.color),
+            obj.distance)
+
+    @staticmethod
+    def default() -> 'Light':
+        return Light(
+            LightType.AREA,
+            125,
+            Color.default(),
+            5)

@@ -38,7 +38,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
         {
             if (value == null)
             {
-                return null;
+                return "mdi-lightbulb-on";
             }
 
             if (value is LightType type && targetType.IsAssignableFrom(typeof(string)))
@@ -53,7 +53,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
             }
             else
             {
-                return null;
+                return "mdi-lightbulb-on";
             }
         }
 

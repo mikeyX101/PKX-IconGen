@@ -35,14 +35,14 @@ namespace PKXIconGen.Core.Services
     /// </summary>
     public static class JsonIO
     {
-        public static readonly JsonSerializerOptions defaultOptions = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
         public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
         {
             try
             {
-                using FileStream file = File.Create(path);
-                await JsonSerializer.SerializeAsync(file, data, defaultOptions);
+                await using FileStream file = File.Create(path);
+                await JsonSerializer.SerializeAsync(file, data, DefaultOptions);
             }
             catch (Exception ex)
             {
@@ -55,36 +55,36 @@ namespace PKXIconGen.Core.Services
         {
             try
             {
-                using FileStream file = File.OpenRead(path);
-                return await JsonSerializer.DeserializeAsync<T>(file, defaultOptions);
+                await using FileStream file = File.OpenRead(path);
+                return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
             }
             catch (Exception ex)
             {
-                CoreManager.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}.", path);
+                CoreManager.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}", path);
                 throw;
             }
         }
 
-        public static IAsyncEnumerable<T?>? ImportAsyncEnumerable<T>(string path) where T : IJsonSerializable
+        public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string path) where T : IJsonSerializable
         {
             try
             {
                 using FileStream file = File.OpenRead(path);
-                return JsonSerializer.DeserializeAsyncEnumerable<T>(file, defaultOptions);
+                return JsonSerializer.DeserializeAsyncEnumerable<T>(file, DefaultOptions);
             }
             catch (Exception ex)
             {
-                CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}.", path);
+                CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}", path);
                 throw;
             }
         }
 
-        public async static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string[] paths) where T : IJsonSerializable?
+        public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<string> paths) where T : IJsonSerializable?
         {
             foreach (string path in paths)
             {
-                using FileStream file = File.OpenRead(path);
-                yield return await JsonSerializer.DeserializeAsync<T>(file, defaultOptions);
+                await using FileStream file = File.OpenRead(path);
+                yield return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
             }
         }
 
@@ -93,7 +93,7 @@ namespace PKXIconGen.Core.Services
             try
             {
                 using MemoryStream memoryStream = new(2048);
-                JsonSerializer.Serialize(memoryStream, data, defaultOptions);
+                JsonSerializer.Serialize(memoryStream, data, DefaultOptions);
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
             catch (Exception ex)
@@ -108,7 +108,7 @@ namespace PKXIconGen.Core.Services
             try
             {
                 using MemoryStream memoryStream = new(2048);
-                await JsonSerializer.SerializeAsync(memoryStream, data, defaultOptions);
+                await JsonSerializer.SerializeAsync(memoryStream, data, DefaultOptions);
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
             catch (Exception ex)

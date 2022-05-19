@@ -15,15 +15,40 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-from typing import Optional
+from typing import Optional, Sequence, List
+
+# noinspection PyUnresolvedReferences
+from mathutils import Vector as MUVector
+
 
 class Color(object):
     
     def __init__(self, r: float, g: float, b: float):
-
         self.r = r
         self.b = b
         self.g = g
+
+    def to_list(self) -> List[float]:
+        return [
+            self.r,
+            self.g,
+            self.b
+        ]
+
+    def to_list_alpha(self) -> List[float]:
+        return [
+            self.r,
+            self.g,
+            self.b,
+            1
+        ]
+
+    def to_mathutils_vector(self) -> MUVector:
+        return MUVector((
+            self.r,
+            self.g,
+            self.b
+        ))
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Color']:
@@ -33,4 +58,13 @@ class Color(object):
         return Color(
             obj.r,
             obj.g,
-            obj.b)
+            obj.b
+        )
+
+    @staticmethod
+    def default() -> 'Color':
+        return Color(
+            1,
+            1,
+            1
+        )

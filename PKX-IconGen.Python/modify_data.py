@@ -16,18 +16,53 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 
-import bpy
 import sys
 import os
 
 sys.path.append(os.getcwd())
+
 from data.pokemon_render_data import PokemonRenderData
 import scene_generator
 from addon import register
 
-data: PokemonRenderData = PokemonRenderData.from_json(sys.stdin.readline())
-scene_generator.generate_scene(data)
+debug_flag: bool = False
+prd: PokemonRenderData
 
-register(data)
+for arg in sys.argv:
+    if arg == "--pkx-debug":
+        debug_flag = True
+        break
 
-bpy.ops.wm.show_region_ui()
+
+if debug_flag:
+    prd = PokemonRenderData.from_json(
+        "{\"name\":\"Ludicolo\",\"output_name\":\"runpappa\","
+        
+        "\"render\":"
+        "{\"model\":\"" + os.getcwd() + "/debugging/runpappa.pkx.dat\","
+        "\"animation_pose\":0,\"animation_frame\":0,"
+        "\"main_camera\":{"
+        "\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},"
+        "\"focus\":{\"x\":0,\"y\":0,\"z\":0},"
+        "\"fov\":40,"
+        "\"light\":{\"type\":3,\"strength\":130,\"color\":{\"r\":1,\"g\":1,\"b\":1},\"distance\":5}},"
+        "\"removed_objects\":[]},"
+        
+        "\"shiny\":"
+        "{\"filter\":{\"r\":1,\"g\":1,\"b\":1},"
+        "\"render\":"
+        "{\"model\":\"\","
+        "\"animation_pose\":0,\"animation_frame\":0,"
+        "\"main_camera\":{"
+        "\"pos\":{\"x\":14,\"y\":-13.5,\"z\":5.5},"
+        "\"focus\":{\"x\":0,\"y\":0,\"z\":10},"
+        "\"fov\":40,"
+        "\"light\":{\"type\":3,\"strength\":130,\"color\":{\"r\":1,\"g\":1,\"b\":1},\"distance\":5}},"
+        "\"removed_objects\":[]}}"
+        "}"
+    )
+else:
+    prd: PokemonRenderData = PokemonRenderData.from_json(sys.stdin.readline())
+
+scene_generator.generate_scene(prd)
+register(prd)

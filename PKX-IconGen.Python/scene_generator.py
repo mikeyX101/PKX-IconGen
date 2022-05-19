@@ -17,29 +17,74 @@
 """
 
 import bpy
-import mathutils
 from math import radians
+from data.camera import Camera
+from data.light import Light
 from data.pokemon_render_data import PokemonRenderData
-from importer import import_hsd
+from data.edit_mode import EditMode
+from utils import import_model
+from utils import remove_objects
+
+
+def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
+    objs = bpy.data.objects
+    scene = bpy.data.scenes["Scene"]
+    armature = objs["Armature0"]
+    camera = objs["PKXIconGen_Camera"]
+    focus = objs["PKXIconGen_FocusPoint"]
+    light = objs["PKXIconGen_TopLight"]
+
+    prd_camera: Camera = prd.get_mode_camera(mode) or Camera.default()
+    prd_light: Light = prd_camera.light or Light.default()
+    animation_pose: int = prd.get_mode_animation_pose(mode) or 0
+    animation_frame: int = prd.get_mode_animation_frame(mode) or 0
+
+    if prd_camera is None:
+        prd_camera = Camera.default()
+
+    camera_pos = prd_camera.pos.to_mathutils_vector()
+    focus_pos = prd_camera.focus.to_mathutils_vector()
+    camera_fov = prd_camera.fov
+
+    camera.location = camera_pos
+    focus.location = focus_pos
+    camera.data.angle = radians(camera_fov)
+
+    light.data.type = prd_light.type.name
+    light.data.energy = prd_light.strength
+    light.data.color = prd_light.color.to_list()
+    light.location[2] = prd_light.distance
+
+    armature.animation_data.action = bpy.data.actions[animation_pose]
+    scene.frame_set(animation_frame)
+
+    remove_objects(prd.get_mode_removed_objects(mode))
+
+
+#  TODO Vertex Lighting
+def change_mats():
+    blender_ver = bpy.app.version
+    mats = bpy.data.materials
+
+    if (2, 93, 0) <= blender_ver < (2, 94, 0):
+        for mat in mats:
+            tree = mat.node_tree
+            if tree is not None:
+                bsdf = tree.nodes["Principled BSDF"]
+                bsdf.inputs[4].default_value = 0  # Metallic
+                bsdf.inputs[5].default_value = 0  # Specular
+                bsdf.inputs[7].default_value = 1  # Roughness
+    elif (3, 0, 0) <= blender_ver < (3, 1, 0):  # TODO Validate nodes in 3.1
+        for mat in mats:
+            tree = mat.node_tree
+            if tree is not None:
+                bsdf = tree.nodes["Principled BSDF"]
+                bsdf.inputs[6].default_value = 0  # Metallic
+                bsdf.inputs[7].default_value = 0  # Specular
+                bsdf.inputs[9].default_value = 1  # Roughness
+
 
 def generate_scene(data: PokemonRenderData):
-    main_render = data.render
-    import_hsd.load(None, bpy.context, main_render.model, 0, "scene_data", "SCENE", True, True, 1000, True)
-
-    objs = bpy.data.objects
-
-    # Move camera
-    camera = objs["PKXIconGen_Camera"]
-    camera.location = main_render.main_camera.pos.to_mathutils_vector()
-    camera.rotation_euler = main_render.main_camera.rot.to_mathutils_euler()
-    
-    camera.data.lens_unit = "FOV"
-    camera.data.angle = radians(main_render.main_camera.fov)
-
-    #TODO Move to addon
-    
-
-    # Remove bounding boxes cube, normally the first 7 objects
-    #objs.remove(objs["Object"])
-    #for i in range(1, 7):
-    #    objs.remove(objs["Object.00" + str(i)])
+    import_model(data.render.model)
+    change_mats()
+    sync_prd_to_scene(data, EditMode.NORMAL)

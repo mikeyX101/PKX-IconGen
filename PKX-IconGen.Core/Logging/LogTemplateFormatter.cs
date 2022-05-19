@@ -30,16 +30,18 @@ namespace PKXIconGen.Core.Logging
     // https://github.com/serilog/serilog-sinks-file/issues/137
     internal class LogTemplateFormatter : ITextFormatter
     {
-        readonly MessageTemplateTextFormatter
-            _withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.loggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
-            _withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.loggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
+        private readonly MessageTemplateTextFormatter
+            withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
+            withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
 
         public void Format(LogEvent logEvent, TextWriter output)
         {
-            HashSet<string> tokens = new(logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Select(p => p.PropertyName));
-            tokens.Add(CoreManager.loggingAssemblyPropertyName);
+            HashSet<string> tokens = new(logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Select(p => p.PropertyName))
+            {
+                CoreManager.LoggingAssemblyPropertyName
+            };
 
-            MessageTemplateTextFormatter formatter = logEvent.Properties.All(p => tokens.Contains(p.Key)) ? _withoutProperties : _withProperties;
+            MessageTemplateTextFormatter formatter = logEvent.Properties.All(p => tokens.Contains(p.Key)) ? withoutProperties : withProperties;
             formatter.Format(logEvent, output);
         }
     }

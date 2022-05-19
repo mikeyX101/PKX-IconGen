@@ -25,7 +25,7 @@ namespace PKX_IconGen.Core.Tests.Data
 {
     public class ColorTests
     {
-        public static void ColorShouldEqualValues(ref Color color, float expectedR, float expectedG, float expectedB, string assetMessage)
+        private static void ColorShouldEqualValues(ref Color color, float expectedR, float expectedG, float expectedB, string assetMessage)
         {
             Assert.AreEqual(expectedR, color.Red, assetMessage + ", Red");
             Assert.AreEqual(expectedG, color.Green, assetMessage + ", Green");

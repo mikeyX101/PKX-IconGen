@@ -28,7 +28,6 @@
         </Border>
     </Design.PreviewWith>
 
-    <!-- Add Styles Here -->
   <Style Selector="TextBlock.Warning">
     <Setter Property="Foreground" Value="Goldenrod" />
   </Style>
@@ -41,5 +40,18 @@
   </Style>
   <Style Selector=":is(i|Icon).Error">
     <Setter Property="Foreground" Value="Red" />
+  </Style>
+
+  <Style Selector="ToggleButton TextBlock.tbchecked">
+    <Setter Property="IsVisible" Value="false"/>
+  </Style>
+  <Style Selector="ToggleButton:checked TextBlock.tbchecked">
+    <Setter Property="IsVisible" Value="true"/>
+  </Style>
+  <Style Selector="ToggleButton TextBlock.tbunchecked">
+    <Setter Property="IsVisible" Value="true"/>
+  </Style>
+  <Style Selector="ToggleButton:checked TextBlock.tbunchecked">
+    <Setter Property="IsVisible" Value="false"/>
   </Style>
 </Styles>

@@ -17,18 +17,21 @@
 """
 from typing import Optional
 
+from .light import Light
 from .vector import Vector
+
 
 class Camera(object):
     
     def __init__(self, 
                  pos: Vector, 
-                 rot: Vector, 
-                 fov: float):
-
+                 focus: Vector,
+                 fov: float,
+                 light: Light):
         self.pos = pos
-        self.rot = rot
+        self.focus = focus
         self.fov = fov
+        self.light = light
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Camera']:
@@ -37,12 +40,14 @@ class Camera(object):
 
         return Camera(
             Vector.parse_obj(obj.pos),
-            Vector.parse_obj(obj.rot),
-            obj.fov)
+            Vector.parse_obj(obj.focus),
+            obj.fov,
+            Light.parse_obj(obj.light))
 
     @staticmethod
     def default() -> 'Camera':
         return Camera(
             Vector(14, -13.5, 5.5), 
-            Vector(86.8, 0, 54), 
-            40)
+            Vector(0, 0, 0),
+            40,
+            Light.default())

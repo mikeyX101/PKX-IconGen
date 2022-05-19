@@ -89,7 +89,7 @@ On Linux: Path to the Blender executable. It is possible to specify a link or an
         </Grid>
         <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
           <i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
-          <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText}" Grid.Column="1" Grid.Row="0" />
+          <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText, Mode=OneWay}" Grid.Column="1" Grid.Row="0" />
         </Grid>
 
         <!--Blender Optional Arguments-->
@@ -145,9 +145,13 @@ Pokémon Battle Revolution uses different rendering as the Gamecube games, have 
           <ToolTip.Tip>
 Integer scale used to know at what resolution the icons are going to be rendered.
 
-Use x1 for making new pokemon icons.
+Use x1 for making new pokemon icons to be imported.
+Use the others for texture packs or any higher resolution needs.
 
-Use the others for texture packs or higher resolution needs.
+Base icon resolution for Colo/XD: 42px X 42px
+Base icon resolution for PBR: 48px X 48px
+
+Please note that this can drastically increase the rendering and processing time depending on your computer.
           </ToolTip.Tip>
         </ComboBox>
 
@@ -182,14 +186,14 @@ Use the others for texture packs or higher resolution needs.
           <TextBlock Text="Model" Grid.Column="1" />
           <TextBlock Text="Built In" HorizontalAlignment="Center" Grid.Column="2" />
         </Grid>
-        <ListBox Items="{ReflectionBinding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
+        <ListBox Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="6"/>
             </Style>
           </ListBox.Styles>
           <ListBox.ItemTemplate>
-              <DataTemplate DataType="{x:Type data:PokemonRenderData}}">
+              <DataTemplate DataType="{x:Type data:PokemonRenderData}">
                 <Grid ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource pathStringFileNameStringConverter}}" Grid.Column="1" />
@@ -207,7 +211,7 @@ Use the others for texture packs or higher resolution needs.
         <!--Assets Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+          <TextBox IsEnabled="False" Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
             <ToolTip.Tip>
 Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
 Make sure to "export" everything containing "pkx".
@@ -218,7 +222,7 @@ Filter with "pkx"
 Enter "export"
             </ToolTip.Tip>
           </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
+          <Button IsEnabled="False" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>

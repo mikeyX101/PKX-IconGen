@@ -453,5 +453,15 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Blender autosaves, we need .blend files though
+# Blender autosaves and debuging .blend files, we need .blend files though
 *.blend1
+
+# Allow PKX-IconGen Python debug folder
+!PKX-IconGen.Python/debugging/*
+PKX-IconGen.Python/debugging/debug.blend
+
+# PKX/DAT
+*.pkx
+*.dat
+
+PKX-IconGen.Core/Data/Blender/JSONSerializableVector3.cs

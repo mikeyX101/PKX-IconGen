@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI
 {
-    public class Program
+    public static class Program
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -55,7 +55,7 @@ namespace PKXIconGen.AvaloniaUI
                     }
                     catch (Exception settingsEx)
                     {
-                        CoreManager.Logger.Fatal(settingsEx, "An exception occured while fetching settings on Avalonia exception.");
+                        CoreManager.Logger.Fatal(settingsEx, "An exception occured while fetching settings on Avalonia exception");
                     }
 
                     CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}", settings);
@@ -72,7 +72,7 @@ namespace PKXIconGen.AvaloniaUI
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.
-        public static AppBuilder BuildAvaloniaApp()
+        private static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()

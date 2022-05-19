@@ -33,7 +33,7 @@ namespace PKXIconGen.Core.Data
         public Color? Filter { get; set; }
 
         [JsonPropertyName("render")]
-        public RenderData Render { get; set; }
+        public RenderData Render { get; init; }
 
         public ShinyInfo() : this(new RenderData())
         {
@@ -65,7 +65,7 @@ namespace PKXIconGen.Core.Data
 
         public static bool operator ==(ShinyInfo? left, ShinyInfo? right)
         {
-            return left?.Equals(right) ?? left is null && right is null;;
+            return left?.Equals(right) ?? left is null && right is null;
         }
 
         public static bool operator !=(ShinyInfo left, ShinyInfo right)

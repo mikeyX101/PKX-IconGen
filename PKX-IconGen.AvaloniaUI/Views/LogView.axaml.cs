@@ -37,7 +37,7 @@ namespace PKXIconGen.AvaloniaUI.Views
 
         public void LogScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (e.ExtentDelta != Vector.Zero && sender != null)
+            if (e.ExtentDelta != Vector.Zero)
             {
                 ScrollViewer scrollViewer = (ScrollViewer)sender;
                 scrollViewer.ScrollToEnd();

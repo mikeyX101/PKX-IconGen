@@ -47,11 +47,11 @@ namespace PKXIconGen.Core
         internal static string PythonFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Python");
 
         // Python Files
-        internal static string SceneGenerator => Path.Combine(PythonFolder, "scene_generator.py");
+        internal static string Render => Path.Combine(PythonFolder, "render.py");
         internal static string ModifyData => Path.Combine(PythonFolder, "modify_data.py");
 
         // Template
-        internal static string Template => Path.Combine(PythonFolder, "template.blend");
+        private static string Template => Path.Combine(PythonFolder, "template.blend");
         internal static string GetTemplateCopy(string templateName) 
         {
             string copy = Path.Combine(TempBlendFolder, $"{templateName}.blend");

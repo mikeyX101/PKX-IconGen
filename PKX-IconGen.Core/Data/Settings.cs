@@ -49,19 +49,12 @@ namespace PKXIconGen.Core.Data
 
         public Settings()
         {
-            if (OperatingSystem.IsMacOS())
-            {
-                BlenderPath = "/Applications/Blender/blender.app/Contents/MacOS/blender";
-            }
-            else
-            {
-                BlenderPath = "";
-            }
+            BlenderPath = OperatingSystem.IsMacOS() ? "/Applications/Blender/blender.app/Contents/MacOS/blender" : "";
 
             BlenderOptionalArguments = "";
             OutputPath = "";
             CurrentGame = Game.Undefined;
-            RenderScale = RenderScale.x1;
+            RenderScale = RenderScale.X1;
             AssetsPath = "";
             LogBlender = false;
         }

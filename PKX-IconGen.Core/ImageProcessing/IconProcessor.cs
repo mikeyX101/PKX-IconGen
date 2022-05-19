@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.ImageProcessing.Extensions;
@@ -7,61 +8,54 @@ using SixLabors.ImageSharp.Processing;
 
 namespace PKXIconGen.Core.ImageProcessing
 {
-    internal class IconProcessor : IDisposable
+    public class IconProcessor
     {
+        private RenderJob Job { get; set; }
+        private bool HasSecondary => Job.Data.Render.SecondaryCamera.HasValue;
+
+        private string FinalOutput { get; init; }
+
         private Game Game { get; set; }
 
-        internal IconProcessor(Game game)
+        public IconProcessor(RenderJob job, string finalOutput)
         {
-            Game = game;
+            Job = job;
+            FinalOutput = finalOutput;
+            Game = job.Game;
         }
 
-        internal async Task Process(string mainStr, string shinyStr, string outputStr)
+        public async Task ProcessJobAsync()
         {
-            Task<Image> mainLoadTask = Image.LoadAsync(mainStr);
-            Task<Image> shinyLoadTask = Image.LoadAsync(shinyStr);
+            Task<Image> mainTask = ProcessIconAsync(Job.MainPath);
+            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath);
+            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath) : null;
+            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath) : null;
 
-            using Image main = await mainLoadTask;
-            Task mainGameProcessTask = GameProcess(main);
-
-            using Image shiny = await shinyLoadTask;
-            Task shinyGameProcessTask = GameProcess(shiny);
-
-            await Task.WhenAll(mainGameProcessTask, shinyGameProcessTask);
+            Image[] mainImages = await Task.WhenAll(mainTask, shinyTask);
+            Image main = mainImages[0];
+            Image shiny = mainImages[1];
             main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
-            await main.SaveAsPngAsync(outputStr);
+            if (secondaryTask != null && shinySecondaryTask != null)
+            {
+                Image[] secondaryImages = await Task.WhenAll(secondaryTask, shinySecondaryTask);
+                Image secondary = secondaryImages[0];
+                Image shinySecondary = secondaryImages[1];
+                secondary.Mutate(ctx => ctx.AddImageBottom(shinySecondary));
+
+                main.Mutate(ctx => ctx.AddImageRight(secondary));
+            }
+
+            await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.Output + ".png"));
         }
 
-        internal async Task Process(string mainStr, string shinyStr, string secondaryStr, string sShinyStr, string outputStr)
+        private async Task<Image> ProcessIconAsync(string path)
         {
-            Task<Image> secondaryLoadTask = Image.LoadAsync(secondaryStr);
-            Task<Image> sShinyLoadTask = Image.LoadAsync(sShinyStr);
-            Task<Image> mainLoadTask = Image.LoadAsync(mainStr);
-            Task<Image> shinyLoadTask = Image.LoadAsync(shinyStr);
-
-            using Image secondary = await mainLoadTask;
-            Task secondaryGameProcessTask = GameProcess(secondary);
-
-            using Image sShiny = await shinyLoadTask;
-            Task sShinyGameProcessTask = GameProcess(sShiny);
-
-            using Image main = await mainLoadTask;
-            Task mainGameProcessTask = GameProcess(main);
-
-            using Image shiny = await shinyLoadTask;
-            Task shinyGameProcessTask = GameProcess(shiny);
-
-            await Task.WhenAll(secondaryGameProcessTask, sShinyGameProcessTask);
-            secondary.Mutate(ctx => ctx.AddImageBottom(sShiny));
-
-            await Task.WhenAll(mainGameProcessTask, shinyGameProcessTask);
-            main.Mutate(ctx => ctx.AddImageBottom(shiny).AddImageRight(secondary));
-
-            await main.SaveAsPngAsync(outputStr);
+            Image img = await Image.LoadAsync(path);
+            return await GameProcess(img);
         }
 
-        private Task GameProcess(Image img)
+        private Task<Image> GameProcess(Image img)
         {
             return Task.Run(() =>
             {
@@ -78,13 +72,14 @@ namespace PKXIconGen.Core.ImageProcessing
                         throw new NotImplementedException("Pokemon Battle Revolution is not yet implemented.");
 
                 }
+                return img;
             });
         }
 
-        public void Dispose()
+        /*public void Dispose()
         {
             // We don't need ImageSharp unless we use IconProcessor again.
             Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
-        }
+        }*/
     }
 }

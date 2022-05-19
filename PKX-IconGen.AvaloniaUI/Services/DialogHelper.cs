@@ -31,10 +31,7 @@ namespace PKXIconGen.AvaloniaUI.Services
     {
         public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
         {
-            if (parent == null)
-            {
-                parent = Utils.GetApplicationLifetime().MainWindow;
-            }
+            parent ??= Utils.GetApplicationLifetime().MainWindow;
 
             DialogWindowViewModel vm = new(dialogType, dialogButtons, message, height, title);
             return await new DialogWindow
@@ -45,10 +42,7 @@ namespace PKXIconGen.AvaloniaUI.Services
 
         public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, uint? height = null, Window? parent = null)
         {
-            if (parent == null)
-            {
-                parent = Utils.GetApplicationLifetime().MainWindow;
-            }
+            parent ??= Utils.GetApplicationLifetime().MainWindow;
 
             DialogWindowViewModel vm = new(asset, dialogButtons, message, title, height);
             return await new DialogWindow
@@ -63,28 +57,25 @@ namespace PKXIconGen.AvaloniaUI.Services
             if (vmType.FullName == null)
             {
                 Exception ex = new NullReferenceException("vmType.FullName is null.");
-                Core.CoreManager.Logger.Error(ex, ex.Message);
+                Core.CoreManager.Logger.Error(ex, "vmType.FullName is null");
                 throw ex;
             }
 
-            Type? windowType = Type.GetType(vmType.FullName.Remove(vmType.FullName.LastIndexOf("ViewModel")).Replace(".ViewModels.", ".Views."));
+            Type? windowType = Type.GetType(vmType.FullName.Remove(vmType.FullName.LastIndexOf("ViewModel", StringComparison.InvariantCulture)).Replace(".ViewModels.", ".Views."));
             if (windowType == null)
             {
                 Exception ex = new NullReferenceException($"No view type were found for {typeof(TViewModel)}");
-                Core.CoreManager.Logger.Error(ex, ex.Message);
+                Core.CoreManager.Logger.Error(ex, "No view type were found for {@ViewModelType}", typeof(TViewModel));
                 throw ex;
             }
             else if (!windowType.IsAssignableTo(typeof(Window)))
             {
-                Exception ex = new InvalidCastException("Passed type is not assignable to Window.");
-                Core.CoreManager.Logger.Error(ex, ex.Message);
+                Exception ex = new InvalidCastException("Found window type is not assignable to Window.");
+                Core.CoreManager.Logger.Error(ex, "Found window type {@WindowType} is not assignable to Window", windowType.Name);
                 throw ex;
             }
 
-            if (parent == null)
-            {
-                parent = Utils.GetApplicationLifetime().MainWindow;
-            }
+            parent ??= Utils.GetApplicationLifetime().MainWindow;
 
             Window? window = (Window?)Activator.CreateInstance(windowType);
             if (window != null)
@@ -96,7 +87,7 @@ namespace PKXIconGen.AvaloniaUI.Services
             else
             {
                 Exception ex = new NullReferenceException("Window was null.");
-                Core.CoreManager.Logger.Error(ex, ex.Message);
+                Core.CoreManager.Logger.Error(ex, "Window was null");
                 throw ex;
             }
         }

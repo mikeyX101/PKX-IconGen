@@ -44,16 +44,15 @@ namespace PKXIconGen.Core.Data
         public Camera MainCamera { get; init; }
         [JsonPropertyName("secondary_camera")]
         public Camera? SecondaryCamera { get; init; }
-        [JsonPropertyName("main_lights")]
-        public Light[] MainLights { get; init; }
-        [JsonPropertyName("secondary_lights")]
-        public Light[] SecondaryLights { get; init; }
 
-        public RenderData() : this("", 0, 0, Camera.GetDefaultCamera(), Array.Empty<Light>(), null, Array.Empty<Light>()) {
+        [JsonPropertyName("removed_objects")]
+        public SortedSet<string> RemovedObjects { get; set; }
+
+        public RenderData() : this("", 0, 0, Camera.GetDefaultCamera(), null, Array.Empty<string>()) {
 
         }
 
-        public RenderData(string model, ushort animationPose, ushort animationFrame, Camera mainCamera, Light[] mainLights, Camera? secondaryCamera, Light[] secondaryLights)
+        public RenderData(string model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, IEnumerable<string> removedObjects)
         {
             Model = model;
 
@@ -62,8 +61,8 @@ namespace PKXIconGen.Core.Data
 
             MainCamera = mainCamera;
             SecondaryCamera = secondaryCamera;
-            MainLights = mainLights;
-            SecondaryLights = secondaryLights;
+
+            RemovedObjects = new SortedSet<string>(removedObjects);
         }
 
         public bool Equals(RenderData? other)
@@ -74,8 +73,7 @@ namespace PKXIconGen.Core.Data
                 AnimationFrame == other.AnimationFrame &&
                 MainCamera.Equals(other.MainCamera) &&
                 (SecondaryCamera?.Equals(other.SecondaryCamera) ?? other.SecondaryCamera == null) &&
-                MainLights.SequenceEqual(other.MainLights) &&
-                SecondaryLights.SequenceEqual(other.SecondaryLights);
+                RemovedObjects.SequenceEqual(other.RemovedObjects);
         }
         public override bool Equals(object? obj)
         {
@@ -84,7 +82,7 @@ namespace PKXIconGen.Core.Data
 
         public static bool operator ==(RenderData? left, RenderData? right)
         {
-            return left?.Equals(right) ?? left is null && right is null;;
+            return left?.Equals(right) ?? left is null && right is null;
         }
 
         public static bool operator !=(RenderData? left, RenderData? right)
@@ -92,6 +90,6 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public override int GetHashCode() => (Model, AnimationPose, AnimationFrame, MainCamera, SecondaryCamera, MainLights, SecondaryLights).GetHashCode();
+        public override int GetHashCode() => (Model, AnimationPose, AnimationFrame, MainCamera, SecondaryCamera, RemovedObjects).GetHashCode();
     }
 }

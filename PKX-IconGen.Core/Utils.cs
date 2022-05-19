@@ -41,7 +41,7 @@ namespace PKXIconGen.Core
                 throw new ArgumentException("Value was greater than the original range.", nameof(value));
             }
 
-            float scale = (float)(newEnd - newStart) / (originalEnd - originalStart);
+            float scale = (newEnd - newStart) / (originalEnd - originalStart);
             return newStart + ((value - originalStart) * scale);
         }
 
@@ -58,7 +58,7 @@ namespace PKXIconGen.Core
                 throw new ArgumentException("Value was greater than the original range.", nameof(value));
             }
 
-            float scale = (float)(newEnd - newStart) / (originalEnd - originalStart);
+            float scale = (newEnd - newStart) / (originalEnd - originalStart);
             return newStart + ((value - originalStart) * scale);
         }
 
@@ -75,7 +75,7 @@ namespace PKXIconGen.Core
                 throw new ArgumentException("Value was greater than the original range.", nameof(value));
             }
 
-            float scale = (float)(newEnd - newStart) / (originalEnd - originalStart);
+            float scale = (newEnd - newStart) / (originalEnd - originalStart);
             return newStart + ((value - originalStart) * scale);
         }
     }

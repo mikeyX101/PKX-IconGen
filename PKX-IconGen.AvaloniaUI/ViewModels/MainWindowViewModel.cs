@@ -22,6 +22,7 @@ using Avalonia.Controls.Selection;
 using DynamicData;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Data;
+using PKXIconGen.Core.ImageProcessing;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
 using System;
@@ -34,6 +35,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
@@ -68,26 +70,20 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         private bool isBlenderValid;
-        public bool IsBlenderValid {
+        private bool IsBlenderValid {
             get => isBlenderValid;
-            set {
-                this.RaiseAndSetIfChanged(ref isBlenderValid, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref isBlenderValid, value);
         }
         private bool isBlenderVersionValid;
         public bool IsBlenderVersionValid {
             get => isBlenderVersionValid;
-            set {
-                this.RaiseAndSetIfChanged(ref isBlenderVersionValid, value);
-            }
+            private set => this.RaiseAndSetIfChanged(ref isBlenderVersionValid, value);
         }
         private string blenderWarningText = "";
         public string BlenderWarningText
         {
             get => blenderWarningText;
-            set {
-                this.RaiseAndSetIfChanged(ref blenderWarningText, value);
-            }
+            private set => this.RaiseAndSetIfChanged(ref blenderWarningText, value);
         }
         private string blenderWarningClass = "";
         private string BlenderWarningClass {
@@ -163,10 +159,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public bool EnableDeleteButton
         {
             get => enableDeleteButton;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref enableDeleteButton, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref enableDeleteButton, value);
         }
 
         private bool builtInsHidden;
@@ -231,13 +224,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 this.RaisePropertyChanged(nameof(PercentPokemonRendered));
             }
         }
-        public string DisplayPokemonRendered
-        {
-            get
-            {
-                return $"{NbOfPokemonRendered}/{NbOfRenders}";
-            }
-        }
+        public string DisplayPokemonRendered => $"{NbOfPokemonRendered}/{NbOfRenders}";
+
         public string PercentPokemonRendered
         {
             get
@@ -246,12 +234,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 {
                     return "0%";
                 }
-                return Math.Round(NbOfRenders / NbOfPokemonRendered * 100d) + "%";
+                return Math.Round(100d * NbOfPokemonRendered / NbOfRenders) + "%";
             }
         }
         #endregion
 
-        public MainWindowViewModel(Settings settings, IList<PokemonRenderData> renderData) : base()
+        public MainWindowViewModel(Settings settings, IEnumerable<PokemonRenderData> renderData) : base()
         {
             // Reactive collections
             PokemonRenderDataItemsSource = new SourceList<PokemonRenderData>();
@@ -260,7 +248,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 .Bind(out pokemonRenderDataItems)
                 .Subscribe();
             PokemonRenderDataItemsSource.AddRange(renderData);
-            PokemonRenderDataSelection = new()
+            PokemonRenderDataSelection = new SelectionModel<PokemonRenderData>()
             {
                 SingleSelect = false,
                 Source = PokemonRenderDataItems
@@ -273,9 +261,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 .Subscribe(_ => { }, () => NbOfRenders = selectedPokemonRenderData.Count);
             */
             // VMs
-            MenuVM = new(this);
+            MenuVM = new MenuViewModel(this);
             MenuVM.OnImport += AddRenderData;
-            LogVM = new();
+            LogVM = new LogViewModel();
 
             // Fields
             logBlender = settings.LogBlender;
@@ -288,7 +276,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             outputPath = settings.OutputPath;
 
             IconStyleItems = IconStyle.GetIconStyles();
-            selectedIconStyle = IconStyleItems.Where(i => i.Game == settings.CurrentGame).First();
+            selectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
 
             RenderScaleItems = Enum.GetValues<RenderScale>();
             SelectedRenderScale = settings.RenderScale;
@@ -304,14 +292,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             // Reactive
             IObservable<bool> renderEnabled = this.WhenAnyValue(
                 vm => vm.IsBlenderValid, vm => vm.OutputPath, vm => vm.SelectedIconStyle, vm => vm.NbOfRenders,
-                (blenderValid, outputPath, iconStyle, nbOfRenders) => blenderValid && !string.IsNullOrWhiteSpace(outputPath) && Directory.Exists(outputPath) && iconStyle.Game != Game.Undefined && nbOfRenders > 0
+                (blenderValid, op, iconStyle, renderNum) => blenderValid && !string.IsNullOrWhiteSpace(op) && Directory.Exists(op) && iconStyle.Game != Game.Undefined && renderNum > 0
             );
             RenderCommand = ReactiveCommand.Create(Render, renderEnabled);
 
             IObservable<bool> renderDataOperationsEnabled = this.WhenAnyValue(
                 vm => vm.IsBlenderValid, 
-                blenderValid => !!blenderValid
-            );
+                blenderValid => (bool)blenderValid);
             NewRenderDataCommand = ReactiveCommand.CreateFromTask(NewRenderData, renderDataOperationsEnabled);
             EditRenderDataCommand = ReactiveCommand.CreateFromTask<PokemonRenderData>(EditRenderData, renderDataOperationsEnabled);
         }
@@ -329,7 +316,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
 
         #region Paths Logic
-        public void VerifyBlenderExecutable()
+        private void VerifyBlenderExecutable()
         {
             BlenderCheckResult? blenderCheckResult = BlenderVersionChecker.CheckExecutable(BlenderPath);
             if (blenderCheckResult != null)
@@ -408,15 +395,17 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }*/
         }
 
+        [UsedImplicitly]
         public ReactiveCommand<Unit,Unit> NewRenderDataCommand { get; }
-        public async Task NewRenderData()
+        private async Task NewRenderData()
         {
             PokemonRenderData? renderData = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, PokemonRenderData?>(new PokemonRenderDataWindowViewModel("Add a new Pokemon...", this, null));
             AddRenderData(renderData);
         }
 
+        [UsedImplicitly]
         public ReactiveCommand<PokemonRenderData,Unit> EditRenderDataCommand { get; }
-        public async Task EditRenderData(PokemonRenderData prd)
+        private async Task EditRenderData(PokemonRenderData prd)
         {
             PokemonRenderDataWindowViewModel dialogVM = new("Edit", this, prd);
             PokemonRenderData? newRenderData = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, PokemonRenderData?>(dialogVM);
@@ -426,7 +415,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
             dialogVM.DisposeCancelToken();
         }
-
+        
+        [UsedImplicitly]
         public async void DeleteSelectedRenderData()
         {
             if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemon render data?\nThis operation is irreversible."))
@@ -438,31 +428,38 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
 
+        [UsedImplicitly]
         public void SelectAllRenderData() => PokemonRenderDataSelection.SelectAll();
         public void DeselectAllRenderData() => PokemonRenderDataSelection.Clear();
 
         #endregion
 
         #region Render
-        private CancellationTokenSource? renderCancelTokenSource = null;
+        private CancellationTokenSource? renderCancelTokenSource;
+        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> RenderCommand { get; }
-        public async void Render()
+        private async void Render()
         {
             DisposeCancelToken();
-            renderCancelTokenSource = new();
-
-            IBlenderRunner runner = BlenderRunners.GetRenderRunner(this, null);
-            runner.OnOutput += LogVM.WriteLine;
-            runner.OnFinish += EndRender;
-
+            renderCancelTokenSource = new CancellationTokenSource();
+            NbOfPokemonRendered = 0;
             CurrentlyRendering = true;
-            await runner.RunAsync(renderCancelTokenSource.Token);
-        }
-        public void EndRender(PokemonRenderData? prd)
-        {
+
+            foreach (RenderJob job in SelectedPokemonRenderData.Select(prd => new RenderJob(prd, SelectedRenderScale, SelectedIconStyle.Game, OutputPath)))
+            {
+                if (renderCancelTokenSource.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                await job.RenderAsync(this, renderCancelTokenSource.Token, LogVM.WriteLine);
+                NbOfPokemonRendered++;
+            }
+
             DisposeCancelToken();
             CurrentlyRendering = false;
         }
+
         private void DisposeCancelToken()
         {
             // Make sure tokens are canceled

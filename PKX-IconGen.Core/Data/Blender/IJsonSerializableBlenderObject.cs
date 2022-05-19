@@ -25,6 +25,6 @@ namespace PKXIconGen.Core.Data.Blender
     public interface IJsonSerializableBlenderObject : IJsonSerializable
     {
         public JsonSerializableVector3 Position { get; }
-        public JsonSerializableVector3 RotationEuler { get; }
+        public JsonSerializableVector3 FocusPoint { get; }
     }
 }

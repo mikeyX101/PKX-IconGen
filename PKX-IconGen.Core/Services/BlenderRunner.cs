@@ -40,24 +40,24 @@ namespace PKXIconGen.Core.Services
         event FinishDel OnFinish;
     }
 
-    public static class BlenderRunners
-    {
-        public static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
-            new BlenderRunner(blenderRunnerInfo, prd, new string[]
-            {
-                "--background",
-                "--python", Paths.SceneGenerator
-            });
-
-        public static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
-            new BlenderRunner(blenderRunnerInfo, prd, new string[]
-            {
-                $"--python", Paths.ModifyData
-            }, $"{JsonIO.ToJsonString(prd)}");
-    }
-
     internal class BlenderRunner : IBlenderRunner
     {
+        internal static class BlenderRunners
+        {
+            internal static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, RenderJob job) => 
+                new BlenderRunner(blenderRunnerInfo, null, new string[]
+                {
+                    "--background",
+                    "--python", Paths.Render
+                }, JsonIO.ToJsonString(job));
+
+            internal static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
+                new BlenderRunner(blenderRunnerInfo, prd.Output, new string[]
+                {
+                    $"--python", Paths.ModifyData
+                }, JsonIO.ToJsonString(prd));
+        }
+
         private const string LogTemplate = "[CLIWrap] -> [{ExecutableName}] {Output}";
 
         private string TemplateName { get; init; }
@@ -65,20 +65,17 @@ namespace PKXIconGen.Core.Services
         private string BlenderPath { get; init; }
         private string[] Arguments { get; init; }
         private string OptionalArguments { get; init; }
-        private byte[]? Input { get; init; } = null;
+        private byte[] Input { get; init; }
         private string ExecutableName { get; init; }
 
-        internal BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd, string[] arguments, string? input = null)
+        private BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string? templateName, string[] arguments, string input)
         {
-            TemplateName = prd.OutputName ?? prd.Name;
+            TemplateName = templateName ?? "";
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
             Arguments = arguments;
             OptionalArguments = blenderRunnerInfo.OptionalArguments;
-            if (input != null)
-            {
-                Input = Encoding.UTF8.GetBytes(input);
-            }
+            Input = Encoding.UTF8.GetBytes(input);
             ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
 
             OnOutput += Log;
@@ -166,11 +163,7 @@ namespace PKXIconGen.Core.Services
                     }
                 });
             
-            if (Input != null)
-            {
-                cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
-            }
-
+            cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
             PokemonRenderData? prd = null;
             try
             {
@@ -199,9 +192,6 @@ namespace PKXIconGen.Core.Services
 
                             OnOutput?.Invoke($"Process exited; Code: {exited.ExitCode}".AsMemory());
                             OnOutput?.Invoke("Operation has finished.".AsMemory());
-                            break;
-
-                        default:
                             break;
                     }
                 }

@@ -30,7 +30,7 @@ namespace PKXIconGen.Core.Data
             return games.Select(game => new IconStyle(game)).ToArray();
         }
 
-        public Game Game { get; set; }
+        public Game Game { get; }
         public string DisplayName => Game.GetName();
 
         private IconStyle(Game game)

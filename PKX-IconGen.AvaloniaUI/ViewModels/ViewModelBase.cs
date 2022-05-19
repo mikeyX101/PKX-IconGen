@@ -21,14 +21,18 @@ using PKXIconGen.Core.Services;
 using ReactiveUI;
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {
         #region OS
+        [UsedImplicitly]
         public bool IsWindows { get; init; }
+        [UsedImplicitly]
         public bool IsMacOS { get; init; }
+        [UsedImplicitly]
         public bool IsLinux { get; init; }
         #endregion
 
@@ -49,22 +53,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             return func(Database.Instance);
         }
 
-        private protected async static Task DoDBQueryAsync(Func<Database, Task> func)
+        private protected static async Task DoDBQueryAsync(Func<Database, Task> func)
         {
             await func(Database.Instance);
         }
 
-        private protected async static Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
+        private protected static async Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
         {
             return await func(Database.Instance);
         }
     }
 
-    public class WindowViewModelBase : ViewModelBase
-    {
-        public WindowViewModelBase() : base()
-        {
-            
-        }
-    }
+    public class WindowViewModelBase : ViewModelBase { }
 }

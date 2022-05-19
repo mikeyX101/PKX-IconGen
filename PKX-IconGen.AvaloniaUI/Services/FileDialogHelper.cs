@@ -32,18 +32,11 @@ namespace PKXIconGen.AvaloniaUI.Services
             {
                 AllowMultiple = false,
                 Title = title,
-                Filters = filters ?? new()
+                Filters = filters ?? new List<FileDialogFilter>()
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            if (files != null)
-            {
-                string? file = files.FirstOrDefault();
-                if (file != null)
-                {
-                    return file;
-                }
-            }
-            return null;
+            string? file = files?.FirstOrDefault();
+            return file;
         }
 
         public static async Task<string?> SaveFile(string title, List<FileDialogFilter>? filters = null, string? initialFileName = null)
@@ -51,15 +44,11 @@ namespace PKXIconGen.AvaloniaUI.Services
             SaveFileDialog fileDialog = new()
             {
                 Title = title,
-                Filters = filters ?? new(),
+                Filters = filters ?? new List<FileDialogFilter>(),
                 InitialFileName = initialFileName
             };
             string? file = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            if (file != null)
-            {
-                return file;
-            }
-            return null;
+            return file;
         }
 
         public static async Task<string[]?> GetFiles(string title, List<FileDialogFilter>? filters = null)
@@ -68,14 +57,10 @@ namespace PKXIconGen.AvaloniaUI.Services
             {
                 AllowMultiple = true,
                 Title = title,
-                Filters = filters ?? new()
+                Filters = filters ?? new List<FileDialogFilter>()
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            if (files != null)
-            {
-                return files;
-            }
-            return null;
+            return files;
         }
 
         public static async Task<string?> GetFolder(string title)
@@ -85,11 +70,7 @@ namespace PKXIconGen.AvaloniaUI.Services
                 Title = title
             };
             string? folder = await folderDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            if (folder != null)
-            {
-                return folder;
-            }
-            return null;
+            return folder;
         }
     }
 }

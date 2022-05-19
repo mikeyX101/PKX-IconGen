@@ -4,14 +4,16 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0b1b815e-52f7-4dda-843e-3922c2cc7d19</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>
-    </StartupFile>
+    <StartupFile>addon.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PKX-IconGen.Python</Name>
     <RootNamespace>PKX-IconGen.Python</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OutputType>Module</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,7 +39,6 @@
     <Compile Include="importer\import_hsd.py" />
     <Compile Include="importer\util.py" />
     <Compile Include="importer\__init__.py" />
-    <Compile Include="json_set_encoder.py" />
     <Compile Include="modify_data.py" />
     <Compile Include="scene_generator.py" />
   </ItemGroup>

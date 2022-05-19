@@ -19,7 +19,7 @@ from typing import Optional
 from typing import List
 
 from .camera import Camera
-from .light import Light
+
 
 class RenderData(object):
     
@@ -28,10 +28,8 @@ class RenderData(object):
                  animation_pose: int, 
                  animation_frame: int, 
                  main_camera: Camera, 
-                 secondary_camera: Optional[Camera], 
-                 main_lights: List[Light], 
-                 secondary_lights: List[Light]):
-
+                 secondary_camera: Optional[Camera],
+                 removed_objects: List[str]):
         self.model = model
 
         self.animation_pose = animation_pose
@@ -39,19 +37,13 @@ class RenderData(object):
 
         self.main_camera = main_camera
         self.secondary_camera = secondary_camera
-        self.main_lights = main_lights
-        self.secondary_lights = secondary_lights
+
+        self.removed_objects = removed_objects
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['RenderData']:
         if obj is None:
             return obj
-
-        for light in obj.main_lights:
-            light = Light.parse_obj(light)
-
-        for light in obj.secondary_lights:
-            light = Light.parse_obj(light)
 
         secondary_camera: Optional[Camera] = None
         try:
@@ -65,5 +57,4 @@ class RenderData(object):
             obj.animation_frame,
             Camera.parse_obj(obj.main_camera),
             secondary_camera,
-            obj.main_lights,
-            obj.secondary_lights)
+            obj.removed_objects)

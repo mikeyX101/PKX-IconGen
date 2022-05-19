@@ -20,43 +20,40 @@
 using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
     /// Data for one light in a Blender scene.
     /// </summary>
-    public readonly struct Light : IJsonSerializableBlenderObject, IEquatable<Light>
+    public readonly struct Light : IJsonSerializable, IEquatable<Light>
     {
-        [JsonPropertyName("pos")]
-        public JsonSerializableVector3 Position { get; init; }
-        [JsonPropertyName("rot")]
-        public JsonSerializableVector3 RotationEuler { get; init; }
-
-        [JsonPropertyName("light_type")]
-        public LightType Type { get; init; }
+        [JsonPropertyName("type")]
+        public readonly LightType Type { get; init; }
         [JsonPropertyName("strength")]
-        public float Strength { get; init; }
+        public readonly float Strength { get; init; }
         [JsonPropertyName("color")]
-        public Color Color { get; init; }
-
-        public Light(Vector3 position, Vector3 rotationEulerXYZ, LightType type, float strength, Color color)
+        public readonly Color Color { get; init; }
+        [JsonPropertyName("distance")]
+        public readonly float Distance { get; init; }
+        
+        [UsedImplicitly]
+        public Light(LightType type, float strength, Color color, float distance)
         {
-            Position = new(position);
-            RotationEuler = new(rotationEulerXYZ);
             Type = type;
             Strength = strength;
             Color = color;
+            Distance = distance;
         }
 
         public bool Equals(Light other)
         {
             return 
-                Position.Equals(other.Position) &&
-                RotationEuler.Equals(other.RotationEuler) &&
                 Type == other.Type &&
-                Strength == other.Strength &&
-                Color.Equals(other.Color);
+                Math.Abs(Strength - other.Strength) < 0.000000001 &&
+                Color.Equals(other.Color) &&
+                Math.Abs(Distance - other.Distance) < 0.000000001;
         }
         public override bool Equals(object? obj)
         {
@@ -73,8 +70,8 @@ namespace PKXIconGen.Core.Data.Blender
             return !(left == right);
         }
 
-        public readonly override int GetHashCode() => (Position, RotationEuler, Type, Strength, Color).GetHashCode();
+        public readonly override int GetHashCode() => (Type, Strength, Color, Distance).GetHashCode();
 
-        public static Light GetDefaultLight() => new();
+        public static Light GetDefaultLight() => new(LightType.Area, 125f, Color.GetDefaultColor(), 5f);
     }
 }

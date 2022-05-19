@@ -15,21 +15,23 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-
-from typing import Optional, Set
+from typing import List, Optional
 import bpy
+from data.color import Color
+from data.light import Light, LightType
 from data.pokemon_render_data import PokemonRenderData
 from data.camera import Camera
 from data.vector import Vector
-import mathutils
-from enum import IntEnum
+from data.edit_mode import EditMode
 from math import radians
 from math import degrees
+from utils import import_model
+from utils import remove_objects
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 1, 0),
+    "version": (0, 3, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -37,18 +39,16 @@ bl_info = {
     "doc_url": "https://github.com/mikeyX101/PKX-IconGen"
 }
 
-class EditMode(IntEnum):
-    NORMAL = 0
-    NORMAL_SECONDARY = 1
-    SHINY = 2
-    SHINY_SECONDARY = 3
-
 addon_keymaps = []
 
 mode: EditMode = EditMode.NORMAL
 prd: PokemonRenderData
-removed_objects: Set[str] = set()
+removed_objects: List[str] = list()
 camera = None
+camera_focus = None
+camera_light = None
+armature = None
+
 
 # Operators
 class ShowRegionUiOperator(bpy.types.Operator):
@@ -64,8 +64,9 @@ class ShowRegionUiOperator(bpy.types.Operator):
         bpy.ops.wm.context_toggle(data_path="space_data.show_region_ui")
         return {'FINISHED'}
 
+
 class PKXSyncOperator(bpy.types.Operator):
-    """Synchronize scene data with the addon, useful if you're doing edits outside of the addon"""
+    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUse at your own risk."""
     bl_idname = "wm.pkx_sync"
     bl_label = "Synchronize"
 
@@ -76,6 +77,7 @@ class PKXSyncOperator(bpy.types.Operator):
     def execute(self, context):
         sync_scene_to_props()
         return {'FINISHED'}
+
 
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
@@ -90,12 +92,13 @@ class PKXDeleteOperator(bpy.types.Operator):
         global removed_objects
         objs = context.selected_objects
 
-        removed_objects.update([obj.name for obj in objs])
-        bpy.ops.object.delete()
-
-        print(removed_objects)
+        removed_objects.extend([obj.name for obj in objs])
+        for obj in objs:
+            obj.hide_render = True
+            obj.hide_viewport = True
 
         return {'FINISHED'}
+
 
 class SaveToPKXIconGenOperator(bpy.types.Operator):
     """Save and exit back to PKX-IconGen"""
@@ -108,7 +111,8 @@ class SaveToPKXIconGenOperator(bpy.types.Operator):
 
     def execute(self, context):
         sync_props_to_prd()
-        print(prd.to_json())
+
+        # Will not work if debugging, test saves from the C# PKX-IconGen application
         try:
             name: str = prd.output_name or prd.name
             with open('../Temp/' + name + '.json', 'w') as json_file:
@@ -117,8 +121,10 @@ class SaveToPKXIconGenOperator(bpy.types.Operator):
             bpy.ops.wm.quit_blender()
         except:
             print("Something happened while saving JSON.")
+            print("Current PRD: " + prd.to_json())
             return {'CANCELLED'}
         return {'FINISHED'}
+
 
 # Access Functions
 def get_camera():
@@ -128,8 +134,41 @@ def get_camera():
         camera = bpy.data.objects["PKXIconGen_Camera"]
     return camera
 
-def can_edit(mode: EditMode, secondary_enabled: bool) -> bool: 
+
+def get_camera_focus():
+    global camera_focus
+
+    if camera_focus is None:
+        camera_focus = bpy.data.objects["PKXIconGen_FocusPoint"]
+    return camera_focus
+
+
+def get_camera_light():
+    global camera_light
+
+    if camera_light is None:
+        camera_light = bpy.data.objects["PKXIconGen_TopLight"]
+    return camera_light
+
+
+def get_armature(refresh: bool):
+    global armature
+
+    if refresh or armature is None:
+        if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
+            try:
+                armature = bpy.data.objects["Armature1"]
+            except KeyError:
+                import_model(prd.shiny.render.model)
+                armature = bpy.data.objects["Armature1"]
+        else:
+            armature = bpy.data.objects["Armature0"]
+    return armature
+
+
+def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
     return mode == EditMode.NORMAL or mode == EditMode.SHINY or secondary_enabled
+
 
 # Update Functions
 def update_mode(self, context):
@@ -142,17 +181,34 @@ def update_mode(self, context):
     sync_prd_to_props()
     sync_props_to_scene()
 
+
+def update_animation_pose(self, context):
+    value = self.animation_pose
+    armature = get_armature(False)
+    action = bpy.data.actions[value]
+
+    armature.animation_data.action = action
+
+
+def update_animation_frame(self, context):
+    value = self.animation_frame
+
+    context.scene.frame_set(value)
+
+
 def update_camera_pos(self, context):
     value = self.pos
     camera = get_camera()
 
     camera.location = value
 
-def update_camera_rot(self, context):
-    value = self.rot
-    camera = get_camera()
 
-    camera.rotation_euler = value
+def update_focus(self, context):
+    value = self.focus
+    focus = get_camera_focus()
+
+    focus.location = value
+
 
 def update_camera_fov(self, context):
     value = self.fov
@@ -160,107 +216,222 @@ def update_camera_fov(self, context):
 
     camera.data.angle = radians(value)
 
+
+def update_light_type(self, context):
+    value = self.light_type
+    light = get_camera_light()
+
+    light.data.type = value
+
+
+def update_light_strength(self, context):
+    value = self.light_strength
+    light = get_camera_light()
+
+    light.data.energy = value
+
+
+def update_light_color(self, context):
+    value = self.light_color
+    light = get_camera_light()
+
+    light.data.color = value
+
+
+def update_light_distance(self, context):
+    value = self.light_distance
+    light = get_camera_light()
+
+    light.location[2] = value
+
+
+def update_shiny_color(self, context):
+    value = self.shiny_color
+
+
+
+
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
+    armature = get_armature(False)
     camera = get_camera()
+    camera_focus = get_camera_focus()
+    camera_light = get_camera_light()
 
     camera_pos = camera.location
-    camera_rot = camera.rotation_euler
+    camera_focus_pos = camera_focus.location
     camera_fov = camera.data.angle
 
-    scene["pos"] = camera_pos
-    scene["rot"] = camera_rot
-    scene["fov"] = degrees(camera_fov)
+    scene.pos = camera_pos
+    scene.focus = camera_focus_pos
+    scene.fov = degrees(camera_fov)
+
+    scene.light_type = camera_light.data.type
+    scene.light_strength = camera_light.data.energy
+    scene.light_color = camera_light.data.color
+    scene.light_distance = camera_light.location[2]
+
+    action = armature.animation_data.action
+    scene.animation_pose = int(action.name[len(action) - 1])
+    scene.animation_frame = scene.frame_current
+
+    action = armature.animation_data.action
+    scene.animation_pose = int(action.name[len(action) - 1])
+    scene.animation_frame = scene.frame_current
+
 
 def sync_props_to_scene():
     scene = bpy.data.scenes["Scene"]
+    armature = get_armature(False)
     camera = get_camera()
+    camera_focus = get_camera_focus()
+    camera_light = get_camera_light()
 
-    camera_pos = scene["pos"]
-    camera_rot = scene["rot"]
-    camera_fov = scene["fov"]
+    camera_pos = scene.pos
+    camera_focus_pos = scene.focus
+    camera_fov = scene.fov
+
+    camera_light.data.type = scene.light_type
+    camera_light.data.energy = scene.light_strength
+    camera_light.data.color = scene.light_color
+    camera_light.location[2] = scene.light_distance
 
     camera.location = camera_pos
-    camera.rotation_euler = camera_rot
+    camera_focus.location = camera_focus_pos
     camera.data.angle = radians(camera_fov)
 
+    armature.animation_data.action = bpy.data.actions[scene.animation_pose]
+    scene.frame_set(scene.animation_frame)
+
+
 def sync_prd_to_props():
+    global removed_objects
     scene = bpy.data.scenes["Scene"]
 
-    prd_camera: Optional[Camera] = None
-    if mode is EditMode.NORMAL:
-        prd_camera = prd.render.main_camera
-    elif mode is EditMode.NORMAL_SECONDARY:
-        if prd.render.secondary_camera is not None:
-            prd_camera = prd.render.secondary_camera
-        else:
-            prd_camera = Camera.default()
-    elif mode is EditMode.SHINY:
-        prd_camera = prd.shiny.render.main_camera
-    elif mode is EditMode.SHINY_SECONDARY:
-        if prd.shiny.render.secondary_camera is not None:
-            prd_camera = prd.shiny.render.secondary_camera
-        else:
-            prd_camera = Camera.default()
-    
-    scene["pos"] = prd_camera.pos.to_mathutils_vector()
-    scene["rot"] = prd_camera.rot.to_mathutils_euler()
-    scene["fov"] = prd_camera.fov
+    prd_camera: Optional[Camera] = prd.get_mode_camera(mode)
+    animation_pose: Optional[int] = prd.get_mode_animation_pose(mode)
+    animation_frame: Optional[int] = prd.get_mode_animation_frame(mode)
+
+    if prd_camera is None:
+        prd_camera = Camera.default()
+
+    scene.pos = prd_camera.pos.to_mathutils_vector()
+    scene.focus = prd_camera.focus.to_mathutils_vector()
+    scene.fov = prd_camera.fov
+
+    prd_light: Light = prd_camera.light
+    scene.light_type = prd_light.type.name
+    scene.light_strength = prd_light.strength
+    scene.light_color = prd_light.color.to_mathutils_vector()
+    scene.light_distance = prd_light.distance
+
+    scene.animation_pose = animation_pose
+    scene.animation_frame = animation_frame
+
+    removed_objects = prd.get_mode_removed_objects(mode)
+    remove_objects(removed_objects)
+    print("Set to Prop: " + str(removed_objects))
+
 
 def sync_props_to_prd():
     global prd
     scene = bpy.data.scenes["Scene"]
-    
-    camera_pos = scene["pos"]
-    camera_rot = scene["rot"]
 
-    camera_pos_vector = Vector(camera_pos[0], camera_pos[1], camera_pos[2])
-    camera_rot_vector = Vector(degrees(camera_rot[0]), degrees(camera_rot[1]), degrees(camera_rot[2]))
-    fov = scene["fov"]
+    camera_pos = scene.pos
+    camera_focus_pos = scene.focus
 
-    secondary_enabled = scene["secondary_enabled"]
+    camera_pos_vector: Vector = Vector(camera_pos[0], camera_pos[1], camera_pos[2])
+    camera_focus_pos_vector: Vector = Vector(camera_focus_pos[0], camera_focus_pos[1], camera_focus_pos[2])
+    fov: float = scene.fov
 
-    if mode is EditMode.NORMAL:
-        prd.render.main_camera = Camera(camera_pos_vector, camera_rot_vector, fov)
-    elif mode is EditMode.NORMAL_SECONDARY:
+    light_color_list = scene.light_color
+    light_type: LightType = LightType[scene.light_type]
+    light_strength: float = scene.light_strength
+    light_color: Color = Color(light_color_list[0], light_color_list[1], light_color_list[2])
+    light_distance: float = scene.light_distance
+    light: Light = Light(light_type, light_strength, light_color, light_distance)
+
+    secondary_enabled: bool = scene.secondary_enabled
+
+    animation_pose: float = scene.animation_pose
+    animation_frame: float = scene.animation_frame
+
+    prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, fov, light)
+    if mode == EditMode.NORMAL:
+        prd.render.main_camera = prd_camera
+        prd.render.animation_pose = animation_pose
+        prd.render.animation_frame = animation_frame
+        prd.render.removed_objects = list(removed_objects)
+    elif mode == EditMode.NORMAL_SECONDARY:
         if secondary_enabled:
-            prd.render.secondary_camera = Camera(camera_pos_vector, camera_rot_vector, fov)
+            prd.render.secondary_camera = prd_camera
         else:
             prd.render.secondary_camera = None
-        
-    elif mode is EditMode.SHINY:
-        prd.shiny.render.main_camera = Camera(camera_pos_vector, camera_rot_vector, fov)
-    elif mode is EditMode.SHINY_SECONDARY:
+        prd.render.animation_pose = animation_pose
+        prd.render.animation_frame = animation_frame
+        prd.render.removed_objects = list(removed_objects)
+
+    elif mode == EditMode.SHINY:
+        prd.shiny.render.main_camera = prd_camera
+        prd.shiny.render.animation_pose = animation_pose
+        prd.shiny.render.animation_frame = animation_frame
+        prd.shiny.render.removed_objects = list(removed_objects)
+    elif mode == EditMode.SHINY_SECONDARY:
         if secondary_enabled:
-            prd.shiny.render.secondary_camera = Camera(camera_pos_vector, camera_rot_vector, fov)
+            prd.shiny.render.secondary_camera = prd_camera
         else:
             prd.shiny.render.secondary_camera = None
+        prd.shiny.render.animation_pose = animation_pose
+        prd.shiny.render.animation_frame = animation_frame
+        prd.shiny.render.removed_objects = list(removed_objects)
 
-    prd.removed_objects = removed_objects
-        
+    print("Set to PRD: " + str(removed_objects))
+
+
 # Props
 MAINPROPS = [
-    ('mode', 
+    ('mode',
      bpy.props.EnumProperty(
         name="Mode",
         description="Edit mode",
-        items=[ ('NORMAL', "Normal", "Regular icon"),
-                ('NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
-                ('SHINY', "Shiny", "Shiny icon"),
-                ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),],
+        items=[
+            ('NORMAL', "Normal", "Regular icon"),
+            ('NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
+            ('SHINY', "Shiny", "Shiny icon"),
+            ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
+        ],
         update=update_mode
-        ),
-    ),
-    ('secondary_enabled', 
+     )),
+    ('secondary_enabled',
      bpy.props.BoolProperty(
         name="Enable secondary cameras",
         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose"
-        ),
-    )
+     ))
+]
+
+ANIMATIONPROPS = [
+    ('animation_pose',
+     bpy.props.IntProperty(
+        name="Animation Pose",
+        description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
+        min=0,
+        max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
+        update=update_animation_pose
+     )),
+    ('animation_frame',
+     bpy.props.IntProperty(
+        name="Animation Frame",
+        description="Animation frame of the pose",
+        min=0,
+        max=1000,
+        soft_min=0,
+        soft_max=500,
+        update=update_animation_frame
+     ))
 ]
 
 CAMERAPROPS = [
-    ('pos', 
+    ('pos',
      bpy.props.FloatVectorProperty(
         name='Position',
         subtype="XYZ",
@@ -268,32 +439,88 @@ CAMERAPROPS = [
         default=(14, -13.5, 5.5),
         update=update_camera_pos
      )),
-
-    ('rot', 
+    ('focus',
      bpy.props.FloatVectorProperty(
-        name='Rotation',
-        subtype="EULER",
-        unit="ROTATION",
-        default=(radians(86.8), radians(0), radians(54)),
-        update=update_camera_rot
+        name='Focus Position',
+        description="Brightness of the light",
+        subtype="XYZ",
+        unit="NONE",
+        default=(0, 0, 0),
+        update=update_focus
      )),
-
-    ('fov', 
+    ('fov',
      bpy.props.IntProperty(
-         name='Field of View',
-         subtype="ANGLE",
-         default=40,
-         update=update_camera_fov
+        name='Field of View',
+        description="Field of view of the Camera in degrees",
+        subtype="ANGLE",
+        min=0,
+        default=40,
+        update=update_camera_fov
+     ))
+]
+
+LIGHTPROPS = [
+    ('light_type',
+     bpy.props.EnumProperty(
+        name="Light type",
+        description="Type of light, Area lights should usually do the trick",
+        items=[
+            ('POINT', "Point", "Point light"),
+            ('SUN', "Sun", "Sun"),
+            ('SPOT', "Spot", "Spot light"),
+            ('AREA', "Area", "Area light"),
+        ],
+        default=3,  # Area
+        update=update_light_type
+     )),
+    ('light_strength',
+     bpy.props.FloatProperty(
+        name="Light Strength",
+        description="Brightness of the light",
+        unit="POWER",
+        step=125,
+        default=125,
+        min=0,
+        update=update_light_strength
+     )),
+    ('light_color',
+     bpy.props.FloatVectorProperty(
+        name="Color",
+        description="Color of the light",
+        subtype="COLOR",
+        default=(1, 1, 1),
+        update=update_light_color
+     )),
+    ('light_distance',
+     bpy.props.FloatProperty(
+        name="Light Distance",
+        description="Distance away from the focus point",
+        unit="NONE",
+        default=5,
+        min=0,
+        update=update_light_distance
+     ))
+]
+
+SHINYPROPS = [
+    ('shiny_color',
+     bpy.props.FloatVectorProperty(
+        name="Color",
+        description="Filter to put on top of textures for the shiny effect",
+        subtype="COLOR",
+        default=(1, 1, 1),
+        update=update_shiny_color
      )),
 ]
 
 ADVANCEDPROPS = [
-    
+
 ]
 
 ALLPROPS = [
-    MAINPROPS, CAMERAPROPS, ADVANCEDPROPS
+    MAINPROPS, ANIMATIONPROPS, CAMERAPROPS, LIGHTPROPS, SHINYPROPS, ADVANCEDPROPS
 ]
+
 
 # Panels
 class PKXPanel:
@@ -301,17 +528,18 @@ class PKXPanel:
     bl_region_type = 'UI'
     bl_category = 'PKX-IconGen'
 
+
 class PKXMainPanel(PKXPanel, bpy.types.Panel):
-    bl_idname = 'VIEW3D_PT_pkx_main_panel'
+    bl_idname = 'VIEW3D_PT_PKX_MAIN_PANEL'
     bl_label = 'PKX-IconGen'
     bl_options = {'HEADER_LAYOUT_EXPAND'}
-    
+
     def draw(self, context):
         layout = self.layout
         col = layout.column()
         layout.use_property_split = True
         layout.use_property_decorate = False
-        
+
         col.label(text="PKX-IconGen")
         for (prop_name, _) in MAINPROPS:
             expand = prop_name == "mode"
@@ -321,70 +549,105 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
         col.operator("wm.pkx_delete")
         col.operator("wm.pkx_save")
 
+
+class PKXAnimationPanel(PKXPanel, bpy.types.Panel):
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_ANIMATION_PANEL'
+    bl_label = 'Animation/Pose'
+    bl_options = {'HEADER_LAYOUT_EXPAND'}
+
+    def draw(self, context):
+        init_subpanel(self, context, ANIMATIONPROPS)
+
+
 class PKXCameraPanel(PKXPanel, bpy.types.Panel):
-    bl_parent_id = 'VIEW3D_PT_pkx_main_panel'
-    bl_idname = 'VIEW3D_PT_pkx_camera_panel'
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_CAMERA_PANEL'
     bl_label = 'Camera'
     bl_options = {'HEADER_LAYOUT_EXPAND'}
-    
-    def draw(self, context):
-        layout = self.layout
 
-        col = layout.column()
-        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
-        for (prop_name, _) in CAMERAPROPS:
-            row = col.row(align=True)
-            row.prop(context.scene, prop_name)
+    def draw(self, context):
+        init_subpanel(self, context, CAMERAPROPS)
+
+
+class PKXLightPanel(PKXPanel, bpy.types.Panel):
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_LIGHT_PANEL'
+    bl_label = 'Light'
+    bl_options = {'HEADER_LAYOUT_EXPAND'}
+
+    def draw(self, context):
+        init_subpanel(self, context, LIGHTPROPS)
+
+
+class PKXShinyPanel(PKXPanel, bpy.types.Panel):
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_ANIMATION_PANEL'
+    bl_label = 'Animation/Pose'
+    bl_options = {'HEADER_LAYOUT_EXPAND'}
+
+    @classmethod
+    def poll(cls, context):
+        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+
+    def draw(self, context):
+        init_subpanel(self, context, SHINYPROPS)
+
 
 class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
-    bl_parent_id = 'VIEW3D_PT_pkx_main_panel'
-    bl_idname = 'VIEW3D_PT_pkx_advanced_panel'
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_ADVANCED_PANEL'
     bl_label = 'Advanced'
     bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw(self, context):
-        layout = self.layout
 
-        col = layout.column()
-        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
-        for (prop_name, _) in ADVANCEDPROPS:
-            row = col.row(align=True)
-            row.prop(context.scene, prop_name)
+    def draw(self, context):
+        col = init_subpanel(self, context, ADVANCEDPROPS)
         col.operator("wm.pkx_sync")
+
+
+def init_subpanel(self, context, props):
+    layout = self.layout
+
+    col = layout.column()
+    col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+    for (prop_name, _) in props:
+        row = col.row(align=True)
+        row.prop(context.scene, prop_name)
+
+    return col
+
 
 CLASSES = [
     PKXMainPanel,
+    PKXAnimationPanel,
     PKXCameraPanel,
+    PKXLightPanel,
     PKXAdvancedPanel,
+
     ShowRegionUiOperator,
     SaveToPKXIconGenOperator,
     PKXSyncOperator,
     PKXDeleteOperator
 ]
 
-# We cannot register without data, addon is not meant to be used standalone anyways
+
+# We cannot register without data, addon is not meant to be used standalone anyway
 def register(data: PokemonRenderData):
-    global prd 
+    global prd
     prd = data
 
     for prop_list in ALLPROPS:
         for (prop_name, prop_value) in prop_list:
             setattr(bpy.types.Scene, prop_name, prop_value)
-    
+
     for c in CLASSES:
         bpy.utils.register_class(c)
 
     scene = bpy.data.scenes["Scene"]
-    scene["pos"] = data.render.main_camera.pos.to_mathutils_vector()
-    scene["rot"] = data.render.main_camera.rot.to_mathutils_euler()
-    scene["fov"] = data.render.main_camera.fov
+    scene.secondary_enabled = data.render.secondary_camera is not None
 
-    objs = bpy.data.objects
-    removed_objects.update(prd.removed_objects)
-    for obj_to_remove in removed_objects:
-        objs.remove(objs[obj_to_remove], do_unlink=True)
-
-    scene["secondary_enabled"] = data.render.secondary_camera is not None
+    # PRD should already be synced with the Scene
+    sync_prd_to_props()
 
     # unselect on start
     for obj in bpy.context.selected_objects:
@@ -396,11 +659,12 @@ def register(data: PokemonRenderData):
     kmi = km.keymap_items.new(PKXDeleteOperator.bl_idname, 'DEL', 'PRESS')
     addon_keymaps.append((km, kmi))
 
+
 def unregister():
     for prop_list in ALLPROPS:
         for (prop_name, _) in prop_list:
             delattr(bpy.types.Scene, prop_name)
-    
+
     for c in CLASSES:
         bpy.utils.unregister_class(c)
 
@@ -408,6 +672,9 @@ def unregister():
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()
+
+    bpy.ops.wm.show_region_ui()
+
 
 if __name__ == "__main__":
     print("Cannot be used standalone, use with the PKX-IconGen app.")

@@ -29,7 +29,7 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
             Size size = ctx.GetCurrentSize();
 
             return ctx
-                .Resize(new ResizeOptions()
+                .Resize(new ResizeOptions
                 {
                     Size = new Size(size.Width, size.Height * 2),
                     Mode = ResizeMode.BoxPad,
@@ -43,7 +43,7 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
             Size size = ctx.GetCurrentSize();
 
             return ctx
-                .Resize(new ResizeOptions()
+                .Resize(new ResizeOptions
                 {
                     Size = new Size(size.Width * 2, size.Height),
                     Mode = ResizeMode.BoxPad,

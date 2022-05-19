@@ -29,23 +29,20 @@ namespace PKXIconGen.Core
 {
     public static class CoreManager
     {
-        internal const string loggingAssemblyPropertyName = "LoggingAssembly";
+        internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
 
-        private static Assembly? lastLoggingAssembly = null;
-        private static IDisposable? disposableProperty;
+        private static Assembly? _lastLoggingAssembly;
+        private static IDisposable? _disposableProperty;
         public static ILogger Logger
         {
             get {
                 // Update calling assembly
                 Assembly callingAssembly = Assembly.GetCallingAssembly();
-                if (callingAssembly != lastLoggingAssembly)
+                if (callingAssembly != _lastLoggingAssembly)
                 {
-                    if (disposableProperty != null)
-                    {
-                        disposableProperty.Dispose();
-                    }
-                    disposableProperty = Serilog.Context.LogContext.PushProperty(loggingAssemblyPropertyName, callingAssembly.GetName().Name);
-                    lastLoggingAssembly = callingAssembly;
+                    _disposableProperty?.Dispose();
+                    _disposableProperty = Serilog.Context.LogContext.PushProperty(LoggingAssemblyPropertyName, callingAssembly.GetName().Name);
+                    _lastLoggingAssembly = callingAssembly;
                 }
                 
                 return NullableLogger ?? throw new ArgumentNullException(nameof(NullableLogger), "CoreManager.Initiate must be called before using the Logger.");
@@ -53,12 +50,12 @@ namespace PKXIconGen.Core
         }
         private static ILogger? NullableLogger { get; set; }
 
-        public static bool Initiated { get; private set; } = false;
+        public static bool Initiated { get; private set; }
         public static void Initiate()
         {
             if (Initiated)
             {
-                Logger.Warning("Tried to reinitiate Core.");
+                Logger.Warning("Tried to reinitiate Core");
                 return;
             }
 
@@ -105,7 +102,7 @@ namespace PKXIconGen.Core
             }
             catch (Exception ex)
             {
-                Logger.Fatal(ex, "An exception occured while migrating the database.");
+                Logger.Fatal(ex, "An exception occured while migrating the database");
             }
         }
 
@@ -115,7 +112,7 @@ namespace PKXIconGen.Core
             Database.OnClose();
             DisposeLogger();
         }
-        public static void DisposeLogger()
+        private static void DisposeLogger()
         {
             if (NullableLogger != null)
             {

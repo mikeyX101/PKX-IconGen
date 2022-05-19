@@ -25,6 +25,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data
 {
@@ -35,19 +38,19 @@ namespace PKXIconGen.Core.Data
         public uint ID { get; internal set; }
 
         [Column, JsonPropertyName("name")]
-        public string Name { get; internal set; }
+        public string Name { get; set; }
         [Column, JsonPropertyName("output_name")]
-        public string? OutputName { get; internal set; }
+        public string? OutputName { get; set; }
+        [JsonIgnore]
+        public string Output => OutputName?.Length > 0 ? OutputName : Name;
+
         [Column, JsonIgnore]
-        public bool BuiltIn { get; internal set; }
+        public bool BuiltIn { get; set; }
 
         [Column, JsonPropertyName("render")]
         public RenderData Render { get; internal set; }
         [Column, JsonPropertyName("shiny")]
         public ShinyInfo Shiny { get; internal set; }
-
-        [Column, JsonPropertyName("removed_objects")]
-        public HashSet<string> RemovedObjects { get; internal set; }
 
         public PokemonRenderData()
         {
@@ -55,13 +58,11 @@ namespace PKXIconGen.Core.Data
             OutputName = "";
             BuiltIn = false;
 
-            Render = new();
-            Shiny = new();
-
-            RemovedObjects = new();
+            Render = new RenderData();
+            Shiny = new ShinyInfo();
         }
         
-        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny, HashSet<string> removedObjects)
+        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny)
         {
             if (name.Length == 0)
             {
@@ -74,26 +75,38 @@ namespace PKXIconGen.Core.Data
 
             Render = render;
             Shiny = shiny;
-
-            RemovedObjects = removedObjects;
         }
 
         [JsonConstructor]
-        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny, HashSet<string> removedObjects) 
-            : this(name, outputName, false, render, shiny, removedObjects)
+        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny) 
+            : this(name, outputName, false, render, shiny)
         {
 
+        }
+
+        public async Task ModifyAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, Action<ReadOnlyMemory<char>>? onOutput = null, Action<PokemonRenderData?>? onFinish = null)
+        {
+            IBlenderRunner runner = BlenderRunner.BlenderRunners.GetModifyDataRunner(blenderRunnerInfo, this);
+            if (onOutput != null)
+            {
+                runner.OnOutput += new IBlenderRunner.OutDel(onOutput);
+            }
+            if (onFinish != null)
+            {
+                runner.OnFinish += new IBlenderRunner.FinishDel(onFinish);
+            }
+            
+            await runner.RunAsync(token);
         }
 
         public bool Equals(PokemonRenderData? other)
         {
-            return other is not null && 
+            return other is not null &&
                 ID == other.ID &&
                 Name == other.Name &&
                 BuiltIn == other.BuiltIn &&
                 Render.Equals(other.Render) &&
-                Shiny.Equals(other.Shiny) &&
-                RemovedObjects.SequenceEqual(other.RemovedObjects);
+                Shiny.Equals(other.Shiny);
         }
         public override bool Equals(object? obj)
         {
@@ -114,6 +127,7 @@ namespace PKXIconGen.Core.Data
             (
                 ID, 
                 Name,
+                OutputName,
                 BuiltIn,
                 Render,
                 Shiny

@@ -19,6 +19,7 @@
 
 using System;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.Core.Data.Blender
 {
@@ -42,11 +43,12 @@ namespace PKXIconGen.Core.Data.Blender
         public readonly byte BValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Blue));
 
         // Floats should be between 0 and 1. Otherwise they will be clamped to that range.
-        public Color(float red, float green, float blue)
+        [UsedImplicitly]
+        public Color(float r, float g, float b)
         {
-            Red = Math.Clamp(red, 0, 1);
-            Green = Math.Clamp(green, 0, 1);
-            Blue = Math.Clamp(blue, 0, 1);
+            Red = Math.Clamp(r, 0, 1);
+            Green = Math.Clamp(g, 0, 1);
+            Blue = Math.Clamp(b, 0, 1);
         }
 
         public bool Equals(Color other)

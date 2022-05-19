@@ -15,7 +15,7 @@
     <Authors>mikeyX</Authors>
     <AssemblyVersion>$(PackageVersion)</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <StartupObject></StartupObject>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <RunPostBuildEvent>Always</RunPostBuildEvent>

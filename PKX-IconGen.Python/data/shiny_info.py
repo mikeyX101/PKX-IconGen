@@ -20,10 +20,10 @@ from typing import Optional
 from .color import Color
 from .render_data import RenderData
 
+
 class ShinyInfo(object):
     
     def __init__(self, filter: Optional[Color], render: RenderData):
-
         self.filter = filter
         self.render = render
 

@@ -45,7 +45,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
 
             if (value is IEnumerable items && targetType.IsAssignableFrom(typeof(string)))
             {
-                IEnumerable<object> objectItems = items.OfType<object>();
+                IEnumerable<object> objectItems = items.OfType<object>().ToList();
 
                 if (!objectItems.Any())
                 {
@@ -53,7 +53,9 @@ namespace PKXIconGen.AvaloniaUI.Converters
                 }
                 else
                 {
-                    return objectItems.Select(o => o.ToString()).Aggregate((s1, s2) => $"{s1};{s2};");
+                    return objectItems
+                        .Select(o => o.ToString())
+                        .Aggregate((s1, s2) => $"{s1};{s2}");
                 }
             }
             else

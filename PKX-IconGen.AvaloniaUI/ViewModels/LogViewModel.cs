@@ -21,6 +21,7 @@ using ReactiveUI;
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
@@ -29,25 +30,26 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private readonly StringBuilder logBuilder;
         public string LogText => logBuilder.ToString();
 
-        private const ushort updateRate = 1000;
+        private const ushort UpdateRate = 1000;
         private Task? updatePendingTask;
 
         public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
 
         public LogViewModel()
         {
-            logBuilder = new(1024);
+            logBuilder = new StringBuilder(1024);
         }
 
+        [UsedImplicitly]
         public void ClearLog()
         {
             logBuilder.Clear();
             this.RaisePropertyChanged(nameof(LogText));
         }
-        private const char newLine = '\n';
+        private const char NewLine = '\n';
         public void WriteLine(ReadOnlyMemory<char> line)
         {
-            logBuilder.Append(line).Append(newLine);
+            logBuilder.Append(line).Append(NewLine);
             ScheduleUpdate();
         }
 
@@ -56,7 +58,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             if (updatePendingTask == null)
             {
                 updatePendingTask = Task.Run(async () => {
-                    await Task.Delay(updateRate);
+                    await Task.Delay(UpdateRate);
                     this.RaisePropertyChanged(nameof(LogText));
                 });
                 await updatePendingTask;

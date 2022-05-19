@@ -16,14 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 from math import radians
-from typing import Optional, Sequence
+from typing import Optional
+# noinspection PyUnresolvedReferences
 from mathutils import Euler
+# noinspection PyUnresolvedReferences
 from mathutils import Vector as MUVector
+
 
 class Vector(object):
     
     def __init__(self, x: float, y: float, z: float):
-
         self.x = x
         self.y = y
         self.z = z
@@ -32,14 +34,17 @@ class Vector(object):
         return MUVector((
             self.x,
             self.y,
-            self.z))
+            self.z
+        ))
 
     def to_mathutils_euler(self) -> Euler:
         return Euler(
             (radians(self.x),
-            radians(self.y),
-            radians(self.z)),
-            "XYZ")
+             radians(self.y),
+             radians(self.z)
+             ),
+            "XYZ"
+        )
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Vector']:
@@ -49,4 +54,5 @@ class Vector(object):
         return Vector(
             obj.x,
             obj.y,
-            obj.z)
+            obj.z
+        )

@@ -35,129 +35,109 @@ using System.Threading;
 using System.Numerics;
 using PKXIconGen.Core;
 using System.Reactive.Disposables;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class PokemonRenderDataWindowViewModel : WindowViewModelBase
     {
-
+        private PokemonRenderData data;
+        private PokemonRenderData Data {
+            get => data;
+            set {
+                data = value;
+                UpdateBindings();
+            }
+        }
+        private bool showShiny;
+        private bool ShowShiny
+        {
+            get => showShiny;
+            set
+            {
+                showShiny = value;
+                UpdateBindings();
+            }
+        }
+        private RenderData CurrentRenderData => ShowShiny ? Data.Shiny.Render : Data.Render;
 
         public string Title { get; init; }
+        private IBlenderRunnerInfo BlenderRunnerInfo { get; init; }
 
         #region General
-        private string name;
         public string Name
         {
-            get => name;
-            set => this.RaiseAndSetIfChanged(ref name, value);
+            get => Data.Name;
+            set {
+                Data.Name = value;
+                this.RaisePropertyChanged();
+            }
         }
 
-        private string? outputName;
         public string? OutputName
         {
-            get => outputName;
-            set => this.RaiseAndSetIfChanged(ref outputName, value);
+            get => Data.OutputName;
+            set {
+                Data.OutputName = value;
+                this.RaisePropertyChanged();
+            }
         }
 
-        private string model;
         public string Model
         {
-            get => model;
-            set => this.RaiseAndSetIfChanged(ref model, value);
+            get => Data.Render.Model;
+            set {
+                Data.Render.Model = value;
+                this.RaisePropertyChanged();
+            }
         }
         #endregion
 
         #region Shiny
-        
-        private Color? shinyColor;
         public Color? ShinyColor
         {
-            get => shinyColor;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref shinyColor, value);
+            get => Data.Shiny.Filter;
+            set {
+                Data.Shiny.Filter = value;
+                this.RaisePropertyChanged();
             }
         }
-        private string? shinyModel;
         public string ShinyModel
         {
-            get => shinyModel ?? "";
-            set => this.RaiseAndSetIfChanged(ref shinyModel, value);
+            get => Data.Shiny.Render.Model;
+            set {
+                Data.Shiny.Render.Model = value;
+                this.RaisePropertyChanged();
+            }
         }
         #endregion
 
         #region Blender Data
-        private ushort normalAnimPose;
-        public ushort NormalAnimPose {
-            get => normalAnimPose;
-            set => this.RaiseAndSetIfChanged(ref normalAnimPose, value);
-        }
-        private ushort normalAnimFrame;
-        public ushort NormalAnimFrame
-        {
-            get => normalAnimFrame;
-            set => this.RaiseAndSetIfChanged(ref normalAnimFrame, value);
-        }
+        public ushort AnimationPose => CurrentRenderData.AnimationPose;
+        public ushort AnimationFrame => CurrentRenderData.AnimationFrame;
+        public Camera MainCamera => CurrentRenderData.MainCamera;
+        public Light MainLight => CurrentRenderData.MainCamera.Light;
+        public Camera? SecondaryCamera => CurrentRenderData.SecondaryCamera;
+        public Light? SecondaryLight => CurrentRenderData.SecondaryCamera?.Light;
 
-        private ushort shinyAnimPose;
-        public ushort ShinyAnimPose
-        {
-            get => shinyAnimPose;
-            set => this.RaiseAndSetIfChanged(ref shinyAnimPose, value);
-        }
-        private ushort shinyAnimFrame;
-        public ushort ShinyAnimFrame
-        {
-            get => shinyAnimFrame;
-            set => this.RaiseAndSetIfChanged(ref shinyAnimFrame, value);
-        }
-
-        private Camera mainCamera;
-        public Camera MainCamera
-        {
-            get => mainCamera;
-            set => this.RaiseAndSetIfChanged(ref mainCamera, value);
-        }
-        public IList<Light> MainLights { get; set; }
-        private Camera? secondaryCamera;
-        public Camera? SecondaryCamera {
-            get => secondaryCamera;
-            set => this.RaiseAndSetIfChanged(ref secondaryCamera, value);
-        }
-        public IList<Light> SecondaryLights { get; set; }
-
-        private IList<string> removedObjects;
-        public IList<string> RemovedObjects
-        {
-            get => removedObjects;
-            set => this.RaiseAndSetIfChanged(ref removedObjects, value);
-        }
+        public ISet<string> RemovedObjects => CurrentRenderData.RemovedObjects;
         #endregion
 
-        public bool currentlyModifying = false;
+        private bool currentlyModifying;
         public bool CurrentlyModifying
         {
             get => currentlyModifying;
             set => this.RaiseAndSetIfChanged(ref currentlyModifying, value);
         }
 
-        private IBlenderRunnerInfo BlenderRunnerInfo { get; }
-        private bool useFilter;
-        public bool UseFilter
-        {
-            get => useFilter;
-            set => this.RaiseAndSetIfChanged(ref useFilter, value);
-        }
-
-#pragma warning disable CS8618
         public PokemonRenderDataWindowViewModel(string title, IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData? renderData)
-#pragma warning restore CS8618
         {
             Title = title;
-            useFilter = true;
+
             BlenderRunnerInfo = blenderRunnerInfo;
 
-            PopulateViewModel(renderData ?? new());
+            data = renderData ?? new();
+            UpdateBindings();
 
             // Reactive
             IObservable<bool> canModifyOrSave = this.WhenAnyValue(
@@ -174,33 +154,29 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             );
 
             ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyOrSave);
+            ShinyToggleCommand = ReactiveCommand.Create(ShinyToggle);
             CancelCommand = ReactiveCommand.Create(Cancel);
             SaveCommand = ReactiveCommand.Create(Save, canModifyOrSave);
         }
 
-        public void PopulateViewModel(PokemonRenderData renderData)
+        private void UpdateBindings()
         {
-            useFilter = renderData.Shiny.Filter.HasValue;
-            
-            name = renderData.Name;
-            outputName = renderData.OutputName;
-            model = renderData.Render.Model;
+            this.RaisePropertyChanged(nameof(Name));
+            this.RaisePropertyChanged(nameof(OutputName));
+            this.RaisePropertyChanged(nameof(Model));
 
-            shinyColor = renderData.Shiny.Filter;
-            shinyModel = renderData.Shiny.Render.Model;
+            this.RaisePropertyChanged(nameof(ShinyColor));
+            this.RaisePropertyChanged(nameof(ShinyModel));
 
-            normalAnimPose = renderData.Render.AnimationPose;
-            normalAnimFrame = renderData.Render.AnimationFrame;
+            this.RaisePropertyChanged(nameof(AnimationPose));
+            this.RaisePropertyChanged(nameof(AnimationFrame));
 
-            shinyAnimPose = renderData.Shiny.Render.AnimationPose;
-            shinyAnimFrame = renderData.Shiny.Render.AnimationFrame;
+            this.RaisePropertyChanged(nameof(MainCamera));
+            this.RaisePropertyChanged(nameof(MainLight));
+            this.RaisePropertyChanged(nameof(SecondaryCamera));
+            this.RaisePropertyChanged(nameof(SecondaryLight));
 
-            MainCamera = renderData.Render.MainCamera;
-            MainLights = new ObservableCollection<Light>(renderData.Render.MainLights);
-            SecondaryCamera = renderData.Render.SecondaryCamera;
-            SecondaryLights = new ObservableCollection<Light>(renderData.Render.SecondaryLights);
-
-            removedObjects = new ObservableCollection<string>(renderData.RemovedObjects);
+            this.RaisePropertyChanged(nameof(RemovedObjects));
         }
 
         public async void BrowseModelPath()
@@ -238,24 +214,22 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
 
         #region Modify in Blender
-        private CancellationTokenSource? modifyBlenderDataCancelTokenSource = null;
+        private CancellationTokenSource? modifyBlenderDataCancelTokenSource;
+        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> ModifyBlenderDataCommand { get; }
-        public async void ModifyBlenderData()
+        private async void ModifyBlenderData()
         {
             DisposeCancelToken();
             modifyBlenderDataCancelTokenSource = new();
 
-            IBlenderRunner blenderRunner = BlenderRunners.GetModifyDataRunner(BlenderRunnerInfo, GetPokemonRenderData());
-            blenderRunner.OnFinish += EndModifyBlenderData;
-
             CurrentlyModifying = true;
-            await blenderRunner.RunAsync(modifyBlenderDataCancelTokenSource.Token);
+            await Data.ModifyAsync(BlenderRunnerInfo, modifyBlenderDataCancelTokenSource.Token, onFinish: EndModifyBlenderData);
         }
-        public void EndModifyBlenderData(PokemonRenderData? newPrd)
+        private void EndModifyBlenderData(PokemonRenderData? newPrd)
         {
             if (newPrd is not null)
             {
-                PopulateViewModel(newPrd);
+                Data = newPrd;
             }
 
             DisposeCancelToken();
@@ -273,24 +247,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
-        #region Data
-        public PokemonRenderData GetPokemonRenderData() => 
-            new(
-                Name,
-                OutputName,
-                new RenderData(Model, NormalAnimPose, NormalAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray()),
-                UseFilter ? 
-                    new ShinyInfo(ShinyColor, new RenderData(Model, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())) : 
-                    new ShinyInfo(new RenderData(ShinyModel, ShinyAnimPose, ShinyAnimFrame, MainCamera, MainLights.ToArray(), SecondaryCamera, SecondaryLights.ToArray())),
-                RemovedObjects.ToHashSet()
-            );
-        #endregion
-
-        #region Save
+        #region Other Buttons
+        [UsedImplicitly]
+        public ReactiveCommand<Unit, Unit> ShinyToggleCommand { get; }
+        private void ShinyToggle() => ShowShiny = !ShowShiny;
+        [UsedImplicitly]
         public ReactiveCommand<Unit, object?> CancelCommand { get; }
-        public static object? Cancel() => null;
+        private static object? Cancel() => null;
+        [UsedImplicitly]
         public ReactiveCommand<Unit, PokemonRenderData> SaveCommand { get; }
-        public PokemonRenderData Save() => GetPokemonRenderData();
+        private PokemonRenderData Save() => Data;
         #endregion
     }
 }

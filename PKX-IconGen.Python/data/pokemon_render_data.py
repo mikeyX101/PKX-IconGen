@@ -16,15 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 
-from copy import deepcopy
 import json
 
 from types import SimpleNamespace
-from typing import List, Set
-from typing import Optional
+from typing import Optional, List
 
+from .edit_mode import EditMode
+from .camera import Camera
 from .render_data import RenderData
 from .shiny_info import ShinyInfo
+
 
 class PokemonRenderData(object):
 
@@ -32,19 +33,43 @@ class PokemonRenderData(object):
                  name: str,
                  output_name: Optional[str],
                  render: RenderData,
-                 shiny: ShinyInfo,
-                 removed_objects: Set[str]):
-
+                 shiny: ShinyInfo):
         self.name = name
         self.output_name = output_name
         self.render = render
         self.shiny = shiny
-        self.removed_objects = removed_objects
 
     def to_json(self) -> str:
-        copy = deepcopy(self)
-        copy.removed_objects = list(copy.removed_objects) # change set to list to serialize it
-        return json.dumps(copy, default=vars, separators=(',', ':'))
+        return json.dumps(self, default=vars, separators=(',', ':'))
+
+    def get_mode_render(self, mode: EditMode) -> RenderData:
+        if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
+            return self.render
+        elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+            return self.shiny.render
+        else:
+            raise Exception("Unknown edit mode: " + mode.name)
+
+    def get_mode_camera(self, mode: EditMode) -> Optional[Camera]:
+        render: RenderData = self.get_mode_render(mode)
+        if mode == EditMode.NORMAL or mode == EditMode.SHINY:
+            return render.main_camera
+        elif mode == EditMode.NORMAL_SECONDARY or mode == EditMode.SHINY_SECONDARY:
+            return render.secondary_camera
+        else:
+            raise Exception("Unknown edit mode: " + mode.name)
+
+    def get_mode_animation_pose(self, mode: EditMode) -> int:
+        render: RenderData = self.get_mode_render(mode)
+        return render.animation_pose
+
+    def get_mode_animation_frame(self, mode: EditMode) -> int:
+        render: RenderData = self.get_mode_render(mode)
+        return render.animation_frame
+
+    def get_mode_removed_objects(self, mode: EditMode) -> List[str]:
+        render: RenderData = self.get_mode_render(mode)
+        return render.removed_objects
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['PokemonRenderData']:
@@ -55,11 +80,10 @@ class PokemonRenderData(object):
             obj.name,
             obj.output_name,
             RenderData.parse_obj(obj.render),
-            ShinyInfo.parse_obj(obj.shiny),
-            obj.removed_objects)
+            ShinyInfo.parse_obj(obj.shiny))
 
     @staticmethod
-    def from_json(json_str: str):
+    def from_json(json_str: str) -> Optional['PokemonRenderData']:
         prd = json.loads(json_str, object_hook=lambda d: SimpleNamespace(**d))
 
         return PokemonRenderData.parse_obj(prd)

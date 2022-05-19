@@ -64,7 +64,7 @@ namespace PKXIconGen.Core.Services
                     {
                         bool isBlender = name.Equals("Blender");
                         bool isValidVersion = version.Value >= MinimumBlenderVersion;
-                        return new(isBlender, isValidVersion, version.Value);    
+                        return new BlenderCheckResult(isBlender, isValidVersion, version.Value);    
                     }
                 }
             }

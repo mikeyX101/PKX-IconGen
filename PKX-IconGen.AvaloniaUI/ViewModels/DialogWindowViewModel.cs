@@ -33,13 +33,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public string? Icon { get; init; }
         public Brush? IconColor { get; init; }
-        public bool IconVisible { get; init; } = false;
+        public bool IconVisible { get; init; }
         
         public string? ImageAsset { get; init; }
-        public bool ImageVisible { get; init; } = false;
+        public bool ImageVisible { get; init; }
 
-        public bool OkButtonVisible { get; init; } = false;
-        public bool YesNoButtonsVisible { get; init; } = false;
+        public bool OkButtonVisible { get; init; }
+        public bool YesNoButtonsVisible { get; init; }
 
         private DialogWindowViewModel(uint? height, string text, string title, DialogButtons dialogButtons)
         {
@@ -49,12 +49,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             switch (dialogButtons)
             {
-                case DialogButtons.Ok:
-                    OkButtonVisible = true;
-                    break;
-
                 case DialogButtons.YesNo:
                     YesNoButtonsVisible = true;
+                    break;
+                
+                case DialogButtons.Ok or _:
+                    OkButtonVisible = true;
                     break;
             }
         }

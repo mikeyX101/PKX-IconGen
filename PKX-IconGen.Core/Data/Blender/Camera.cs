@@ -20,6 +20,7 @@
 using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.Core.Data.Blender
 {
@@ -29,26 +30,32 @@ namespace PKXIconGen.Core.Data.Blender
     public readonly struct Camera : IJsonSerializableBlenderObject, IEquatable<Camera>
     {
         [JsonPropertyName("pos")]
-        public JsonSerializableVector3 Position { get; init; }
-        [JsonPropertyName("rot")]
-        public JsonSerializableVector3 RotationEuler { get; init; }
+        public readonly JsonSerializableVector3 Position { get; init; }
+        [JsonPropertyName("focus")]
+        public readonly JsonSerializableVector3 FocusPoint { get; init; }
 
         [JsonPropertyName("fov")]
-        public float FieldOfView { get; init; }
+        public readonly float FieldOfView { get; init; }
 
-        public Camera(Vector3 position, Vector3 rotationEulerXYZ, float fieldOfView)
+        [JsonPropertyName("light")]
+        public readonly Light Light { get; init; }
+        
+        [UsedImplicitly]
+        public Camera(Vector3 position, Vector3 focusPoint, float fieldOfView, Light light)
         {
-            Position = new(position);
-            RotationEuler = new(rotationEulerXYZ);
+            Position = new JsonSerializableVector3(position);
+            FocusPoint = new JsonSerializableVector3(focusPoint);
             FieldOfView = fieldOfView;
+            Light = light;
         }
 
         public bool Equals(Camera other)
         {
             return
                 Position.Equals(other.Position) &&
-                RotationEuler.Equals(other.RotationEuler) &&
-                FieldOfView == other.FieldOfView;
+                FocusPoint.Equals(other.FocusPoint) &&
+                Math.Abs(FieldOfView - other.FieldOfView) < 0.000000001 &&
+                Light.Equals(other.Light);
         }
         public override bool Equals(object? obj)
         {
@@ -65,8 +72,8 @@ namespace PKXIconGen.Core.Data.Blender
             return !(left == right);
         }
 
-        public readonly override int GetHashCode() => (Position, RotationEuler, FieldOfView).GetHashCode();
+        public readonly override int GetHashCode() => (Position, FocusPoint, FieldOfView, Light).GetHashCode();
 
-        public static Camera GetDefaultCamera() => new(new(14f, -13.5f, 5.5f), new(86.8f, 0f, 54f), 40f);
+        public static Camera GetDefaultCamera() => new(new Vector3(14f, -13.5f, 5.5f), new Vector3(0f, 0f, 0f), 40f, Light.GetDefaultLight());
     }
 }

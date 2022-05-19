@@ -22,13 +22,13 @@ namespace PKXIconGen.Core.Data
 {
     public enum RenderScale : byte
     {
-        x1 = 0,
-        x2 = 1,
-        x3 = 2,
-        x4 = 3,
-        x5 = 4,
-        x6 = 5,
-        x7 = 6,
-        x8 = 7,
+        X1 = 1,
+        X2 = 2,
+        X3 = 3,
+        X4 = 4,
+        X5 = 5,
+        X6 = 6,
+        X7 = 7,
+        X8 = 8,
     }
 }

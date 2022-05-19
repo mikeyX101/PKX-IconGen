@@ -34,6 +34,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reflection;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
@@ -54,12 +55,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             ExportBlenderCommand = ReactiveCommand.CreateFromTask(ExportBlender, exportEnabled);
         }
 
+        [UsedImplicitly]
         public async void Import()
         {
             List<FileDialogFilter>? filters = null;
             if (IsWindows)
             {
-                filters = new();
+                filters = new List<FileDialogFilter>();
                 List<string> extensions = new() {
                     "json"
                 };
@@ -78,12 +80,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 }
                 catch (ArgumentNullException ex)
                 {
-                    Core.CoreManager.Logger.Error(ex, "An exception occured while importing data. Probably invalid Json for this case.");
+                    CoreManager.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
                     await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while importing. The given Json is invalid.\nClose the application and see the logs for further details.");
                 }
                 catch (Exception ex) 
                 {
-                    Core.CoreManager.Logger.Error(ex, "An unexpected exception occured while importing data.");
+                    CoreManager.Logger.Error(ex, "An unexpected exception occured while importing data");
                     await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An unexpected error occured while importing. \nClose the application and see the logs for further details.");
                 }
             }
@@ -91,8 +93,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public delegate void ImportDel(PokemonRenderData? data);
         public event ImportDel? OnImport;
 
+        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> ExportCommand { get; }
-        public async Task Export()
+        private async Task Export()
         {
             IEnumerable<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData;
             if (data.Count() == 1)
@@ -102,8 +105,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 List<string> extensions = new() {
                     "json"
                 };
-                List<FileDialogFilter>? filters = new(new List<FileDialogFilter> { new FileDialogFilter { Extensions = extensions, Name = "PKX-IconGen Json" } });
-                string? filePath = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.OutputName ?? renderData.Name + ".json");
+                List<FileDialogFilter> filters = new(new List<FileDialogFilter> { new() { Extensions = extensions, Name = "PKX-IconGen Json" } });
+                string? filePath = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Output + ".json");
                 if (filePath != null)
                 {
                     await JsonIO.ExportAsync(renderData, filePath);
@@ -116,23 +119,27 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 {
                     foreach (PokemonRenderData prd in data)
                     {
-                        await JsonIO.ExportAsync(prd, Path.Combine(directory, prd.OutputName ?? prd.Name + ".json"));
+                        await JsonIO.ExportAsync(prd, Path.Combine(directory, prd.Output + ".json"));
                     }
                 }
             }
         }
+        
+        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> ExportBlenderCommand { get; }
-        public async Task ExportBlender()
+        private async Task ExportBlender()
         {
             await Task.Delay(1);
             throw new NotImplementedException();
         }
 
+        [UsedImplicitly]
         public void ToggleLogBlender()
         {
             MainWindow.LogBlender = !MainWindow.LogBlender;
         }
 
+        [UsedImplicitly]
         public void ImporterAddon()
         {
             string url = "https://github.com/StarsMmd/Blender-Addon-Gamecube-Models";
@@ -154,7 +161,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
 
-        public async void About()
+        [UsedImplicitly]
+        public static async void About()
         {
             Assembly coreAssembly = Assembly.Load("PKX-IconGen.Core");
             Assembly uiAssembly = Assembly.GetExecutingAssembly();
@@ -172,7 +180,8 @@ Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"
                 height: 250, title: "About");
         }
 
-        public void Quit()
+        [UsedImplicitly]
+        public static void Quit()
         {
             Utils.GetApplicationLifetime().Shutdown(0);
         }

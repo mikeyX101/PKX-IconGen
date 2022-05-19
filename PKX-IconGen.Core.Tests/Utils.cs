@@ -2,7 +2,7 @@
 using PKXIconGen.Core;
 using System;
 
-namespace PKX_IconGen.Core.Tests.Data
+namespace PKX_IconGen.Core.Tests
 {
     public class UtilsTests
     {

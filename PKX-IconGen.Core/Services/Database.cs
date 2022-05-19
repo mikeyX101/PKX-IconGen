@@ -30,34 +30,36 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.Core.Services
 {
-    public class Database : DbContext
+    public sealed class Database : DbContext
     {
+        [UsedImplicitly]
         internal class DatabaseDesignTimeFactory : IDesignTimeDbContextFactory<Database>
         {
             public Database CreateDbContext(string[] args) => new();
         }
 
-        private static Database? instance;
+        private static Database? _instance;
         public static Database Instance
         {
             get
             {
-                if (instance == null || instance.Disposed)
+                if (_instance == null || _instance.Disposed)
                 {
-                    instance = new Database();
+                    _instance = new Database();
                 }
-                return instance;
+                return _instance;
             }
         }
         internal static void OnClose()
         {
-            if (instance != null)
+            if (_instance != null)
             {
-                instance.Dispose();
-                instance = null;
+                _instance.Dispose();
+                _instance = null;
             }
         }
 
@@ -68,7 +70,7 @@ namespace PKXIconGen.Core.Services
         private static Exception IfNullTable(string propertyName)
         {
             Exception ex = new InvalidOperationException($"{propertyName} was somehow null?");
-            CoreManager.Logger.Fatal(ex, "{TableName} was somehow null?", propertyName);
+            CoreManager.Logger.Fatal(ex, "{@TableName} was somehow null?", propertyName);
             return ex;
         }
 
@@ -104,16 +106,6 @@ namespace PKXIconGen.Core.Services
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
                     v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions) ?? new ShinyInfo());
-
-            pokemonRenderDataEntityBuilder.Property<HashSet<string>>(nameof(PokemonRenderData.RemovedObjects))
-                .HasDefaultValue(new HashSet<string>())
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<HashSet<string>>(v, serializerOptions) ?? new HashSet<string>(),
-                    new ValueComparer<HashSet<string>>(
-                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToHashSet()));
         }
 
         internal void RunMigrations()
@@ -131,7 +123,7 @@ namespace PKXIconGen.Core.Services
             }
         }
 
-        public bool Disposed { get; private set; } = false;
+        private bool Disposed { get; set; }
         public override void Dispose()
         {
             Disposed = true;
@@ -158,9 +150,7 @@ namespace PKXIconGen.Core.Services
         {
             if (SettingsTable != null)
             {
-                Settings settings = SettingsTable
-                    .Where(s => s.InternalID == SettingsId)
-                    .First();
+                Settings settings = SettingsTable.First(s => s.InternalID == SettingsId);
 
                 EntityEntry<Settings> entity = SettingsTable.Attach(settings);
                 entity.Property(propertySelector).CurrentValue = value;
@@ -194,13 +184,13 @@ namespace PKXIconGen.Core.Services
             if (PokemonRenderDataTable != null)
             {
                 newData.ID = id;
-                PokemonRenderData? data = PokemonRenderDataTable.Find(id);
+                PokemonRenderData? data = await PokemonRenderDataTable.FindAsync(id);
                 
                 if (data is not null)
                 {
-                    EntityEntry<PokemonRenderData> prd = Entry(data);
-                    prd.CurrentValues.SetValues(newData);
-                    prd.Property(prd => prd.ID).IsModified = false;
+                    EntityEntry<PokemonRenderData> prdEntry = Entry(data);
+                    prdEntry.CurrentValues.SetValues(newData);
+                    prdEntry.Property(prd => prd.ID).IsModified = false;
                 }
 
                 return await SaveChangesAsync();
@@ -211,7 +201,7 @@ namespace PKXIconGen.Core.Services
             }
         }
 
-        private static List<PokemonRenderData>? BuiltInPRDs;
+        private List<PokemonRenderData>? BuiltInPRDs;
         public List<PokemonRenderData> GetPokemonRenderDataBuiltIns()
         {
             if (BuiltInPRDs != null)
@@ -247,9 +237,7 @@ namespace PKXIconGen.Core.Services
         {
             if (PokemonRenderDataTable != null)
             {
-                PokemonRenderData pokemonRenderData = PokemonRenderDataTable
-                    .Where(prd => prd.ID == id && !prd.BuiltIn)
-                    .First();
+                PokemonRenderData pokemonRenderData = PokemonRenderDataTable.First(prd => prd.ID == id && !prd.BuiltIn);
 
                 PokemonRenderDataTable.RemoveRange(pokemonRenderData);
 
