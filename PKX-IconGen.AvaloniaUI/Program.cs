@@ -17,6 +17,8 @@
 */
 #endregion
 
+using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using PKXIconGen.Core;
@@ -24,8 +26,6 @@ using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.MaterialDesign;
-using System;
-using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI
 {

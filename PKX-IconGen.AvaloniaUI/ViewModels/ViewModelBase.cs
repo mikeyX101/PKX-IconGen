@@ -17,11 +17,11 @@
 */
 #endregion
 
-using PKXIconGen.Core.Services;
-using ReactiveUI;
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using PKXIconGen.Core.Services;
+using ReactiveUI;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

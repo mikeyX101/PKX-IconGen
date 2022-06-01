@@ -17,6 +17,7 @@
 */
 #endregion
 
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -24,11 +25,8 @@ using Avalonia.Xaml.Interactions.Core;
 using Avalonia.Xaml.Interactivity;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
-using PKXIconGen.Core;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
-using System;
-using System.Linq;
 
 namespace PKXIconGen.AvaloniaUI
 {

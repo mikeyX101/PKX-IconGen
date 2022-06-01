@@ -17,17 +17,11 @@
 */
 #endregion
 
-using Avalonia;
-using Avalonia.Data.Converters;
-using AvaloniaColor = Avalonia.Media.Color;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using System;
 using System.Globalization;
-using System.IO;
-using System.Reflection;
+using Avalonia.Data.Converters;
 using Avalonia.Media;
-using PKXIconGen.Core;
+using AvaloniaColor = Avalonia.Media.Color;
 
 namespace PKXIconGen.AvaloniaUI.Converters
 {

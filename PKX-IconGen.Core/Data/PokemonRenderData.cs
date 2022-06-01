@@ -17,19 +17,16 @@
 */
 #endregion
 
-using Microsoft.EntityFrameworkCore;
-using PKXIconGen.Core.Data.Blender;
 using System;
-using System.Linq;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
 using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data

@@ -17,13 +17,13 @@
 */
 #endregion
 
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using Serilog.Parsing;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace PKXIconGen.Core.Logging
 {

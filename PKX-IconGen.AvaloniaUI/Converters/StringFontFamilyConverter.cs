@@ -17,10 +17,10 @@
 */
 #endregion
 
-using Avalonia.Data.Converters;
-using Avalonia.Media;
 using System;
 using System.Globalization;
+using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace PKXIconGen.AvaloniaUI.Converters
 {

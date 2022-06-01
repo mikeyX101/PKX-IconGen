@@ -17,10 +17,10 @@
 */
 #endregion
 
+using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using PKXIconGen.AvaloniaUI.ViewModels;
-using System;
 
 namespace PKXIconGen.AvaloniaUI
 {

@@ -17,13 +17,12 @@
 */
 #endregion
 
+using System;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using ReactiveUI;
-using System;
 
 namespace PKXIconGen.AvaloniaUI.Views
 {

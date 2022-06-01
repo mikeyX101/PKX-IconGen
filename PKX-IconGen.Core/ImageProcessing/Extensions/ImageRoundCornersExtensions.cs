@@ -17,7 +17,6 @@
 */
 #endregion
 
-using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;

@@ -19,7 +19,6 @@
 
 using NUnit.Framework;
 using PKXIconGen.Core.Data.Blender;
-using System;
 
 namespace PKXIconGen.Core.Tests.Data
 {

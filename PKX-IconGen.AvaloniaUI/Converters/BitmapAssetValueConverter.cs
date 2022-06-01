@@ -17,14 +17,14 @@
 */
 #endregion
 
-using Avalonia;
-using Avalonia.Data.Converters;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using Avalonia;
+using Avalonia.Data.Converters;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 // https://docs.avaloniaui.net/docs/controls/image
 namespace PKXIconGen.AvaloniaUI.Converters

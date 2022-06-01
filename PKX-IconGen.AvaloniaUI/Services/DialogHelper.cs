@@ -17,13 +17,12 @@
 */
 #endregion
 
+using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
-using System;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.Services
 {

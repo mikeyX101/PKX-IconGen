@@ -1,13 +1,10 @@
-﻿using PKXIconGen.Core.ImageProcessing;
-using PKXIconGen.Core.Services;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using PKXIconGen.Core.ImageProcessing;
+using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data
 {

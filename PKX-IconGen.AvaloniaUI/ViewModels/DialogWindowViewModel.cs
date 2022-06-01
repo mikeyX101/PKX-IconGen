@@ -19,7 +19,6 @@
 
 using Avalonia.Media;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
-using System.Threading.Tasks;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

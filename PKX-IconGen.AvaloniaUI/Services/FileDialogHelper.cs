@@ -17,10 +17,10 @@
 */
 #endregion
 
-using Avalonia.Controls;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 
 namespace PKXIconGen.AvaloniaUI.Services
 {

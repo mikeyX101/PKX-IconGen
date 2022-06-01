@@ -17,12 +17,6 @@
 */
 #endregion
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PKXIconGen.Core.Data;
-using PKXIconGen.Core.Data.Blender;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +25,11 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PKXIconGen.Core.Data;
 
 namespace PKXIconGen.Core.Services
 {

@@ -17,14 +17,6 @@
 */
 #endregion
 
-using Avalonia.Controls;
-using Avalonia.Controls.Selection;
-using DynamicData;
-using PKXIconGen.AvaloniaUI.Services;
-using PKXIconGen.Core.Data;
-using PKXIconGen.Core.ImageProcessing;
-using PKXIconGen.Core.Services;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,8 +27,15 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Controls.Selection;
+using DynamicData;
 using DynamicData.Binding;
 using JetBrains.Annotations;
+using PKXIconGen.AvaloniaUI.Services;
+using PKXIconGen.Core.Data;
+using PKXIconGen.Core.Services;
+using ReactiveUI;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

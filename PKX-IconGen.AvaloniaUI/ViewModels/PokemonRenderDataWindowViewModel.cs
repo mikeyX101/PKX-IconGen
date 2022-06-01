@@ -19,23 +19,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+using System.Reactive;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Data.Blender;
 using ReactiveUI;
-using System.Collections.ObjectModel;
-using System.Reactive;
-using System.IO;
-using PKXIconGen.Core.Services;
-using System.Threading;
-using System.Numerics;
-using PKXIconGen.Core;
-using System.Reactive.Disposables;
-using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

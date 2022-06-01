@@ -17,24 +17,21 @@
 */
 #endregion
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Reflection;
+using System.Threading.Tasks;
 using Avalonia.Controls;
-using DynamicData.Binding;
+using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reactive;
-using System.Reflection;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {

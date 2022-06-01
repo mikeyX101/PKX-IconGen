@@ -20,10 +20,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using PKXIconGen.AvaloniaUI.ViewModels;
-using PKXIconGen.Core.Data;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace PKXIconGen.AvaloniaUI.Views
 {

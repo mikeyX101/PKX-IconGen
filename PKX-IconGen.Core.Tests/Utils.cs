@@ -17,9 +17,8 @@
 */
 #endregion
 
-using NUnit.Framework;
-using PKXIconGen.Core;
 using System;
+using NUnit.Framework;
 
 namespace PKXIconGen.Core.Tests
 {
