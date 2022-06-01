@@ -15,8 +15,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+
 from typing import List, Optional
 import bpy
+
+import utils
 from data.color import Color
 from data.light import Light, LightType
 from data.pokemon_render_data import PokemonRenderData
@@ -25,13 +28,11 @@ from data.vector import Vector
 from data.edit_mode import EditMode
 from math import radians
 from math import degrees
-from utils import import_model
-from utils import remove_objects
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 0),
+    "version": (0, 5, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -66,13 +67,9 @@ class ShowRegionUiOperator(bpy.types.Operator):
 
 
 class PKXSyncOperator(bpy.types.Operator):
-    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUse at your own risk."""
+    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUSE AT YOUR OWN RISK."""
     bl_idname = "wm.pkx_sync"
     bl_label = "Synchronize"
-
-    @classmethod
-    def poll(cls, context):
-        return True
 
     def execute(self, context):
         sync_scene_to_props()
@@ -100,14 +97,10 @@ class PKXDeleteOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class SaveToPKXIconGenOperator(bpy.types.Operator):
+class PKXSaveOperator(bpy.types.Operator):
     """Save and exit back to PKX-IconGen"""
     bl_idname = "wm.pkx_save"
     bl_label = "Save and quit"
-
-    @classmethod
-    def poll(cls, context):
-        return True
 
     def execute(self, context):
         sync_props_to_prd()
@@ -154,15 +147,12 @@ def get_camera_light():
 def get_armature(refresh: bool):
     global armature
 
+    objs = bpy.data.objects
     if refresh or armature is None:
         if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
-            try:
-                armature = bpy.data.objects["Armature1"]
-            except KeyError:
-                import_model(prd.shiny.render.model)
-                armature = bpy.data.objects["Armature1"]
+            armature = objs["Armature1"]
         else:
-            armature = bpy.data.objects["Armature0"]
+            armature = objs["Armature0"]
     return armature
 
 
@@ -179,6 +169,9 @@ def update_mode(self, context):
     mode = EditMode[value]
 
     sync_prd_to_props()
+
+    utils.switch_model(prd.shiny, mode)
+
     sync_props_to_scene()
 
 
@@ -248,7 +241,7 @@ def update_light_distance(self, context):
 def update_shiny_color(self, context):
     value = self.shiny_color
 
-
+    utils.change_shiny_color(value)
 
 
 def sync_scene_to_props():
@@ -279,8 +272,11 @@ def sync_scene_to_props():
     scene.animation_pose = int(action.name[len(action) - 1])
     scene.animation_frame = scene.frame_current
 
+    # TODO Shiny color?
+
 
 def sync_props_to_scene():
+    global removed_objects
     scene = bpy.data.scenes["Scene"]
     armature = get_armature(False)
     camera = get_camera()
@@ -302,6 +298,11 @@ def sync_props_to_scene():
 
     armature.animation_data.action = bpy.data.actions[scene.animation_pose]
     scene.frame_set(scene.animation_frame)
+
+    utils.remove_objects(removed_objects)
+
+    if prd.shiny.hue is not None:
+        utils.change_shiny_color(scene.shiny_color)
 
 
 def sync_prd_to_props():
@@ -329,8 +330,9 @@ def sync_prd_to_props():
     scene.animation_frame = animation_frame
 
     removed_objects = prd.get_mode_removed_objects(mode)
-    remove_objects(removed_objects)
-    print("Set to Prop: " + str(removed_objects))
+
+    if prd.shiny.hue is not None:
+        scene.shiny_color = utils.hue2rgb(prd.shiny.hue)
 
 
 def sync_props_to_prd():
@@ -385,7 +387,8 @@ def sync_props_to_prd():
         prd.shiny.render.animation_frame = animation_frame
         prd.shiny.render.removed_objects = list(removed_objects)
 
-    print("Set to PRD: " + str(removed_objects))
+    if prd.shiny.hue is not None:
+        prd.shiny.hue = utils.rgb2hue(scene.shiny_color)
 
 
 # Props
@@ -463,7 +466,7 @@ LIGHTPROPS = [
     ('light_type',
      bpy.props.EnumProperty(
         name="Light type",
-        description="Type of light, Area lights should usually do the trick",
+        description="Type of light, Point lights should usually do the trick",
         items=[
             ('POINT', "Point", "Point light"),
             ('SUN', "Sun", "Sun"),
@@ -489,6 +492,8 @@ LIGHTPROPS = [
         description="Color of the light",
         subtype="COLOR",
         default=(1, 1, 1),
+        min=0,
+        max=1,
         update=update_light_color
      )),
     ('light_distance',
@@ -509,6 +514,8 @@ SHINYPROPS = [
         description="Filter to put on top of textures for the shiny effect",
         subtype="COLOR",
         default=(1, 1, 1),
+        min=0,
+        max=1,
         update=update_shiny_color
      )),
 ]
@@ -546,8 +553,8 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
 
             row = col.row(align=True)
             row.prop(context.scene, prop_name, expand=expand)
-        col.operator("wm.pkx_delete")
-        col.operator("wm.pkx_save")
+        col.operator(PKXDeleteOperator.bl_idname)
+        col.operator(PKXSaveOperator.bl_idname)
 
 
 class PKXAnimationPanel(PKXPanel, bpy.types.Panel):
@@ -582,13 +589,13 @@ class PKXLightPanel(PKXPanel, bpy.types.Panel):
 
 class PKXShinyPanel(PKXPanel, bpy.types.Panel):
     bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
-    bl_idname = 'VIEW3D_PT_PKX_ANIMATION_PANEL'
-    bl_label = 'Animation/Pose'
+    bl_idname = 'VIEW3D_PT_PKX_SHINY_PANEL'
+    bl_label = 'Shiny Info'
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     @classmethod
     def poll(cls, context):
-        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+        return prd.shiny.hue is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
 
     def draw(self, context):
         init_subpanel(self, context, SHINYPROPS)
@@ -622,10 +629,11 @@ CLASSES = [
     PKXAnimationPanel,
     PKXCameraPanel,
     PKXLightPanel,
+    PKXShinyPanel,
     PKXAdvancedPanel,
 
     ShowRegionUiOperator,
-    SaveToPKXIconGenOperator,
+    PKXSaveOperator,
     PKXSyncOperator,
     PKXDeleteOperator
 ]
@@ -646,8 +654,8 @@ def register(data: PokemonRenderData):
     scene = bpy.data.scenes["Scene"]
     scene.secondary_enabled = data.render.secondary_camera is not None
 
-    # PRD should already be synced with the Scene
     sync_prd_to_props()
+    utils.remove_objects(removed_objects)
 
     # unselect on start
     for obj in bpy.context.selected_objects:

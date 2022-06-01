@@ -15,7 +15,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-from typing import Optional, Sequence, List
+
+from typing import Optional, List
 
 # noinspection PyUnresolvedReferences
 from mathutils import Vector as MUVector

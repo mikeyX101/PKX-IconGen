@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+
 from typing import Optional
 from typing import List
 
@@ -24,7 +25,7 @@ from .camera import Camera
 class RenderData(object):
     
     def __init__(self, 
-                 model: str, 
+                 model: Optional[str],
                  animation_pose: int, 
                  animation_frame: int, 
                  main_camera: Camera, 
@@ -45,6 +46,12 @@ class RenderData(object):
         if obj is None:
             return obj
 
+        model: Optional[str] = None
+        try:
+            model = obj.model
+        except AttributeError:
+            pass
+
         secondary_camera: Optional[Camera] = None
         try:
             secondary_camera = Camera.parse_obj(obj.secondary_camera)
@@ -52,7 +59,7 @@ class RenderData(object):
             pass
 
         return RenderData(
-            obj.model,
+            model,
             obj.animation_pose,
             obj.animation_frame,
             Camera.parse_obj(obj.main_camera),

@@ -63,6 +63,7 @@ namespace PKXIconGen.Core.Services
         private string TemplateName { get; init; }
         private bool LogBlender { get; init; }
         private string BlenderPath { get; init; }
+        private string AssetsPath { get; init; }
         private string[] Arguments { get; init; }
         private string OptionalArguments { get; init; }
         private byte[] Input { get; init; }
@@ -73,6 +74,7 @@ namespace PKXIconGen.Core.Services
             TemplateName = templateName ?? "";
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
+            AssetsPath = blenderRunnerInfo.AssetsPath;
             Arguments = arguments;
             OptionalArguments = blenderRunnerInfo.OptionalArguments;
             Input = Encoding.UTF8.GetBytes(input);
@@ -161,6 +163,10 @@ namespace PKXIconGen.Core.Services
                     {
                         args.Add(OptionalArguments);
                     }
+
+                    args
+                        .Add("--") // Python Script args
+                        .Add("--assets-path").Add(AssetsPath);
                 });
             
             cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));

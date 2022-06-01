@@ -17,6 +17,8 @@
 */
 #endregion
 
+using System;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 
@@ -27,6 +29,25 @@ namespace PKXIconGen.AvaloniaUI
         public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
         {
             return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new System.InvalidOperationException();
+        }
+
+        public static void OpenUrl(string url)
+        {
+            // For .NETCore 3 and more: https://stackoverflow.com/a/43232486
+            // hack because of this: https://github.com/dotnet/corefx/issues/10361
+            if (OperatingSystem.IsWindows())
+            {
+                url = url.Replace("&", "^&");
+                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                Process.Start("xdg-open", url);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                Process.Start("open", url);
+            }
         }
     }
 }

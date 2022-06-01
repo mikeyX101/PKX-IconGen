@@ -15,16 +15,16 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+
 from typing import Optional
 
-from .color import Color
 from .render_data import RenderData
 
 
 class ShinyInfo(object):
     
-    def __init__(self, filter: Optional[Color], render: RenderData):
-        self.filter = filter
+    def __init__(self, hue: Optional[float], render: RenderData):
+        self.hue = hue
         self.render = render
 
     @staticmethod
@@ -32,12 +32,13 @@ class ShinyInfo(object):
         if obj is None:
             return obj
 
-        color: Optional[Color] = None
+        hue: Optional[float] = None
         try:
-            color = Color.parse_obj(obj.filter)
+            hue = obj.hue
         except AttributeError:
             pass
 
         return ShinyInfo(
-            color,
-            RenderData.parse_obj(obj.render))
+            hue,
+            RenderData.parse_obj(obj.render)
+        )

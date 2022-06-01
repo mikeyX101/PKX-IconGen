@@ -26,38 +26,41 @@ namespace PKXIconGen.AvaloniaUI.Services
 {
     public static class FileDialogHelper
     {
-        public static async Task<string?> GetFile(string title, List<FileDialogFilter>? filters = null)
+        public static async Task<string?> GetFile(string title, List<FileDialogFilter>? filters = null, string? initialDirectory = null)
         {
             OpenFileDialog fileDialog = new()
             {
                 AllowMultiple = false,
                 Title = title,
-                Filters = filters ?? new List<FileDialogFilter>()
+                Filters = filters ?? new List<FileDialogFilter>(),
+                Directory = initialDirectory
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
             string? file = files?.FirstOrDefault();
             return file;
         }
 
-        public static async Task<string?> SaveFile(string title, List<FileDialogFilter>? filters = null, string? initialFileName = null)
+        public static async Task<string?> SaveFile(string title, List<FileDialogFilter>? filters = null, string? initialFileName = null, string? initialDirectory = null)
         {
             SaveFileDialog fileDialog = new()
             {
                 Title = title,
                 Filters = filters ?? new List<FileDialogFilter>(),
-                InitialFileName = initialFileName
+                InitialFileName = initialFileName,
+                Directory = initialDirectory
             };
             string? file = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
             return file;
         }
 
-        public static async Task<string[]?> GetFiles(string title, List<FileDialogFilter>? filters = null)
+        public static async Task<string[]?> GetFiles(string title, List<FileDialogFilter>? filters = null, string? initialDirectory = null)
         {
             OpenFileDialog fileDialog = new()
             {
                 AllowMultiple = true,
                 Title = title,
-                Filters = filters ?? new List<FileDialogFilter>()
+                Filters = filters ?? new List<FileDialogFilter>(),
+                Directory = initialDirectory
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
             return files;

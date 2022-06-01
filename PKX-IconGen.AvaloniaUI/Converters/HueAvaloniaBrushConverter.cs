@@ -20,19 +20,20 @@
 using Avalonia;
 using Avalonia.Data.Converters;
 using AvaloniaColor = Avalonia.Media.Color;
-using PKXIconGen.Core.Data.Blender;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using Avalonia.Media;
+using PKXIconGen.Core;
 
 namespace PKXIconGen.AvaloniaUI.Converters
 {
-    public class PKXColorAvaloniaColorConverter : IValueConverter
+    public class HueAvaloniaBrushConverter : IValueConverter
     {
-        public static PKXColorAvaloniaColorConverter Instance = new();
+        public static HueAvaloniaBrushConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -41,10 +42,9 @@ namespace PKXIconGen.AvaloniaUI.Converters
                 return null;
             }
 
-
-            if (value is Color color && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
+            if (value is float hue && targetType.IsAssignableFrom(typeof(SolidColorBrush)))
             {
-                return AvaloniaColor.FromUInt32(color.ToUInt());
+                return new SolidColorBrush(Core.Utils.HueToRgb(Core.Utils.ConvertRange(0, 1, 0, 360, hue)));
             }
             else
             {
@@ -54,19 +54,10 @@ namespace PKXIconGen.AvaloniaUI.Converters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
-            if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(Color)))
-            {
-                return Color.FromRgbInt(color.ToUint32());
-            }
-            else
-            {
-                return null;
-            }
+            return new Avalonia.Data.BindingNotification(
+                new NotSupportedException("Converting a Avalonia brush back to the original hue is not supported."),
+                Avalonia.Data.BindingErrorType.Error
+            );
         }
     }
 }

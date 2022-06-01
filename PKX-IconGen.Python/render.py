@@ -21,34 +21,77 @@ import sys
 import os
 
 sys.path.append(os.getcwd())
+
+from math import radians
+from data.camera import Camera
+from data.light import Light
+from data.pokemon_render_data import PokemonRenderData
 from data.edit_mode import EditMode
 from data.render_job import RenderJob
-import scene_generator
+import utils
 
-job: RenderJob = RenderJob.from_json(sys.stdin.readline())
-scene_generator.import_model(job.data.render.model)
-scene_generator.change_mats()
 
-blender_render = bpy.data.scenes["Scene"].render
+def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
+    objs = bpy.data.objects
+    scene = bpy.data.scenes["Scene"]
+    armature = objs["Armature0"]
+    camera = objs["PKXIconGen_Camera"]
+    focus = objs["PKXIconGen_FocusPoint"]
+    light = objs["PKXIconGen_TopLight"]
 
-base_resolution = 48 if job.game == 3 else 42  # For PBR, for Colo/XD
-blender_render.resolution_x = base_resolution * job.scale
-blender_render.resolution_y = base_resolution * job.scale
+    prd_camera: Camera = prd.get_mode_camera(mode) or Camera.default()
+    prd_light: Light = prd_camera.light or Light.default()
+    animation_pose: int = prd.get_mode_animation_pose(mode) or 0
+    animation_frame: int = prd.get_mode_animation_frame(mode) or 0
 
-scene_generator.sync_prd_to_scene(job.data, EditMode.NORMAL)
-blender_render.filepath = job.main_path
-bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+    if prd_camera is None:
+        prd_camera = Camera.default()
 
-if job.data.render.secondary_camera is not None:
-    scene_generator.sync_prd_to_scene(job.data, EditMode.NORMAL_SECONDARY)
-    blender_render.filepath = job.secondary_path
+    camera_pos = prd_camera.pos.to_mathutils_vector()
+    focus_pos = prd_camera.focus.to_mathutils_vector()
+    camera_fov = prd_camera.fov
+
+    camera.location = camera_pos
+    focus.location = focus_pos
+    camera.data.angle = radians(camera_fov)
+
+    light.data.type = prd_light.type.name
+    light.data.energy = prd_light.strength
+    light.data.color = prd_light.color.to_list()
+    light.location[2] = prd_light.distance
+
+    armature.animation_data.action = bpy.data.actions[animation_pose]
+    scene.frame_set(animation_frame)
+
+    utils.switch_model(prd.shiny, mode)
+
+    utils.remove_objects(prd.get_mode_removed_objects(mode))
+
+
+if __name__ == "__main__":
+    job: RenderJob = RenderJob.from_json(sys.stdin.readline())
+    utils.import_model(job.data.render.model, job.data.shiny.hue)
+
+    blender_render = bpy.data.scenes["Scene"].render
+
+    base_resolution = 48 if job.game == 3 else 42  # For PBR, for Colo/XD
+    blender_render.resolution_x = base_resolution * job.scale
+    blender_render.resolution_y = base_resolution * job.scale
+
+    sync_prd_to_scene(job.data, EditMode.NORMAL)
+    blender_render.filepath = job.main_path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
 
-scene_generator.sync_prd_to_scene(job.data, EditMode.SHINY)
-blender_render.filepath = job.shiny_path
-bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+    if job.data.render.secondary_camera is not None:
+        sync_prd_to_scene(job.data, EditMode.NORMAL_SECONDARY)
+        blender_render.filepath = job.secondary_path
+        bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
 
-if job.data.shiny.render.secondary_camera is not None:
-    scene_generator.sync_prd_to_scene(job.data, EditMode.SHINY_SECONDARY)
-    blender_render.filepath = job.shiny_secondary_path
+    sync_prd_to_scene(job.data, EditMode.SHINY)
+    blender_render.filepath = job.shiny_path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+
+    if job.data.shiny.render.secondary_camera is not None:
+        sync_prd_to_scene(job.data, EditMode.SHINY_SECONDARY)
+        blender_render.filepath = job.shiny_secondary_path
+        bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)

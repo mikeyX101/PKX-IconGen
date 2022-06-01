@@ -20,22 +20,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
              x:Class="PKXIconGen.AvaloniaUI.Views.MenuView">
   <Menu>
     <MenuItem Header="_File">
-      <MenuItem Header="_Import..." Command="{Binding Import}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Import..." Command="{Binding Import}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-import" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="_Export Selected..." Command="{Binding ExportCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{Binding ExportCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-blender-software" />
         </MenuItem.Icon>
@@ -48,14 +49,19 @@
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Settings">
-      <MenuItem Header="Log Blender to Logs folder" Command="{Binding ToggleLogBlender}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Log Blender to Logs folder" Command="{Binding ToggleLogBlender}">
         <MenuItem.Icon>
           <i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Help">
-      <MenuItem Header="Link to Importer Addon" Command="{Binding ImporterAddon}">
+      <MenuItem Header="PKX-IconGen on Github" Command="{Binding GitHub}">
+        <MenuItem.Icon>
+          <i:Icon Value="mdi-github" />
+        </MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Importer Addon on Github" Command="{Binding ImporterAddon}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-github" />
         </MenuItem.Icon>

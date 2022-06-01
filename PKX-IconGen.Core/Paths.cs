@@ -33,10 +33,13 @@ namespace PKXIconGen.Core
         
         // Logs
         internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-        internal static string Log => Path.Combine(LogFolder, $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.txt");
+        private static string SessionLog { get; } = $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
+        internal static string Log => Path.Combine(LogFolder, SessionLog);
+
+        internal static string LogLatest => Path.Combine(LogFolder, $"latest.log");
 
         internal static string BlenderLogsFolder => Path.Combine(LogFolder, "Blender");
-        internal static string BlenderLog => Path.Combine(BlenderLogsFolder, $"blenderLog-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.txt");
+        internal static string BlenderLog => Path.Combine(BlenderLogsFolder, $"blenderLog-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log");
 
         // Temp Folders
         internal static string TempFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");

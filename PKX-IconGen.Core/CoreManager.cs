@@ -55,7 +55,7 @@ namespace PKXIconGen.Core
         {
             if (Initiated)
             {
-                Logger.Warning("Tried to reinitiate Core");
+                Logger.Warning("Tried to initiate Core again");
                 return;
             }
 
@@ -69,6 +69,11 @@ namespace PKXIconGen.Core
                 Directory.CreateDirectory(Paths.TempBlendFolder);
             }
 
+            if (!Directory.Exists(Paths.LogFolder))
+            {
+                Directory.CreateDirectory(Paths.LogFolder);
+            }
+            
             if (!Directory.Exists(Paths.LogFolder))
             {
                 Directory.CreateDirectory(Paths.LogFolder);
@@ -98,7 +103,7 @@ namespace PKXIconGen.Core
                 db.RunMigrations();
 
                 Initiated = true;
-                Logger.Information("PKX-IconGen Core initiated!");
+                Logger.Information("PKX-IconGen Core initiated");
             }
             catch (Exception ex)
             {
@@ -108,9 +113,12 @@ namespace PKXIconGen.Core
 
         public static void OnClose()
         {
-            Logger.Information("PKX-IconGen Core shuting down gracefully...");
+            Logger.Information("PKX-IconGen Core shutting down gracefully...");
             Database.OnClose();
             DisposeLogger();
+            
+            // Copy log as latest.log
+            File.Copy(Paths.Log, Paths.LogLatest, true);
         }
         private static void DisposeLogger()
         {

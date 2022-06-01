@@ -24,8 +24,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-        xmlns:ai="using:Avalonia.Xaml.Interactivity"
-        xmlns:aic="using:Avalonia.Xaml.Interactions.Core"
         
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="780"
         x:Class="PKXIconGen.AvaloniaUI.Views.MainWindow"
@@ -44,7 +42,7 @@
     <StyleInclude Source="/Assets/Styles.axaml" />
   </Window.Styles>
   <Window.Resources>
-    <conv:PathStringFileNameStringConverter x:Key="pathStringFileNameStringConverter" />
+    <conv:PathStringFileNameStringConverter x:Key="PathStringFileNameStringConverter" />
   </Window.Resources>
 
   <Panel>
@@ -64,7 +62,7 @@
       </StackPanel>
       <views:MenuView DataContext="{Binding MenuVM}" DockPanel.Dock="Top" />
       <!--20 rows-->
-      <Grid ShowGridLines="False" ColumnDefinitions="0.25*,1.3*,1*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+      <Grid ShowGridLines="False" ColumnDefinitions="0.25*,1.3*,1*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,35">
         <!--Blender Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="*,30" RowDefinitions="*">
@@ -121,9 +119,9 @@ Output path for the generated icons.
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
         <ComboBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
           <ComboBox.ItemTemplate>
-            <DataTemplate>
+            <DataTemplate DataType="{x:Type data:IconStyle}">
               <Panel VerticalAlignment="Center" Height="30">
-                <TextBlock VerticalAlignment="Center" Text="{ReflectionBinding DisplayName}" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}" />
               </Panel>
             </DataTemplate>
           </ComboBox.ItemTemplate>
@@ -135,7 +133,7 @@ Pokémon Colosseum has no cropping.
 
 Pokémon XD uses the same rendering as Colosseum, but circle crops are used for each icon.
 
-Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline.
+Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline. NOT AVAILABLE YET.
           </ToolTip.Tip>
         </ComboBox>
 
@@ -180,13 +178,13 @@ Please note that this can drastically increase the rendering and processing time
         </Grid>
         <!--Pokemon-->
         <TextBlock Text="Hide Built-Ins" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="10" />
-        <CheckBox IsChecked="{Binding BuiltInsHidden}" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="11" />
+        <CheckBox IsChecked="{Binding BuiltInsHidden}" IsThreeState="False" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="11" />
         <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
           <TextBlock Text="Name" Grid.Column="0" />
           <TextBlock Text="Model" Grid.Column="1" />
           <TextBlock Text="Built In" HorizontalAlignment="Center" Grid.Column="2" />
         </Grid>
-        <ListBox Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
+        <ListBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="6"/>
@@ -196,7 +194,7 @@ Please note that this can drastically increase the rendering and processing time
               <DataTemplate DataType="{x:Type data:PokemonRenderData}">
                 <Grid ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
-                  <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource pathStringFileNameStringConverter}}" Grid.Column="1" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
                   <i:Icon IsVisible="{Binding BuiltIn}" VerticalAlignment="Center" FontSize="16" Value="mdi-check" Grid.Column="2" />
                   <Panel HorizontalAlignment="Right" Grid.Column="3">
                     <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand}" CommandParameter="{Binding .}">
@@ -213,8 +211,9 @@ Please note that this can drastically increase the rendering and processing time
         <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
           <TextBox IsEnabled="False" Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
             <ToolTip.Tip>
-Optional if custom Pokemon are used, needed for Pokemon that already exist. This is the "Game Files" folder from Colosseum Tool or GoD-Tool.
-Make sure to "export" everything containing "pkx".
+Optional if custom Pokemon are used, needed for default built-in Pokemon. Useful when exporting and sharing Pokemon data.
+From there you can include {{AssetsPath}} in a model path.
+This is the "Game Files" folder from Colosseum Tool or GoD-Tool. Make sure to "export" everything containing "pkx".
               
 In Colosseum/GoD Tool:
 Go in 4. Import/Export files
@@ -228,23 +227,23 @@ Enter "export"
         </Grid>
 
         <!--Log-->
-        <Grid Margin="16,0,16,0" Grid.Column="2" Grid.Row="0" Grid.RowSpan="19" ColumnDefinitions="*" RowDefinitions="20,*">
+        <Grid Margin="16,0,16,8" Grid.Column="2" Grid.Row="0" Grid.RowSpan="18" ColumnDefinitions="*" RowDefinitions="20,*">
           <TextBlock Height="20" Margin="5" Grid.Column="0" Grid.Row="0">Log</TextBlock>
-          <views:LogView DataContext="{Binding LogVM}" Padding="0,5,0,5" Grid.Column="0" Grid.Row="1" />
+          <views:LogView DataContext="{Binding LogVM}" Padding="0,5,0,0" Grid.Column="0" Grid.Row="1" />
         </Grid>
 
         <!--State and render button-->
-        <Grid Margin="16,0,16,5" ColumnDefinitions="50,*,75" RowDefinitions="*" Grid.Column="2" Grid.Row="19" Grid.RowSpan="1">
-          <Grid ColumnDefinitions="50" RowDefinitions="*,*" Grid.Column="0" Grid.Row="0">
+        <Grid Margin="16,0,16,5" ColumnDefinitions="50,*,75" RowDefinitions="*" Grid.Column="2" Grid.Row="18" Grid.RowSpan="2">
+          <Grid ColumnDefinitions="50" RowDefinitions="*,*" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0">
             <TextBlock Text="{Binding PercentPokemonRendered}" Width="50" TextAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" />
             <TextBlock Text="{Binding DisplayPokemonRendered}" Width="50" TextAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" />
           </Grid>
 
-          <ProgressBar Minimum="0" Maximum="{Binding NbOfRenders}" Value="{Binding NbOfPokemonRendered}" Height="20" Margin="5" Grid.Column="1" Grid.Row="0" />
-          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{ReflectionBinding RenderCommand}" Grid.Column="2" Grid.Row="0">
+          <ProgressBar Minimum="0" Maximum="{Binding NbOfRenders}" Value="{Binding NbOfPokemonRendered}" Height="20" Margin="5" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" />
+          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{ReflectionBinding RenderCommand}" Grid.Column="2" Grid.Row="0">
             <TextBlock TextAlignment="Center">Render</TextBlock>
           </Button>
-          <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" Command="{ReflectionBinding EndRender}" Grid.Column="2" Grid.Row="0">
+          <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{ReflectionBinding EndRender}" Grid.Column="2" Grid.Row="0">
             <TextBlock TextAlignment="Center">Cancel</TextBlock>
           </Button>
         </Grid>

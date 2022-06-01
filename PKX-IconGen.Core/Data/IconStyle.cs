@@ -27,7 +27,8 @@ namespace PKXIconGen.Core.Data
         public static IconStyle[] GetIconStyles()
         {
             Game[] games = Enum.GetValues<Game>();
-            return games.Select(game => new IconStyle(game)).ToArray();
+            //TODO Remove Where when PBR is supported
+            return games.Where(game => game != Game.PokemonBattleRevolution).Select(game => new IconStyle(game)).ToArray();
         }
 
         public Game Game { get; }

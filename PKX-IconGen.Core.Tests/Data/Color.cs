@@ -21,15 +21,15 @@ using NUnit.Framework;
 using PKXIconGen.Core.Data.Blender;
 using System;
 
-namespace PKX_IconGen.Core.Tests.Data
+namespace PKXIconGen.Core.Tests.Data
 {
     public class ColorTests
     {
-        private static void ColorShouldEqualValues(ref Color color, float expectedR, float expectedG, float expectedB, string assetMessage)
+        private static void ColorShouldEqualValues(ref Color color, float expectedR, float expectedG, float expectedB, string assertMessage)
         {
-            Assert.AreEqual(expectedR, color.Red, assetMessage + ", Red");
-            Assert.AreEqual(expectedG, color.Green, assetMessage + ", Green");
-            Assert.AreEqual(expectedB, color.Blue, assetMessage + ", Blue");
+            Assert.AreEqual(expectedR, color.Red, assertMessage + ", Red");
+            Assert.AreEqual(expectedG, color.Green, assertMessage + ", Green");
+            Assert.AreEqual(expectedB, color.Blue, assertMessage + ", Blue");
         }
 
         [Test, Order(1)]

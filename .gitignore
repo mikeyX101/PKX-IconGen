@@ -459,9 +459,8 @@ $RECYCLE.BIN/
 # Allow PKX-IconGen Python debug folder
 !PKX-IconGen.Python/debugging/*
 PKX-IconGen.Python/debugging/debug.blend
+PKX-IconGen.Python/debugging/*.json
 
 # PKX/DAT
 *.pkx
 *.dat
-
-PKX-IconGen.Core/Data/Blender/JSONSerializableVector3.cs

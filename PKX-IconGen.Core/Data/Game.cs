@@ -17,7 +17,6 @@
 */
 #endregion
 
-
 namespace PKXIconGen.Core.Data
 {
     public enum Game : byte

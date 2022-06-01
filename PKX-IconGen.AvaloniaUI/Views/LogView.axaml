@@ -21,20 +21,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+             xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="PKXIconGen.AvaloniaUI.Views.LogView">
+             x:Class="PKXIconGen.AvaloniaUI.Views.LogView"
+             
+             x:DataType="vm:LogViewModel" x:CompileBindings="True">
   <UserControl.Resources>
-    <conv:StringFontFamilyConverter x:Key="stringToFontFamily"/>
+    <conv:StringFontFamilyConverter x:Key="StringToFontFamily"/>
   </UserControl.Resources>
 
   <Border Background="#262626" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
     <ScrollViewer Name="LogScroll" ScrollChanged="LogScroll_ScrollChanged" AllowAutoHide="False" HorizontalScrollBarVisibility="Disabled">
-      <TextBlock Text="{Binding LogText}" HorizontalAlignment="Left" Foreground="White" Background="#262626" TextWrapping="WrapWithOverflow" FontFamily="{Binding LogFont, Converter={StaticResource stringToFontFamily}}" FontSize="14" Padding="10,5,10,0" />
+      <TextBlock Text="{Binding LogText}" HorizontalAlignment="Left" Foreground="White" Background="#262626" TextWrapping="WrapWithOverflow" FontFamily="{Binding LogFont, Converter={StaticResource StringToFontFamily}}" FontSize="14" Padding="10,0,10,0" />
     </ScrollViewer>
 
     <Border.ContextMenu>
       <ContextMenu>
-        <MenuItem Header="Clear Log" Command="{Binding ClearLog}">
+        <MenuItem Header="Clear Log" Command="{ReflectionBinding ClearLog}">
           <MenuItem.Icon>
             <i:Icon Value="mdi-delete" />
           </MenuItem.Icon>

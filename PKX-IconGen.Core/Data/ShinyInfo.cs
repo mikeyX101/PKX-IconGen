@@ -24,38 +24,34 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace PKXIconGen.Core.Data
 {
-    public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>
+    public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>, ICloneable
     {
-        [JsonPropertyName("filter")]
-        public Color? Filter { get; set; }
+        [JsonPropertyName("hue")]
+        public float? Hue { get; set; }
 
         [JsonPropertyName("render")]
         public RenderData Render { get; init; }
 
-        public ShinyInfo() : this(new RenderData())
+        public ShinyInfo()
         {
-            Filter = Color.GetDefaultColor();
+            Hue = 1;
+            Render = new RenderData();
         }
 
-        public ShinyInfo(Color? color, RenderData renderData)
+        public ShinyInfo(float? hue, RenderData renderData)
         {
-            Filter = color;
-            Render = renderData;
-        }
-
-        public ShinyInfo(RenderData renderData)
-        {
-            Filter = null;
+            Hue = hue;
             Render = renderData;
         }
 
         public bool Equals(ShinyInfo? other)
         {
             return other is not null &&
-                Filter.Equals(other.Filter) &&
+                Hue.Equals(other.Hue) &&
                 Render.Equals(other.Render);
         }
         public override bool Equals(object? obj)
@@ -73,6 +69,11 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public override int GetHashCode() => (Filter, Render).GetHashCode();
+        public override int GetHashCode() => (Hue, Render).GetHashCode();
+
+        public object Clone()
+        {
+            return new ShinyInfo(Hue, (RenderData)Render.Clone());
+        }
     }
 }

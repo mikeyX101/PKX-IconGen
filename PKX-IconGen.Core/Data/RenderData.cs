@@ -27,13 +27,13 @@ using System.Threading.Tasks;
 
 namespace PKXIconGen.Core.Data
 {
-    public class RenderData : IJsonSerializable, IEquatable<RenderData>
+    public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     {
         /// <summary>
         /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
         /// </summary>
         [JsonPropertyName("model")]
-        public string Model { get; set; }
+        public string? Model { get; set; }
 
         [JsonPropertyName("animation_pose")]
         public ushort AnimationPose { get; init; }
@@ -46,13 +46,22 @@ namespace PKXIconGen.Core.Data
         public Camera? SecondaryCamera { get; init; }
 
         [JsonPropertyName("removed_objects")]
-        public SortedSet<string> RemovedObjects { get; set; }
+        public SortedSet<string> RemovedObjects { get; init; }
 
-        public RenderData() : this("", 0, 0, Camera.GetDefaultCamera(), null, Array.Empty<string>()) {
+        public RenderData() {
+            Model = null;
 
+            AnimationPose = 0;
+            AnimationFrame = 0;
+
+            MainCamera = Camera.GetDefaultCamera();
+            SecondaryCamera = null;
+
+            RemovedObjects = new SortedSet<string>();
         }
 
-        public RenderData(string model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, IEnumerable<string> removedObjects)
+        [JsonConstructor]
+        public RenderData(string? model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, SortedSet<string> removedObjects)
         {
             Model = model;
 
@@ -62,7 +71,7 @@ namespace PKXIconGen.Core.Data
             MainCamera = mainCamera;
             SecondaryCamera = secondaryCamera;
 
-            RemovedObjects = new SortedSet<string>(removedObjects);
+            RemovedObjects = removedObjects;
         }
 
         public bool Equals(RenderData? other)
@@ -91,5 +100,17 @@ namespace PKXIconGen.Core.Data
         }
 
         public override int GetHashCode() => (Model, AnimationPose, AnimationFrame, MainCamera, SecondaryCamera, RemovedObjects).GetHashCode();
+
+        public object Clone()
+        {
+            return new RenderData(
+                Model, 
+                AnimationPose, 
+                AnimationFrame, 
+                MainCamera, 
+                SecondaryCamera,
+                new SortedSet<string>(RemovedObjects)
+            );
+        }
     }
 }

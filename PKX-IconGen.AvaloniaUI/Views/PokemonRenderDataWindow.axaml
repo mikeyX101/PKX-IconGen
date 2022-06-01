@@ -20,12 +20,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
-        xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
-        xmlns:blender="using:PKXIconGen.Core.Data.Blender"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-        xmlns:color="clr-namespace:AvaloniaColorPicker;assembly=AvaloniaColorPicker"
         
         mc:Ignorable="d" d:DesignWidth="1300" d:DesignHeight="850"
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
@@ -44,7 +41,8 @@
     <conv:LightTypeMaterialDesignIconConverter x:Key="LightTypeMaterialDesignIconConverter"/>
     <conv:EnumerableSemiColonStringConverter x:Key="EnumerableSemiColonStringConverter"/>
     <conv:PKXColorHexStringConverter x:Key="PkxColorHexStringConverter"/>
-    <conv:PKXColorAvaloniaColorConverter x:Key="PkxColorAvaloniaColorConverter"/>
+    <conv:HueAvaloniaBrushConverter x:Key="HueAvaloniaBrushConverter"/>
+    <conv:PKXColorAvaloniaBrushConverter x:Key="PkxColorAvaloniaBrushConverter"/>
     <conv:PKXHeaderConverter x:Key="PkxHeaderConverter"/>
   </Window.Resources>
   <Window.Styles>
@@ -72,8 +70,7 @@
             MaterialOpacity="0.65" />
       </ExperimentalAcrylicBorder.Material>
     </ExperimentalAcrylicBorder>
-
-    <!--IsVisible="{Binding CurrentlyModifying}"-->
+    
     <Grid IsVisible="{Binding CurrentlyModifying}" Background="#dd000000" ZIndex="10" ColumnDefinitions="*" RowDefinitions="*,*">
       <TextBlock Text="Change data in Blender..." Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="0"/>
       <Button Margin="8" Width="75" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{ReflectionBinding EndModifyBlenderData}" Grid.Column="0" Grid.Row="1">
@@ -108,8 +105,8 @@ Output name for the rendered file. If unspecified, uses the Pokemon's name.
           <ToolTip.Tip>
 Path to the Pokemon model. 
 
-If it is in the asset folder, you can specify {{AssetPath}} instead of manually going in the folder.
-Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
+If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
+Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
           </ToolTip.Tip>
         </TextBox>
         <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseModelPath}" Grid.Column="1" Grid.Row="0">
@@ -117,30 +114,22 @@ Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
         </Button>
       </Grid>
 
-      <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
+      <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="0" Grid.Row="3" />
       <StackPanel Orientation="Vertical" Margin="0,0,0,16" Grid.Column="1" Grid.Row="3">
         <ToolTip.Tip>
 Filter or different model for the shiny version of the Pokemon.
 Filters cannot be transparent or have transparency.
 
-If your shiny model is in the asset folder, you can specify {{AssetPath}} instead of manually going in the folder.
-Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
+If your shiny model is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder. NOT IMPLEMENTED YET
+Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
         </ToolTip.Tip>
         
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <RadioButton IsChecked="{Binding ShinyColor.HasValue}" Content="Filter: " Name="ShinyFilter" GroupName="Shiny" />
-          <color:ColorButton IsEnabled="{Binding #ShinyFilter.IsChecked}" Color="{Binding ShinyColor, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" />
-          <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding ShinyColor, Mode=OneWay, Converter={StaticResource PkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
-          <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding ShinyColor.Value.RValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-          <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding ShinyColor.Value.GValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-          <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding ShinyColor.Value.BValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
+          <RadioButton IsChecked="{Binding ShinyHue.HasValue}" Content="Color: " Name="ShinyFilter" GroupName="Shiny" Command="{ReflectionBinding UseShinyColor}" />
+          <Panel Width="30" Height="20" Background="{Binding ShinyHue, Mode=OneWay, Converter={StaticResource HueAvaloniaBrushConverter}}" />
         </StackPanel>
 
-        <RadioButton IsChecked="{Binding !ShinyColor.HasValue}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" />
+        <RadioButton IsChecked="{Binding !#ShinyFilter.IsChecked}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" Command="{ReflectionBinding UseShinyModel}" />
         <Grid ColumnDefinitions="*,30" RowDefinitions="*">
           <TextBox IsEnabled="{Binding #ShinyModel.IsChecked}" Text="{Binding ShinyModel, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" />
           <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseShinyModelPath}" Grid.Column="1" Grid.Row="0">
@@ -152,7 +141,7 @@ Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
       <Border CornerRadius="10" Background="#ff4f4f4f" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
         <Grid ShowGridLines="False" ColumnDefinitions="100,75,*,75,*,75,*,75,*,75,*,75,*" RowDefinitions="50,*,20,*,*,*,*,*,50">
           
-          <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggleCommand}" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="13">
+          <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggle}" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="13">
             <Panel>
               <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Normal</TextBlock>
               <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Shiny</TextBlock>
@@ -185,7 +174,7 @@ Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
           <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="2" Grid.ColumnSpan="6" />
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="5">
-            <color:ColorButton IsEnabled="False" Color="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" />
+            <Panel Width="30" Height="20" Background="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaBrushConverter}}" />
             <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
             <TextBlock Text="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
             <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
@@ -208,16 +197,16 @@ Example: {{AssetPath}}/pkx_lugia/pkx_lugia.pkx.dat
           <TextBox Text="{Binding SecondaryCamera.Value.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="5" />
           <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="5" />
           <TextBox Text="{Binding SecondaryCamera.Value.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="5" />
-          <TextBlock Text="Rot X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="6" />
+          <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="6" />
           <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="2" Grid.Row="6" />
-          <TextBlock Text="Rot Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="6" />
+          <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="6" />
           <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="4" Grid.Row="6" />
-          <TextBlock Text="Rot Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="6" />
+          <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="6" />
           <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="False" Grid.Column="6" Grid.Row="6" />
 
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="5">
-            <color:ColorButton IsEnabled="False" Color="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" />
+            <Panel Width="30" Height="20" Background="{Binding SecondaryLight.Value.Color, TargetNullValue=None, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaBrushConverter}}" />
             <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
             <TextBlock Text="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
             <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />

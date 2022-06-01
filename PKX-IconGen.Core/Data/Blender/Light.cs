@@ -25,7 +25,7 @@ using JetBrains.Annotations;
 namespace PKXIconGen.Core.Data.Blender
 {
     /// <summary>
-    /// Data for one light in a Blender scene.
+    /// Data for a light in a Blender scene.
     /// </summary>
     public readonly struct Light : IJsonSerializable, IEquatable<Light>
     {
@@ -72,6 +72,6 @@ namespace PKXIconGen.Core.Data.Blender
 
         public readonly override int GetHashCode() => (Type, Strength, Color, Distance).GetHashCode();
 
-        public static Light GetDefaultLight() => new(LightType.Area, 125f, Color.GetDefaultColor(), 5f);
+        public static Light GetDefaultLight() => new(LightType.Point, 250f, Color.GetDefaultColor(), 5f);
     }
 }

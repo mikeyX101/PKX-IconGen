@@ -25,84 +25,136 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Threading;
+using JetBrains.Annotations;
 using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data
 {
-    [Table("PokemonRenderData"), Index(nameof(ID), IsUnique = true, Name = "IDX_ID")]
-    public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>
+    [Table("PokemonRenderData"), Index(nameof(Id), IsUnique = true, Name = "IDX_ID")]
+    public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>, ICloneable, INotifyPropertyChanged
     {
         [Column("ID"), Key, Required, JsonIgnore]
-        public uint ID { get; internal set; }
+        public uint Id { get; internal set; }
 
+        private string name;
         [Column, JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string Name
+        {
+            get => name;
+            set
+            {
+                name = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string? outputName;
         [Column, JsonPropertyName("output_name")]
-        public string? OutputName { get; set; }
+        public string? OutputName
+        {
+            get => outputName;
+            set
+            {
+                outputName = value;
+                OnPropertyChanged();
+            }
+        }
+        
         [JsonIgnore]
-        public string Output => OutputName?.Length > 0 ? OutputName : Name;
+        public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
 
-        [Column, JsonIgnore]
-        public bool BuiltIn { get; set; }
+        private bool builtIn;
+        [Column, JsonIgnore] 
+        public bool BuiltIn
+        {
+            get => builtIn;
+            set
+            {
+                builtIn = value;
+                OnPropertyChanged();
+            }
+        }
 
+        private RenderData render;
         [Column, JsonPropertyName("render")]
-        public RenderData Render { get; internal set; }
+        public RenderData Render
+        {
+            get => render;
+            set
+            {
+                render = value;
+                OnPropertyChanged();
+            }
+        }
+        private ShinyInfo shiny;
         [Column, JsonPropertyName("shiny")]
-        public ShinyInfo Shiny { get; internal set; }
+        public ShinyInfo Shiny 
+        {
+            get => shiny;
+            set
+            {
+                shiny = value;
+                OnPropertyChanged();
+            }
+        }
 
         public PokemonRenderData()
         {
-            Name = "";
+            name = "";
             OutputName = "";
-            BuiltIn = false;
+            builtIn = false;
 
-            Render = new RenderData();
-            Shiny = new ShinyInfo();
+            render = new RenderData();
+            shiny = new ShinyInfo();
         }
         
-        internal PokemonRenderData(string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny)
+        public PokemonRenderData(uint id, string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny)
         {
-            if (name.Length == 0)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
+            Id = id;
 
-            Name = name;
+            this.name = name;
             OutputName = !string.IsNullOrEmpty(outputName) ? outputName : null;
-            BuiltIn = builtIn;
+            this.builtIn = builtIn;
 
-            Render = render;
-            Shiny = shiny;
+            this.render = render;
+            this.shiny = shiny;
         }
 
         [JsonConstructor]
-        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny) 
-            : this(name, outputName, false, render, shiny)
+        public PokemonRenderData(uint id, string name, string? outputName, RenderData render, ShinyInfo shiny) 
+            : this(id, name, outputName, false, render, shiny)
         {
 
         }
 
-        public async Task ModifyAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, Action<ReadOnlyMemory<char>>? onOutput = null, Action<PokemonRenderData?>? onFinish = null)
+        public async Task ModifyAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, Action<ReadOnlyMemory<char>>? onOutput = null, Action? onFinish = null)
         {
             IBlenderRunner runner = BlenderRunner.BlenderRunners.GetModifyDataRunner(blenderRunnerInfo, this);
             if (onOutput != null)
             {
                 runner.OnOutput += new IBlenderRunner.OutDel(onOutput);
             }
-            if (onFinish != null)
-            {
-                runner.OnFinish += new IBlenderRunner.FinishDel(onFinish);
-            }
             
+            runner.OnFinish += newData =>
+            {
+                if (newData is not null)
+                {
+                    Render = newData.Render;
+                    Shiny = newData.Shiny;
+                }
+            };
             await runner.RunAsync(token);
+            onFinish?.Invoke();
         }
 
         public bool Equals(PokemonRenderData? other)
         {
             return other is not null &&
-                ID == other.ID &&
+                Id == other.Id &&
                 Name == other.Name &&
                 BuiltIn == other.BuiltIn &&
                 Render.Equals(other.Render) &&
@@ -125,12 +177,25 @@ namespace PKXIconGen.Core.Data
 
         public override int GetHashCode() => 
             (
-                ID, 
+                Id, 
                 Name,
                 OutputName,
                 BuiltIn,
                 Render,
                 Shiny
             ).GetHashCode();
+
+        public object Clone()
+        {
+            return new PokemonRenderData(Id, Name, OutputName, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

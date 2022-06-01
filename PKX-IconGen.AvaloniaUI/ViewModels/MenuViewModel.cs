@@ -140,25 +140,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
 
         [UsedImplicitly]
+        public void GitHub()
+        {
+            Utils.OpenUrl("https://github.com/mikeyX101/PKX-IconGen");
+        }
+        
+        [UsedImplicitly]
         public void ImporterAddon()
         {
-            string url = "https://github.com/StarsMmd/Blender-Addon-Gamecube-Models";
-
-            // For .NETCore 3 and more: https://stackoverflow.com/a/43232486
-            // hack because of this: https://github.com/dotnet/corefx/issues/10361
-            if (IsWindows)
-            {
-                url = url.Replace("&", "^&");
-                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-            }
-            else if (IsMacOS)
-            {
-                Process.Start("xdg-open", url);
-            }
-            else if (IsLinux)
-            {
-                Process.Start("open", url);
-            }
+            Utils.OpenUrl("https://github.com/StarsMmd/Blender-Addon-Gamecube-Models");
         }
 
         [UsedImplicitly]

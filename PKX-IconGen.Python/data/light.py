@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+
 from enum import IntEnum
 from typing import Optional
 
@@ -50,7 +51,7 @@ class Light(object):
     @staticmethod
     def default() -> 'Light':
         return Light(
-            LightType.AREA,
-            125,
+            LightType.POINT,
+            250,
             Color.default(),
             5)

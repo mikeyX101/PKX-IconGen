@@ -30,5 +30,6 @@ namespace PKXIconGen.Core.Data
         public bool LogBlender { get; }
         public string Path { get; }
         public string OptionalArguments { get; }
+        public string AssetsPath { get; }
     }
 }

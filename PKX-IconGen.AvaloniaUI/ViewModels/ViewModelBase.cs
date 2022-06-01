@@ -31,7 +31,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public bool IsWindows { get; init; }
         [UsedImplicitly]
-        public bool IsMacOS { get; init; }
+        public bool IsMacOs { get; init; }
         [UsedImplicitly]
         public bool IsLinux { get; init; }
         #endregion
@@ -39,7 +39,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ViewModelBase()
         {
             IsWindows = OperatingSystem.IsWindows();
-            IsMacOS = OperatingSystem.IsMacOS();
+            IsMacOs = OperatingSystem.IsMacOS();
             IsLinux = OperatingSystem.IsLinux();
         }
 

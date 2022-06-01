@@ -1,2 +1,2 @@
 Commented out lights creation
-Commented out print outs
+Commented out print-outs

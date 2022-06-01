@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 /*  PKX-IconGen.Core - Pokemon Icon Generator for GCN/WII Pokemon games
     Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
 
@@ -65,7 +65,10 @@ namespace PKXIconGen.Core.Services
 
         private const uint SettingsId = 1;
 
-        private Database() : base() { }
+        private Database() : base()
+        {
+            
+        }
 
         private static Exception IfNullTable(string propertyName)
         {
@@ -133,6 +136,25 @@ namespace PKXIconGen.Core.Services
         public DbSet<Settings>? SettingsTable { get; set; }
         public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; set; }
 
+        //https://stackoverflow.com/questions/16437083/dbcontext-discard-changes-without-disposing/22098063#22098063
+        public void RejectChanges()
+        {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Modified:
+                    case EntityState.Deleted:
+                        entry.State = EntityState.Modified; //Revert changes made to deleted entity.
+                        entry.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Added:
+                        entry.State = EntityState.Detached;
+                        break;
+                }
+            }
+        }
+
         #region Settings
         public async Task<Settings> GetSettingsAsync()
         {
@@ -179,20 +201,12 @@ namespace PKXIconGen.Core.Services
             }
         }
 
-        public async Task<int> EditPokemonRenderDataAsync(uint id, PokemonRenderData newData)
+        public async Task<int> UpdatePokemonRenderDataAsync(PokemonRenderData newData)
         {
             if (PokemonRenderDataTable != null)
             {
-                newData.ID = id;
-                PokemonRenderData? data = await PokemonRenderDataTable.FindAsync(id);
-                
-                if (data is not null)
-                {
-                    EntityEntry<PokemonRenderData> prdEntry = Entry(data);
-                    prdEntry.CurrentValues.SetValues(newData);
-                    prdEntry.Property(prd => prd.ID).IsModified = false;
-                }
-
+                EntityEntry<PokemonRenderData> dataEntry = PokemonRenderDataTable.Update(newData);
+                dataEntry.State = EntityState.Modified;
                 return await SaveChangesAsync();
             }
             else
@@ -237,7 +251,7 @@ namespace PKXIconGen.Core.Services
         {
             if (PokemonRenderDataTable != null)
             {
-                PokemonRenderData pokemonRenderData = PokemonRenderDataTable.First(prd => prd.ID == id && !prd.BuiltIn);
+                PokemonRenderData pokemonRenderData = PokemonRenderDataTable.First(prd => prd.Id == id && !prd.BuiltIn);
 
                 PokemonRenderDataTable.RemoveRange(pokemonRenderData);
 
