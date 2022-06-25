@@ -18,6 +18,7 @@
 
 from typing import List, Optional
 import bpy
+import os
 
 import utils
 from data.color import Color
@@ -32,7 +33,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 5, 0),
+    "version": (0, 5, 1),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -74,7 +75,6 @@ class PKXSyncOperator(bpy.types.Operator):
     def execute(self, context):
         sync_scene_to_props()
         return {'FINISHED'}
-
 
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
@@ -144,15 +144,15 @@ def get_camera_light():
     return camera_light
 
 
-def get_armature(refresh: bool):
+def get_armature():
     global armature
 
     objs = bpy.data.objects
-    if refresh or armature is None:
-        if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
-            armature = objs["Armature1"]
-        else:
-            armature = objs["Armature0"]
+    if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
+        armature = objs["Armature1"]
+    else:
+        armature = objs["Armature0"]
+
     return armature
 
 
@@ -168,17 +168,15 @@ def update_mode(self, context):
     global mode
     mode = EditMode[value]
 
-    sync_prd_to_props()
-
     utils.switch_model(prd.shiny, mode)
-
+    sync_prd_to_props()
     sync_props_to_scene()
 
 
 def update_animation_pose(self, context):
     value = self.animation_pose
-    armature = get_armature(False)
-    action = bpy.data.actions[value]
+    armature = get_armature()
+    action = bpy.data.actions[os.path.basename(prd.get_mode_render(mode).model) + '_Anim 0 ' + str(value)]
 
     armature.animation_data.action = action
 
@@ -246,7 +244,7 @@ def update_shiny_color(self, context):
 
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
-    armature = get_armature(False)
+    armature = get_armature()
     camera = get_camera()
     camera_focus = get_camera_focus()
     camera_light = get_camera_light()
@@ -265,11 +263,7 @@ def sync_scene_to_props():
     scene.light_distance = camera_light.location[2]
 
     action = armature.animation_data.action
-    scene.animation_pose = int(action.name[len(action) - 1])
-    scene.animation_frame = scene.frame_current
-
-    action = armature.animation_data.action
-    scene.animation_pose = int(action.name[len(action) - 1])
+    scene.animation_pose = int(action.name[len(action.name) - 1])
     scene.animation_frame = scene.frame_current
 
     # TODO Shiny color?
@@ -278,7 +272,7 @@ def sync_scene_to_props():
 def sync_props_to_scene():
     global removed_objects
     scene = bpy.data.scenes["Scene"]
-    armature = get_armature(False)
+    armature = get_armature()
     camera = get_camera()
     camera_focus = get_camera_focus()
     camera_light = get_camera_light()
@@ -296,7 +290,7 @@ def sync_props_to_scene():
     camera_focus.location = camera_focus_pos
     camera.data.angle = radians(camera_fov)
 
-    armature.animation_data.action = bpy.data.actions[scene.animation_pose]
+    armature.animation_data.action = bpy.data.actions[os.path.basename(prd.get_mode_render(mode).model) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
     utils.remove_objects(removed_objects)

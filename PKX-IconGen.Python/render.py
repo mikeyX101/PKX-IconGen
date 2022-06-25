@@ -31,10 +31,22 @@ from data.render_job import RenderJob
 import utils
 
 
+def get_armature(prd: PokemonRenderData, mode: EditMode):
+    objs = bpy.data.objects
+    if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
+        armature = objs["Armature1"]
+    else:
+        armature = objs["Armature0"]
+
+    return armature
+
+
 def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
+    utils.switch_model(prd.shiny, mode)
+
     objs = bpy.data.objects
     scene = bpy.data.scenes["Scene"]
-    armature = objs["Armature0"]
+    armature = get_armature(prd, mode)
     camera = objs["PKXIconGen_Camera"]
     focus = objs["PKXIconGen_FocusPoint"]
     light = objs["PKXIconGen_TopLight"]
@@ -60,10 +72,8 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     light.data.color = prd_light.color.to_list()
     light.location[2] = prd_light.distance
 
-    armature.animation_data.action = bpy.data.actions[animation_pose]
+    armature.animation_data.action = bpy.data.actions[os.path.basename(prd.get_mode_render(mode).model) + '_Anim 0 ' + str(animation_pose)]
     scene.frame_set(animation_frame)
-
-    utils.switch_model(prd.shiny, mode)
 
     utils.remove_objects(prd.get_mode_removed_objects(mode))
 
