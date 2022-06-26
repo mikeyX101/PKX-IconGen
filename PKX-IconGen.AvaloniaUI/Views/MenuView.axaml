@@ -54,6 +54,11 @@
           <i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Clean temporary folders" Command="{Binding CleanTempFolders}">
+        <MenuItem.Icon>
+          <i:Icon Value="mdi-delete-clock" />
+        </MenuItem.Icon>
+      </MenuItem>
     </MenuItem>
     <MenuItem Header="_Help">
       <MenuItem Header="PKX-IconGen on Github" Command="{Binding GitHub}">

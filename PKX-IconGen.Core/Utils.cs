@@ -18,6 +18,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.Core
 {
@@ -101,6 +105,21 @@ namespace PKXIconGen.Core
             byte blue = (byte)Math.Round(ConvertRange(0, 1, 0, 255, b + m));
 
             return (uint)(0xFF << 24 | red << 16 | green << 8 | blue);
+        }
+
+        public static Task CleanTempFolders()
+        {
+            return Task.Run(() =>
+            {
+                IEnumerable<string> tempFiles = Directory.EnumerateFiles(Paths.TempFolder, "*", SearchOption.AllDirectories);
+                IEnumerable<string> logFiles = Directory.EnumerateFiles(Paths.LogFolder, "*", SearchOption.AllDirectories);
+                IEnumerable<string> files = tempFiles.Concat(logFiles);
+
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            });
         }
     }
 }

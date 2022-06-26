@@ -28,7 +28,7 @@ namespace PKXIconGen.AvaloniaUI
     {
         public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
         {
-            return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new System.InvalidOperationException();
+            return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new InvalidOperationException();
         }
 
         public static void OpenUrl(string url)

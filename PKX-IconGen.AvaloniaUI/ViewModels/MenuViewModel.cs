@@ -135,6 +135,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             MainWindow.LogBlender = !MainWindow.LogBlender;
         }
+        
+        [UsedImplicitly]
+        public async void CleanTempFolders()
+        {
+            bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder.\nThis operation is irreversible.");
+            if (delete)
+            {
+                await Core.Utils.CleanTempFolders();
+            }
+        }
 
         [UsedImplicitly]
         public void GitHub()
