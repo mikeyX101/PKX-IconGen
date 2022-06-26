@@ -45,16 +45,16 @@
     <None Remove=".gitignore" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.14" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.14" />
+    <PackageReference Include="Avalonia" Version="0.10.15" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.14" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.14" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.14" />
-    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.10.14" />
-    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.14" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.15" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.15" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.15" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.10.15" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.15" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
