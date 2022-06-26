@@ -113,8 +113,8 @@ namespace PKXIconGen.Core
             {
                 IEnumerable<string> tempFiles = Directory.EnumerateFiles(Paths.TempFolder, "*", SearchOption.AllDirectories);
                 IEnumerable<string> logFiles = Directory.EnumerateFiles(Paths.LogFolder, "*", SearchOption.AllDirectories);
-                IEnumerable<string> files = tempFiles.Concat(logFiles);
-
+                IEnumerable<string> files = tempFiles.Concat(logFiles).Where(f => f != Paths.Log);
+                
                 foreach (string file in files)
                 {
                     File.Delete(file);
