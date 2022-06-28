@@ -42,6 +42,17 @@ class PokemonRenderData(object):
     def to_json(self) -> str:
         return json.dumps(self, default=vars, separators=(',', ':'))
 
+    def get_mode_model(self, mode: EditMode) -> RenderData:
+        if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
+            return self.render.model
+        elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+            if self.shiny.render.model is not None and self.shiny.render.model != "":
+                return self.shiny.render.model
+            else:
+                return self.render.model
+        else:
+            raise Exception("Unknown edit mode: " + mode.name)
+
     def get_mode_render(self, mode: EditMode) -> RenderData:
         if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
             return self.render

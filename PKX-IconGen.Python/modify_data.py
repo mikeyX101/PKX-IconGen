@@ -42,7 +42,9 @@ if __name__ == "__main__":
 
         prd = PokemonRenderData.from_json(json)
     else:
-        prd: PokemonRenderData = PokemonRenderData.from_json(sys.stdin.readline())
+        json = sys.stdin.readline()
+        print(json)
+        prd = PokemonRenderData.from_json(json)
 
     utils.import_model(prd.render.model, prd.shiny.hue)
     register(prd)

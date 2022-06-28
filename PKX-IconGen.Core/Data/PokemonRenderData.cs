@@ -128,12 +128,12 @@ namespace PKXIconGen.Core.Data
 
         }
 
-        public async Task ModifyAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, Action<ReadOnlyMemory<char>>? onOutput = null, Action? onFinish = null)
+        public async Task ModifyAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, IBlenderRunner.OutDel? onOutput = null, Action? onFinish = null)
         {
             IBlenderRunner runner = BlenderRunner.BlenderRunners.GetModifyDataRunner(blenderRunnerInfo, this);
             if (onOutput != null)
             {
-                runner.OnOutput += new IBlenderRunner.OutDel(onOutput);
+                runner.OnOutput += onOutput;
             }
             
             runner.OnFinish += newData =>

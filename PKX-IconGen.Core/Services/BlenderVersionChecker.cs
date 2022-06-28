@@ -50,7 +50,7 @@ namespace PKXIconGen.Core.Services
             {
                 if (!OperatingSystem.IsWindows())
                 {
-                    // Ask with "blender.exe --version"?
+                    // Ask with "blender --version"?
                     return new(true, true, 0);
                 }
                 else if (File.Exists(path))
@@ -60,7 +60,7 @@ namespace PKXIconGen.Core.Services
                     string? name = fileVersionInfo.ProductName;
                     float? version = fileVersionInfo.ProductVersion != null ? float.Parse(fileVersionInfo.ProductVersion, CultureInfo.InvariantCulture) : null;
 
-                    if (name != null && version != null)
+                    if (name != null && version.HasValue)
                     {
                         bool isBlender = name.Equals("Blender");
                         bool isValidVersion = version.Value >= MinimumBlenderVersion;

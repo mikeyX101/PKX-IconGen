@@ -42,16 +42,16 @@ namespace PKXIconGen.Core.Data
             FinalOutput = finalOutput;
         }
         
-        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, Action<ReadOnlyMemory<char>>? onOutput = null, Action<PokemonRenderData?>? onFinish = null)
+        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null)
         {
             IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(blenderRunnerInfo, this);
             if (onOutput != null)
             {
-                runner.OnOutput += new IBlenderRunner.OutDel(onOutput);
+                runner.OnOutput += onOutput;
             }
             if (onFinish != null)
             {
-                runner.OnFinish += new IBlenderRunner.FinishDel(onFinish);
+                runner.OnFinish += onFinish;
             }
             
             await runner.RunAsync(token);

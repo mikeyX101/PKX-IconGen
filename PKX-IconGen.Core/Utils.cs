@@ -121,5 +121,10 @@ namespace PKXIconGen.Core
                 }
             });
         }
+
+        public static string? GetTrueModelPath(string? model, string? assetsPath)
+        {
+            return model?.Replace("{{AssetsPath}}", assetsPath);
+        }
     }
 }

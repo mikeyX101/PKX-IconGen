@@ -147,11 +147,7 @@ def get_camera_light():
 def get_armature():
     global armature
 
-    objs = bpy.data.objects
-    if prd.shiny.render.model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
-        armature = objs["Armature1"]
-    else:
-        armature = objs["Armature0"]
+    armature = utils.get_armature(prd, mode)
 
     return armature
 
@@ -176,7 +172,9 @@ def update_mode(self, context):
 def update_animation_pose(self, context):
     value = self.animation_pose
     armature = get_armature()
-    action = bpy.data.actions[os.path.basename(prd.get_mode_render(mode).model) + '_Anim 0 ' + str(value)]
+
+    clean_model_path = utils.get_clean_model_path(prd.get_mode_model(mode))
+    action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(value)]
 
     armature.animation_data.action = action
 
@@ -290,7 +288,8 @@ def sync_props_to_scene():
     camera_focus.location = camera_focus_pos
     camera.data.angle = radians(camera_fov)
 
-    armature.animation_data.action = bpy.data.actions[os.path.basename(prd.get_mode_render(mode).model) + '_Anim 0 ' + str(scene.animation_pose)]
+    clean_model_path = utils.get_clean_model_path(prd.get_mode_model(mode))
+    armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
     utils.remove_objects(removed_objects)

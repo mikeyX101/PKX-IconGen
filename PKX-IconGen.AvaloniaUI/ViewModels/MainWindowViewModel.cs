@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -182,10 +183,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             get => assetsPath;
             set
             {
+                value = Regex.Replace(value, @"(/|\\)+$", "");
+                
                 DoDBQuery(db => db.SaveSettingsProperty(s => s.AssetsPath, value));
                 this.RaiseAndSetIfChanged(ref assetsPath, value);
+                this.RaisePropertyChanged(nameof(AssetsPathIsValid));
             }
         }
+        
+        public bool AssetsPathIsValid => string.IsNullOrWhiteSpace(AssetsPath) || Directory.Exists(AssetsPath);
         #endregion
 
         #region Progress
@@ -283,19 +289,43 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             assetsPath = settings.AssetsPath;
 
-
             currentlyRendering = false;
 
             // Reactive
             IObservable<bool> renderEnabled = this.WhenAnyValue(
-                vm => vm.IsBlenderValid, vm => vm.OutputPath, vm => vm.SelectedIconStyle, vm => vm.NbOfRenders,
-                (blenderValid, op, iconStyle, renderNum) => blenderValid && !string.IsNullOrWhiteSpace(op) && Directory.Exists(op) && iconStyle.Game != Game.Undefined && renderNum > 0
+                    vm => vm.IsBlenderValid,
+                    vm => vm.OutputPath, 
+                    vm => vm.SelectedIconStyle, 
+                    vm => vm.NbOfRenders,
+                    vm => vm.AssetsPath,
+                    vm => vm.AssetsPathIsValid,
+                    vm => vm.SelectedPokemonRenderData,
+                (blenderValid, output, iconStyle, renderNum, assets, assetsPathValid, selectedPRDs) => 
+                    blenderValid &&
+                    !string.IsNullOrWhiteSpace(output) && Directory.Exists(output) && 
+                    iconStyle.Game != Game.Undefined && 
+                    renderNum > 0 && 
+                    assetsPathValid &&
+                    (
+                        !string.IsNullOrWhiteSpace(assets) || // Good if we have an assets path
+                        selectedPRDs.All(prd =>  // otherwise check selected PRDs for model paths containing {{AssetsPath}}
+                            (!prd.Render.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
+                            (
+                                string.IsNullOrWhiteSpace(prd.Shiny.Render.Model) || // No Shiny model or
+                                !prd.Shiny.Render.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
+                            )
+                        )
+                    )
             );
             RenderCommand = ReactiveCommand.Create(Render, renderEnabled);
 
             IObservable<bool> renderDataOperationsEnabled = this.WhenAnyValue(
-                vm => vm.IsBlenderValid, 
-                blenderValid => (bool)blenderValid);
+                    vm => vm.IsBlenderValid, 
+                    vm => vm.AssetsPathIsValid,
+                (blenderValid, assetsPathValid) => 
+                    blenderValid && 
+                    assetsPathValid
+            );
             NewRenderDataCommand = ReactiveCommand.CreateFromTask(NewRenderData, renderDataOperationsEnabled);
             EditRenderDataCommand = ReactiveCommand.CreateFromTask<PokemonRenderData>(EditRenderData, renderDataOperationsEnabled);
         }

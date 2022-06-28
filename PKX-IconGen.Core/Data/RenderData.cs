@@ -97,6 +97,11 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
+        public string? GetTrueModelPath(string? assetsPath)
+        {
+            return Utils.GetTrueModelPath(Model, assetsPath);
+        }
+
         public override int GetHashCode() => (Model, AnimationPose, AnimationFrame, MainCamera, SecondaryCamera, RemovedObjects).GetHashCode();
 
         public object Clone()

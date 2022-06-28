@@ -137,11 +137,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 vm => vm.Name, vm => vm.Model, vm => vm.ShinyModel,
                 (name, model, shinyModel) => 
                     !string.IsNullOrWhiteSpace(name) && 
-                    !string.IsNullOrWhiteSpace(model) && File.Exists(model) &&
+                    !string.IsNullOrWhiteSpace(model) && model.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath)) &&
                     (   
                         string.IsNullOrWhiteSpace(shinyModel) 
                         ||
-                        File.Exists(shinyModel) 
+                        (shinyModel.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
                     )
             );
 
@@ -204,6 +204,17 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
 
             return await FileDialogHelper.GetFile("Select a model...", filters, !string.IsNullOrWhiteSpace(Model) ? Model : null);
+        }
+
+        [UsedImplicitly]
+        public void InsertAssetsPath(TextBox textBox)
+        {
+            const string toInsert = "{{AssetsPath}}";
+            string value = textBox.Text.Insert(textBox.CaretIndex, toInsert);
+            
+            textBox.Text = value;
+            textBox.Focus();
+            textBox.CaretIndex += toInsert.Length;
         }
 
         #region Modify in Blender

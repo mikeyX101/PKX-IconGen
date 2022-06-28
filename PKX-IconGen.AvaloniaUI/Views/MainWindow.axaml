@@ -209,10 +209,11 @@ Please note that this can drastically increase the rendering and processing time
         <!--Assets Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
         <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox IsEnabled="False" Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
+          <TextBox Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0" Classes.Error="{Binding !AssetsPathIsValid}">
             <ToolTip.Tip>
 Optional if custom Pokemon are used, needed for default built-in Pokemon. Useful when exporting and sharing Pokemon data.
-From there you can include {{AssetsPath}} in a model path.
+
+From there you can include {{AssetsPath}} in a model path. Don't include a trailing slash or backslash.
 This is the "Game Files" folder from Colosseum Tool or GoD-Tool. Make sure to "export" everything containing "pkx".
               
 In Colosseum/GoD Tool:
@@ -221,7 +222,7 @@ Filter with "pkx"
 Enter "export"
             </ToolTip.Tip>
           </TextBox>
-          <Button IsEnabled="False" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
+          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>

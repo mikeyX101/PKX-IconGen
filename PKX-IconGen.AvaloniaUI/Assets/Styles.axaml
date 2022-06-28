@@ -20,7 +20,7 @@
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia">
     <Design.PreviewWith>
         <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
+          <!-- Add Controls for Previewer Here -->
           <StackPanel>
             <TextBlock Classes="Warning">Warning</TextBlock>
             <TextBlock Classes="Error">Error</TextBlock>
@@ -37,6 +37,9 @@
 
   <Style Selector="TextBlock.Error">
     <Setter Property="Foreground" Value="Red" />
+  </Style>
+  <Style Selector="TextBox.Error /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="Red" />
   </Style>
   <Style Selector=":is(i|Icon).Error">
     <Setter Property="Foreground" Value="Red" />

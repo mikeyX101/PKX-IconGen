@@ -26,6 +26,7 @@ from typing import List, Optional, Final
 
 from data.color import Color
 from data.edit_mode import EditMode
+from data.pokemon_render_data import PokemonRenderData
 from data.shiny_info import ShinyInfo
 from importer import import_hsd
 
@@ -51,10 +52,20 @@ def parse_cmd_args():
     return cmd_args
 
 
+def get_true_model_path(model: str, assets_path: str):
+    return model.replace("{{AssetsPath}}", assets_path)
+
+
+def get_clean_model_path(model: str) -> str:
+    return model.replace("{{AssetsPath}}/", "")
+
+
 def import_model(model: str, shiny_hue: Optional[Color]):
-    true_path = model
+    print(f"Assets Path: {assets_path}")
     if assets_path is not None:
-        true_path = os.path.join(assets_path, true_path.replace("{{AssetsPath}}", ""))
+        true_path = get_true_model_path(model, assets_path)
+    else:
+        true_path = model
 
     print(f"Importing: {true_path}")
     import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
@@ -164,6 +175,17 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
             show_armature(objs["Armature0"])
     else:
         raise Exception("PRD had no filter or alt model.")
+
+
+def get_armature(prd: PokemonRenderData, mode: EditMode):
+    objs = bpy.data.objects
+    shiny_model = prd.shiny.render.model
+    if shiny_model is not None and shiny_model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
+        armature = objs["Armature1"]
+    else:
+        armature = objs["Armature0"]
+
+    return armature
 
 
 def show_armature(armature_obj):
