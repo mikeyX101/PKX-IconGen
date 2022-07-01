@@ -149,7 +149,7 @@ namespace PKXIconGen.Core.Services
                     {
                         args
                             .Add("--log").Add("*")
-                            .Add($"--log-file").Add(Paths.BlenderLog);
+                            .Add("--log-file").Add(Paths.BlenderLog);
                     }
 
                     args

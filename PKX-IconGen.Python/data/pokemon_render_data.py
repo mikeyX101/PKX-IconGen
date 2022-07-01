@@ -87,9 +87,15 @@ class PokemonRenderData(object):
         if obj is None:
             return obj
 
+        output_name: Optional[str] = None
+        try:
+            output_name = obj.output_name
+        except AttributeError:
+            pass
+
         return PokemonRenderData(
             obj.name,
-            obj.output_name,
+            output_name,
             RenderData.parse_obj(obj.render),
             ShinyInfo.parse_obj(obj.shiny))
 

@@ -76,6 +76,7 @@ class PKXSyncOperator(bpy.types.Operator):
         sync_scene_to_props()
         return {'FINISHED'}
 
+
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
     bl_idname = "wm.pkx_delete"
@@ -93,6 +94,24 @@ class PKXDeleteOperator(bpy.types.Operator):
         for obj in objs:
             obj.hide_render = True
             obj.hide_viewport = True
+
+        return {'FINISHED'}
+
+
+class PKXResetDeletedOperator(bpy.types.Operator):
+    """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
+    bl_idname = "wm.pkx_reset_deleted"
+    bl_label = "Reset deleted items"
+
+    @classmethod
+    def poll(cls, context):
+        global removed_objects
+        return len(removed_objects) > 0
+
+    def execute(self, context):
+        global removed_objects
+        removed_objects = []
+        utils.show_armature(get_armature())
 
         return {'FINISHED'}
 
@@ -547,6 +566,7 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
             row = col.row(align=True)
             row.prop(context.scene, prop_name, expand=expand)
         col.operator(PKXDeleteOperator.bl_idname)
+        col.operator(PKXResetDeletedOperator.bl_idname)
         col.operator(PKXSaveOperator.bl_idname)
 
 
@@ -628,7 +648,8 @@ CLASSES = [
     ShowRegionUiOperator,
     PKXSaveOperator,
     PKXSyncOperator,
-    PKXDeleteOperator
+    PKXDeleteOperator,
+    PKXResetDeletedOperator
 ]
 
 
