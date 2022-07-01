@@ -110,19 +110,22 @@ namespace PKXIconGen.Core.Services
                     v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions) ?? new ShinyInfo());
         }
 
-        internal void RunMigrations()
+        internal Task GetMigrationsTask()
         {
-            try
+            return Task.Run(async () =>
             {
-                CoreManager.Logger.Information("Running Database migrations...");
-                Database.Migrate();
-                CoreManager.Logger.Information("Database migration successful");
-            }
-            catch (Exception e)
-            {
-                CoreManager.Logger.Error(e, "Database migration failed");
-                throw;
-            }
+                try
+                {
+                    CoreManager.Logger.Information("Running Database migrations...");
+                    await Database.MigrateAsync();
+                    CoreManager.Logger.Information("Database migration successful");
+                }
+                catch (Exception e)
+                {
+                    CoreManager.Logger.Error(e, "Database migration failed");
+                    throw;
+                }
+            });
         }
 
         private bool Disposed { get; set; }

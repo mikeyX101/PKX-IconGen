@@ -55,6 +55,11 @@
             MaterialOpacity="0.65" />
       </ExperimentalAcrylicBorder.Material>
     </ExperimentalAcrylicBorder>
+    
+    <Panel IsVisible="{Binding !InitialLoadingFinished}" Background="#dd000000" ZIndex="10">
+      <TextBlock Text="Loading, please wait a moment..." Margin="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Panel>
+    
     <DockPanel>
       <StackPanel IsVisible="{Binding IsWindows, Mode=OneTime}" Orientation="Horizontal" HorizontalAlignment="Left" Height="32" Margin="8,0,0,0" DockPanel.Dock="Top">
         <Image Source="/Assets/gen-icon.ico" Width="16" Margin="0,0,8,0" />

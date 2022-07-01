@@ -24,6 +24,7 @@ using Serilog.Exceptions;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace PKXIconGen.Core
 {
@@ -50,6 +51,8 @@ namespace PKXIconGen.Core
         }
         private static ILogger? NullableLogger { get; set; }
 
+        public static Task? DatabaseMigrationTask { get; private set; }
+        
         public static bool Initiated { get; private set; }
         public static void Initiate()
         {
@@ -97,18 +100,11 @@ namespace PKXIconGen.Core
                 .WriteTo.Console(textFormatter)
                 .CreateLogger();
 
-            try
-            {
-                Database db = Database.Instance;
-                db.RunMigrations();
-
-                Initiated = true;
-                Logger.Information("PKX-IconGen Core initiated");
-            }
-            catch (Exception ex)
-            {
-                Logger.Fatal(ex, "An exception occured while migrating the database");
-            }
+            Logger.Information("Starting database migration Task");
+            DatabaseMigrationTask = Database.Instance.GetMigrationsTask();
+            
+            Logger.Information("PKX-IconGen Core initiated");
+            Initiated = true;
         }
 
         public static void OnClose()

@@ -17,6 +17,8 @@
 */
 #endregion
 
+using System.Linq;
+
 namespace PKXIconGen.Core.Data
 {
     public enum Game : byte
@@ -29,6 +31,12 @@ namespace PKXIconGen.Core.Data
 
     public static class GameExtensions
     {
+        public static IconStyle GetIconStyle(this Game game)
+        {
+            IconStyle[] iconStyles = IconStyle.GetIconStyles();
+            return iconStyles.First(g => g.Game == game);
+        }
+        
         public static string GetName(this Game game) => game switch
         {
             Game.PokemonColosseum => "Pokémon Colosseum",

@@ -25,8 +25,10 @@ using Avalonia.Xaml.Interactions.Core;
 using Avalonia.Xaml.Interactivity;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
+using PKXIconGen.Core;
 using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
+using Serilog.Core;
 
 namespace PKXIconGen.AvaloniaUI
 {
@@ -37,19 +39,26 @@ namespace PKXIconGen.AvaloniaUI
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override async void OnFrameworkInitializationCompleted()
+        public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                Database db = Database.Instance;
-                desktop.MainWindow = new MainWindow()
+                if (CoreManager.DatabaseMigrationTask == null)
                 {
-                    DataContext = new MainWindowViewModel(await db.GetSettingsAsync(), await db.GetPokemonRenderDataAsync())
+                    const string msg = "Database Migration didn't happen.";
+                    InvalidOperationException e = new(msg);
+                    CoreManager.Logger.Fatal(e, msg);
+                    throw e;
+                }
+                
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = new MainWindowViewModel(CoreManager.DatabaseMigrationTask)
                 };
             }
             else
             {
-                // Work around for other assemblies for the designer (https://github.com/AvaloniaUI/Avalonia/issues/7126)
+                // Workaround for other assemblies in the designer (https://github.com/AvaloniaUI/Avalonia/issues/7126)
                 GC.KeepAlive(typeof(Interaction));
                 GC.KeepAlive(typeof(InvokeCommandAction));
 

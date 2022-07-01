@@ -61,7 +61,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Blender Path
         public string Path => BlenderPath;
-        private string blenderPath;
+        private string blenderPath = "";
         public string BlenderPath {
             get => blenderPath;
             set {
@@ -101,7 +101,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Blender Optional Arguments
         public string OptionalArguments => BlenderOptionalArguments;
-        private string blenderOptionalArguments;
+        private string blenderOptionalArguments = "";
         public string BlenderOptionalArguments {
             get => blenderOptionalArguments;
             set {
@@ -112,7 +112,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Output Path
-        private string outputPath;
+        private string outputPath = "";
         public string OutputPath {
             get => outputPath;
             set {
@@ -123,8 +123,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Icon Style
-        public IconStyle[] IconStyleItems { get; private set; }
-        private IconStyle selectedIconStyle;
+
+        public IconStyle[] IconStyleItems { get; } = IconStyle.GetIconStyles();
+        private IconStyle selectedIconStyle = Game.Undefined.GetIconStyle();
         public IconStyle SelectedIconStyle {
             get => selectedIconStyle; 
             set
@@ -136,7 +137,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Render Scale
-        public RenderScale[] RenderScaleItems { get; private set; }
+        public RenderScale[] RenderScaleItems { get; } = Enum.GetValues<RenderScale>();
         private RenderScale selectedRenderScale;
         public RenderScale SelectedRenderScale {
             get => selectedRenderScale; 
@@ -177,7 +178,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Assets Path
-        private string assetsPath;
+        private string assetsPath = "";
         public string AssetsPath
         {
             get => assetsPath;
@@ -196,6 +197,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Progress
 
+        private bool initialLoadingFinished = false;
+
+        public bool InitialLoadingFinished
+        {
+            get => initialLoadingFinished;
+            set => this.RaiseAndSetIfChanged(ref initialLoadingFinished, value);
+        }
+        
         private bool currentlyRendering;
         public bool CurrentlyRendering
         {
@@ -237,11 +246,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
-        public MainWindowViewModel(Settings settings, IEnumerable<PokemonRenderData> renderData) : base()
+        public MainWindowViewModel(Task databaseLoadingTask) : base()
         {
             // Reactive collections
             PokemonRenderDataItemsSource = new SourceCache<PokemonRenderData, uint>(prd => prd.Id);
-            PokemonRenderDataItemsSource.AddOrUpdate(renderData);
             PokemonRenderDataItemsSource.Connect()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .AutoRefresh(prd => prd.Name)
@@ -267,29 +275,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             MenuVM = new MenuViewModel(this);
             MenuVM.OnImport += AddRenderData;
             LogVM = new LogViewModel();
-
-            // Fields
-            logBlender = settings.LogBlender;
-
-            blenderPath = settings.BlenderPath;
-            VerifyBlenderExecutable();
-
-            blenderOptionalArguments = settings.BlenderOptionalArguments;
-
-            outputPath = settings.OutputPath;
-
-            IconStyleItems = IconStyle.GetIconStyles();
-            selectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
-
-            RenderScaleItems = Enum.GetValues<RenderScale>();
-            SelectedRenderScale = settings.RenderScale;
-
-            enableDeleteButton = false;
-            builtInsHidden = false;
-
-            assetsPath = settings.AssetsPath;
-
-            currentlyRendering = false;
 
             // Reactive
             IObservable<bool> renderEnabled = this.WhenAnyValue(
@@ -328,6 +313,40 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             );
             NewRenderDataCommand = ReactiveCommand.CreateFromTask(NewRenderData, renderDataOperationsEnabled);
             EditRenderDataCommand = ReactiveCommand.CreateFromTask<PokemonRenderData>(EditRenderData, renderDataOperationsEnabled);
+            
+            SetInitialState(databaseLoadingTask);
+        }
+
+        private async void SetInitialState(Task databaseLoadingTask)
+        {
+            await databaseLoadingTask;
+            Database db = Database.Instance;
+            
+            Settings settings = await db.GetSettingsAsync();
+            IEnumerable<PokemonRenderData> renderData = await db.GetPokemonRenderDataAsync();
+            
+            PokemonRenderDataItemsSource.AddOrUpdate(renderData);
+            
+            // Fields
+            logBlender = settings.LogBlender;
+
+            blenderPath = settings.BlenderPath;
+            VerifyBlenderExecutable();
+
+            blenderOptionalArguments = settings.BlenderOptionalArguments;
+
+            outputPath = settings.OutputPath;
+
+            selectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
+
+            SelectedRenderScale = settings.RenderScale;
+
+            enableDeleteButton = false;
+            builtInsHidden = false;
+
+            assetsPath = settings.AssetsPath;
+            
+            InitialLoadingFinished = true;
         }
 
         private async void AddRenderData(PokemonRenderData? data)
