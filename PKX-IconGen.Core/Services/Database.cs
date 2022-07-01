@@ -25,6 +25,9 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Design;
@@ -110,7 +113,7 @@ namespace PKXIconGen.Core.Services
                     v => JsonSerializer.Deserialize<ShinyInfo>(v, serializerOptions) ?? new ShinyInfo());
         }
 
-        internal Task GetMigrationsTask()
+        internal Task GetMigrationTask()
         {
             return Task.Run(async () =>
             {
@@ -135,162 +138,95 @@ namespace PKXIconGen.Core.Services
             base.Dispose();
         }
 
-        public DbSet<Settings>? SettingsTable { get; set; }
-        public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; set; }
-
-        //https://stackoverflow.com/questions/16437083/dbcontext-discard-changes-without-disposing/22098063#22098063
-        public void RejectChanges()
-        {
-            foreach (var entry in ChangeTracker.Entries())
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Modified:
-                    case EntityState.Deleted:
-                        entry.State = EntityState.Modified; //Revert changes made to deleted entity.
-                        entry.State = EntityState.Unchanged;
-                        break;
-                    case EntityState.Added:
-                        entry.State = EntityState.Detached;
-                        break;
-                }
-            }
-        }
+        [UsedImplicitly]
+        public DbSet<Settings>? SettingsTable { get; internal set; }
+        private IQueryable<Settings>? SettingsLinq => SettingsTable?.ToLinqToDB();
+        
+        [UsedImplicitly]
+        public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; internal set; }
+        private IQueryable<PokemonRenderData>? PokemonRenderDataLinq => PokemonRenderDataTable?.ToLinqToDB();
 
         #region Settings
         public async Task<Settings> GetSettingsAsync()
         {
-            if (SettingsTable != null)
+            if (SettingsLinq != null)
             {
-                return await SettingsTable.FirstOrDefaultAsync() ?? new Settings();
+                return await SettingsLinq.FirstOrDefaultAsyncLinqToDB() ?? new Settings();
             }
-            else
-            {
-                throw IfNullTable(nameof(SettingsTable));
-            }
+            
+            throw IfNullTable(nameof(SettingsLinq));
         }
 
-        public void SaveSettingsProperty<TProperty>(Expression<Func<Settings, TProperty>> propertySelector, TProperty value)
+        public int SaveSettingsProperty<TProperty>(Expression<Func<Settings, TProperty>> propertySelector, TProperty value)
         {
-            if (SettingsTable != null)
+            if (SettingsLinq != null)
             {
-                Settings settings = SettingsTable.First(s => s.InternalID == SettingsId);
-
-                EntityEntry<Settings> entity = SettingsTable.Attach(settings);
-                entity.Property(propertySelector).CurrentValue = value;
-
-                SaveChanges();
+                return SettingsLinq
+                    .Where(s => s.InternalID == SettingsId)
+                    .Set(propertySelector, value)
+                    .Update();
             }
-            else
-            {
-                throw IfNullTable(nameof(SettingsTable));
-            }
+            
+            throw IfNullTable(nameof(SettingsLinq));
         }
         #endregion
 
         #region Pokemon Render Data
-        public async Task<int> AddPokemonRenderDataAsync(PokemonRenderData pokemonRenderData)
+        public async Task<int> AddPokemonRenderDataAsync(PokemonRenderData prd)
         {
-            if (PokemonRenderDataTable != null)
+            if (PokemonRenderDataLinq != null)
             {
-                await PokemonRenderDataTable.AddAsync(pokemonRenderData);
+                await using IDataContext ctx = this.CreateLinqToDbContext();
 
-                return await SaveChangesAsync();
+                int id = await ctx.InsertWithInt32IdentityAsync(prd);
+                if (id > 0)
+                {
+                    prd.Id = (uint)id;
+                    return 1;
+                }
+
+                return 0;
             }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
+            
+            throw IfNullTable(nameof(PokemonRenderDataLinq));
         }
 
-        public async Task<int> UpdatePokemonRenderDataAsync(PokemonRenderData newData)
+        public async Task<int> UpdatePokemonRenderDataAsync(PokemonRenderData prd)
         {
             if (PokemonRenderDataTable != null)
             {
-                EntityEntry<PokemonRenderData> dataEntry = PokemonRenderDataTable.Update(newData);
-                dataEntry.State = EntityState.Modified;
-                return await SaveChangesAsync();
-            }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
-        }
+                await using IDataContext ctx = this.CreateLinqToDbContext();
 
-        private List<PokemonRenderData>? BuiltInPRDs;
-        public List<PokemonRenderData> GetPokemonRenderDataBuiltIns()
-        {
-            if (BuiltInPRDs != null)
-            {
-                return BuiltInPRDs;
+                prd.BuiltIn = false;
+                return await ctx.UpdateAsync(prd);
             }
-
-            if (PokemonRenderDataTable != null)
-            {
-                BuiltInPRDs = PokemonRenderDataTable.Where(prd => prd.BuiltIn).ToList();
-                return BuiltInPRDs;
-            }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
+            
+            throw IfNullTable(nameof(PokemonRenderDataTable));
         }
 
         public async Task<List<PokemonRenderData>> GetPokemonRenderDataAsync(bool orderedByName = true)
         {
-            if (PokemonRenderDataTable != null)
+            if (PokemonRenderDataLinq != null)
             {
-                List<PokemonRenderData> data = await PokemonRenderDataTable.ToListAsync();
+                List<PokemonRenderData> data = await PokemonRenderDataLinq.ToListAsyncLinqToDB();
                 return orderedByName ? data.OrderBy(prd => prd.Name).ToList() : data;
-            }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
+            } 
+            
+            throw IfNullTable(nameof(PokemonRenderDataLinq));
         }
-
-        public async Task<int> DeletePokemonRenderDataAsync(uint id)
+        
+        public async Task<int> DeletePokemonRenderDataAsync(IEnumerable<PokemonRenderData> prds)
         {
-            if (PokemonRenderDataTable != null)
+            if (PokemonRenderDataLinq != null)
             {
-                PokemonRenderData pokemonRenderData = PokemonRenderDataTable.First(prd => prd.Id == id && !prd.BuiltIn);
+                uint[] prdIds = prds.Select(prd => prd.Id).ToArray();
 
-                PokemonRenderDataTable.RemoveRange(pokemonRenderData);
-
-                return await SaveChangesAsync();
+                return await PokemonRenderDataLinq
+                    .Where(prd => prdIds.Contains(prd.Id))
+                    .DeleteAsync();
             }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
-        }
-        public async Task<int> DeletePokemonRenderDataAsync(PokemonRenderData renderData)
-        {
-            if (PokemonRenderDataTable != null)
-            {
-                if (!renderData.BuiltIn)
-                {
-                    PokemonRenderDataTable.Remove(renderData);
-                }
-                return await SaveChangesAsync();
-            }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
-        }
-        public async Task<int> DeletePokemonRenderDataAsync(IEnumerable<PokemonRenderData> renderData)
-        {
-            if (PokemonRenderDataTable != null)
-            {
-                PokemonRenderDataTable.RemoveRange(renderData.Where(prd => !prd.BuiltIn));
-
-                return await SaveChangesAsync();
-            }
-            else
-            {
-                throw IfNullTable(nameof(PokemonRenderDataTable));
-            }
+            
+            throw IfNullTable(nameof(PokemonRenderDataLinq));
         }
         #endregion
     }

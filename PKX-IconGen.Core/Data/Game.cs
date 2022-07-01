@@ -42,7 +42,7 @@ namespace PKXIconGen.Core.Data
             Game.PokemonColosseum => "Pokémon Colosseum",
             Game.PokemonXDGaleOfDarkness => "Pokémon XD: Gale of Darkness",
             Game.PokemonBattleRevolution => "Pokémon Battle Revolution",
-            Game.Undefined or _ => "Undefined"
+            Game.Undefined or _ => ""
         };
     }
 }

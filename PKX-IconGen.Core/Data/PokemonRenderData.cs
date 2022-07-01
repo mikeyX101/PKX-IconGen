@@ -122,8 +122,8 @@ namespace PKXIconGen.Core.Data
         }
 
         [JsonConstructor]
-        public PokemonRenderData(uint id, string name, string? outputName, RenderData render, ShinyInfo shiny) 
-            : this(id, name, outputName, false, render, shiny)
+        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny) 
+            : this(0, name, outputName, false, render, shiny)
         {
 
         }
@@ -184,7 +184,7 @@ namespace PKXIconGen.Core.Data
 
         public object Clone()
         {
-            return new PokemonRenderData(Id, Name, OutputName, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
+            return new PokemonRenderData(Id, Name, OutputName, BuiltIn, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

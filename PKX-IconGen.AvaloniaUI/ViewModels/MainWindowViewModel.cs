@@ -353,8 +353,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             if (data is not null)
             {
-                int changed = await DoDBQueryAsync(db => db.AddPokemonRenderDataAsync(data));
-                if (changed > 0)
+                int id = await DoDBQueryAsync(db => db.AddPokemonRenderDataAsync(data));
+                if (id > 0)
                 {
                     PokemonRenderDataItemsSource.AddOrUpdate(data);
                 }
@@ -453,23 +453,20 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ReactiveCommand<PokemonRenderData,Unit> EditRenderDataCommand { get; }
         private async Task EditRenderData(PokemonRenderData prd)
         {
-            using PokemonRenderDataWindowViewModel dialogVm = new("Edit", this, prd);
+            PokemonRenderData copy = (PokemonRenderData)prd.Clone();
+            using PokemonRenderDataWindowViewModel dialogVm = new("Edit", this, copy);
             bool toSave = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, bool>(dialogVm);
-            if (toSave)
+            if (toSave && await DoDBQueryAsync(db => db.UpdatePokemonRenderDataAsync(copy)) > 0)
             {
-                await DoDBQueryAsync(db => db.UpdatePokemonRenderDataAsync(prd));
+                PokemonRenderDataItemsSource.AddOrUpdate(copy);
+                PokemonRenderDataItemsSource.Refresh(copy);
             }
-            else
-            {
-                DoDBQuery(db => db.RejectChanges());
-            }
-            PokemonRenderDataItemsSource.Refresh(prd);
         }
         
         [UsedImplicitly]
         public async void DeleteSelectedRenderData()
         {
-            if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemon render data?\nThis operation is irreversible."))
+            if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemons?\nThis operation is irreversible."))
             {
                 if (await DoDBQueryAsync(db => db.DeletePokemonRenderDataAsync(PokemonRenderDataSelection.SelectedItems)) > 0)
                 {

@@ -25,6 +25,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using LinqToDB.EntityFrameworkCore;
 
 namespace PKXIconGen.Core
 {
@@ -100,8 +101,10 @@ namespace PKXIconGen.Core
                 .WriteTo.Console(textFormatter)
                 .CreateLogger();
 
+            LinqToDBForEFTools.Initialize();
+            
             Logger.Information("Starting database migration Task");
-            DatabaseMigrationTask = Database.Instance.GetMigrationsTask();
+            DatabaseMigrationTask = Database.Instance.GetMigrationTask();
             
             Logger.Information("PKX-IconGen Core initiated");
             Initiated = true;
@@ -116,6 +119,7 @@ namespace PKXIconGen.Core
             // Copy log as latest.log
             File.Copy(Paths.Log, Paths.LogLatest, true);
         }
+
         private static void DisposeLogger()
         {
             if (NullableLogger != null)

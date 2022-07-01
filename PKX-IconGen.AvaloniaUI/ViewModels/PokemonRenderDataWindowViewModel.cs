@@ -134,14 +134,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             // Reactive
             IObservable<bool> canModifyOrSave = this.WhenAnyValue(
-                vm => vm.Name, vm => vm.Model, vm => vm.ShinyModel,
-                (name, model, shinyModel) => 
+                vm => vm.Name, vm => vm.Model, vm => vm.ShinyHue, vm => vm.ShinyModel,
+                (name, model, shinyHue, shinyModel) => 
                     !string.IsNullOrWhiteSpace(name) && 
                     !string.IsNullOrWhiteSpace(model) && model.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath)) &&
                     (   
-                        string.IsNullOrWhiteSpace(shinyModel) 
+                        shinyHue.HasValue
                         ||
-                        (shinyModel.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
+                        (!string.IsNullOrWhiteSpace(shinyModel) && shinyModel.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
                     )
             );
 
@@ -210,9 +210,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public void InsertAssetsPath(TextBox textBox)
         {
             const string toInsert = "{{AssetsPath}}";
-            string value = textBox.Text.Insert(textBox.CaretIndex, toInsert);
-            
-            textBox.Text = value;
+
+            textBox.Text = textBox.Text is null ? toInsert : textBox.Text.Insert(textBox.CaretIndex, toInsert);
             textBox.Focus();
             textBox.CaretIndex += toInsert.Length;
         }

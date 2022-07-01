@@ -106,7 +106,7 @@ Output name for the rendered file. If unspecified, uses the Pokemon's name.
 Path to the Pokemon model. It should be a .dat file.
 
 If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
-Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
+Example: {{AssetsPath}}/pkx_lugia/lugia.pkx.dat
           </ToolTip.Tip>
         </TextBox>
         <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding InsertAssetsPath}" CommandParameter="{Binding #ModelTextBox}" Grid.Column="1" Grid.Row="0">
