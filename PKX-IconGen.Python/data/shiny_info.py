@@ -33,10 +33,8 @@ class ShinyInfo(object):
             return obj
 
         hue: Optional[float] = None
-        try:
+        if "hue" in obj.__dict__.keys():
             hue = obj.hue
-        except AttributeError:
-            pass
 
         return ShinyInfo(
             hue,

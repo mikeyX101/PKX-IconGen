@@ -47,16 +47,12 @@ class RenderData(object):
             return obj
 
         model: Optional[str] = None
-        try:
+        if "model" in obj.__dict__.keys():
             model = obj.model
-        except AttributeError:
-            pass
 
         secondary_camera: Optional[Camera] = None
-        try:
-            secondary_camera = Camera.parse_obj(obj.secondary_camera)
-        except AttributeError:
-            pass
+        if "secondary_camera" in obj.__dict__.keys():
+            secondary_camera = obj.secondary_camera
 
         return RenderData(
             model,

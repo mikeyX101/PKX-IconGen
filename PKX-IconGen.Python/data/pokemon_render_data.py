@@ -88,10 +88,8 @@ class PokemonRenderData(object):
             return obj
 
         output_name: Optional[str] = None
-        try:
+        if "output_name" in obj.__dict__.keys():
             output_name = obj.output_name
-        except AttributeError:
-            pass
 
         return PokemonRenderData(
             obj.name,
