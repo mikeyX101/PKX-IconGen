@@ -31,7 +31,7 @@ using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data
 {
-    [Table("PokemonRenderData"), Index(nameof(Id), IsUnique = true, Name = "IDX_ID")]
+    [Table("PokemonRenderData"), Microsoft.EntityFrameworkCore.Index(nameof(Id), IsUnique = true, Name = "IDX_ID")]
     public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>, ICloneable, INotifyPropertyChanged
     {
         [Column("ID"), Key, Required, JsonIgnore]
