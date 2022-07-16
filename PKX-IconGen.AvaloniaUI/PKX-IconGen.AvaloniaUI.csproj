@@ -13,7 +13,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.1.0</AssemblyVersion>
+    <AssemblyVersion>0.1.1</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.2.0</Version>
     <StartupObject></StartupObject>
@@ -26,7 +26,7 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.1.0</PackageVersion>
+    <PackageVersion>0.1.1</PackageVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -45,21 +45,21 @@
     <None Remove=".gitignore" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.15" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
+    <PackageReference Include="Avalonia" Version="0.10.16" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.16" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.15" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.15" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.15" />
-    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.10.15" />
-    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.15" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.16" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.16" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.16" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.10.16" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.16" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.6">
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Projektanker.Icons.Avalonia" Version="5.0.2" />
-    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="5.0.2" />
+    <PackageReference Include="Projektanker.Icons.Avalonia" Version="5.1.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="5.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PKX-IconGen.Core\PKX-IconGen.Core.csproj" />
