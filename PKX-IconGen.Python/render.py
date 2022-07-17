@@ -62,7 +62,7 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     light.data.color = prd_light.color.to_list()
     light.location[2] = prd_light.distance
 
-    clean_model_path = utils.get_clean_model_path(prd.get_mode_model(mode))
+    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
     armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(animation_pose)]
     scene.frame_set(animation_frame)
 

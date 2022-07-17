@@ -23,7 +23,7 @@ from .render_data import RenderData
 
 class ShinyInfo(object):
     
-    def __init__(self, hue: Optional[float], render: RenderData):
+    def __init__(self, hue: Optional[float], render: RenderData) -> 'ShinyInfo':
         self.hue = hue
         self.render = render
 

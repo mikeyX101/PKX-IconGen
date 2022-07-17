@@ -125,7 +125,7 @@ def load_hsd(filepath, context = None, offset = 0, scene_name = 'scene_data', da
 
 def load_bone(data, info, rel, filepath):
     root_joint, valid = hsd.HSD_init_Joint(data, info.entry)
-    mesh_dict, material_dict = init_geometry()
+    mesh_dict, material_dict = init_geometry(filepath)
     if valid:
         armature = load_model(root_joint, mesh_dict, material_dict)
     else:
@@ -140,7 +140,7 @@ def load_scene(data, scene_info, rel, filepath, import_animation = True):
     scene = list(scenedescs.values())[0]
 
     #do geometry here because the way it's currently implemented it initializes geometry from all models
-    mesh_dict, material_dict = init_geometry()
+    mesh_dict, material_dict = init_geometry(filepath)
 
     for k, modelset in enumerate(scene.modelsets):
         root_joint = modelset.joint
@@ -708,10 +708,10 @@ def add_material_animation(material_dict, animations, action):
 def add_shape_animation(mesh_dict, animations, action):
     pass
 
-def init_geometry():
+def init_geometry(filepath):
     hsd_textures = hsd.HSD_get_struct_dict('HSD_TObjDesc')
     texture_dict = {}
-    image_dict = make_textures(hsd_textures.values(), texture_dict)
+    image_dict = make_textures(hsd_textures.values(), texture_dict, os.path.basename(filepath))
 
     hsd_materials = hsd.HSD_get_struct_dict('HSD_MObjDesc')
     material_dict = {}
@@ -1761,7 +1761,7 @@ def add_instances(armature, bones, mesh_dict):
 
 
 
-def make_textures(hsd_textures, texture_dict):
+def make_textures(hsd_textures, texture_dict, prefix):
     image_dict = {}
     imported_images_check = {}
     global image_count
@@ -1784,7 +1784,7 @@ def make_textures(hsd_textures, texture_dict):
 
             import_into_memory = True
 
-            image = img.read_image_from_scene(hsd_texture, image_path, import_into_memory)
+            image = img.read_image_from_scene(hsd_texture, image_path, prefix, import_into_memory)
             if import_into_memory:
                 #make sure the image doesn't unload and is stored in .blend files
                 image.pack()

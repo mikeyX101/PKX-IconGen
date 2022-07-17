@@ -25,7 +25,9 @@ from data.color import Color
 from data.light import Light, LightType
 from data.pokemon_render_data import PokemonRenderData
 from data.camera import Camera
-from data.vector import Vector
+from data.texture import Texture
+from data.vector2 import Vector2
+from data.vector3 import Vector3
 from data.edit_mode import EditMode
 from math import radians
 from math import degrees
@@ -33,7 +35,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 5, 1),
+    "version": (0, 6, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -46,6 +48,8 @@ addon_keymaps = []
 mode: EditMode = EditMode.NORMAL
 prd: PokemonRenderData
 removed_objects: List[str] = list()
+render_textures: dict[str, Texture] = dict()
+custom_texture_invalid: bool = False
 camera = None
 camera_focus = None
 camera_light = None
@@ -68,7 +72,7 @@ class ShowRegionUiOperator(bpy.types.Operator):
 
 
 class PKXSyncOperator(bpy.types.Operator):
-    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUSE AT YOUR OWN RISK."""
+    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUSE AT YOUR OWN RISK, NOT EVERYTHING IS SUPPORTED."""
     bl_idname = "wm.pkx_sync"
     bl_label = "Synchronize"
 
@@ -192,7 +196,7 @@ def update_animation_pose(self, context):
     value = self.animation_pose
     armature = get_armature()
 
-    clean_model_path = utils.get_clean_model_path(prd.get_mode_model(mode))
+    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
     action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(value)]
 
     armature.animation_data.action = action
@@ -259,6 +263,56 @@ def update_shiny_color(self, context):
     utils.change_shiny_color(value)
 
 
+# Textures Updates
+def update_current_texture_image(self, context):
+    value = self.current_texture_image
+    name = value.name
+
+    texture: Texture = get_texture_obj(name)
+    self.custom_texture_path = texture.image_path
+    if len(texture.mapping) > 0:
+        first_material_name: str = list[str](texture.mapping)[0]
+        first_material_mapping: Vector2 = texture.mapping[first_material_name]
+
+        self.texture_material = bpy.data.Materials[first_material_name]
+        self.texture_mapping = first_material_mapping.to_mathutils_vector()
+
+
+def update_custom_texture_path(self, context):
+    global custom_texture_invalid
+
+    value = self.custom_texture_path
+    original_image = self.current_texture_image
+
+    if value is not None and value != "":
+        texture_path: str = utils.get_absolute_asset_path(value)
+        if os.path.isfile(texture_path):
+            custom_texture_invalid = False
+            utils.set_custom_image(original_image.name, texture_path)
+        else:
+            custom_texture_invalid = True
+    elif value is not None:
+        custom_texture_invalid = True
+    else:
+        custom_texture_invalid = False
+
+
+def update_texture_material(self, context):
+    pass
+
+
+def update_texture_mapping(self, context):
+    pass
+
+
+def get_texture_obj(name) -> Texture:
+    if name not in render_textures.keys():  # Should only be the case when selecting the image
+        new_texture: Texture = Texture(name, None, dict[str, Vector2]())
+        render_textures[name] = new_texture
+
+    return render_textures[name]
+
+
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
     armature = get_armature()
@@ -307,7 +361,7 @@ def sync_props_to_scene():
     camera_focus.location = camera_focus_pos
     camera.data.angle = radians(camera_fov)
 
-    clean_model_path = utils.get_clean_model_path(prd.get_mode_model(mode))
+    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
     armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
@@ -354,8 +408,8 @@ def sync_props_to_prd():
     camera_pos = scene.pos
     camera_focus_pos = scene.focus
 
-    camera_pos_vector: Vector = Vector(camera_pos[0], camera_pos[1], camera_pos[2])
-    camera_focus_pos_vector: Vector = Vector(camera_focus_pos[0], camera_focus_pos[1], camera_focus_pos[2])
+    camera_pos_vector: Vector3 = Vector3(camera_pos[0], camera_pos[1], camera_pos[2])
+    camera_focus_pos_vector: Vector3 = Vector3(camera_focus_pos[0], camera_focus_pos[1], camera_focus_pos[2])
     fov: float = scene.fov
 
     light_color_list = scene.light_color
@@ -519,6 +573,63 @@ LIGHTPROPS = [
      ))
 ]
 
+
+def poll_current_texture_image(scene, img):
+    model: str = utils.get_relative_asset_path(prd.get_mode_model(mode))
+    model_file: str = os.path.basename(model)
+
+    return img.type != "RENDER_RESULT" and img.name.startswith(model_file)
+
+
+def poll_texture_materials(scene, mat):
+    image_obj = scene.current_texture_image
+    if image_obj is not None:
+        node_tree = mat.node_tree
+        for node in node_tree.nodes:
+            if utils.is_node_teximage_with_image(node, image_obj):
+                return True
+
+    return False
+
+
+TEXTURESPROPS = [
+    ('current_texture_image',
+     bpy.props.PointerProperty(
+        name="Texture",
+        description="Texture search",
+        type=bpy.types.Image,
+        poll=poll_current_texture_image,
+        update=update_current_texture_image,
+     )),
+    ('custom_texture_path',
+     bpy.props.StringProperty(
+        name="Custom Texture",
+        description="Texture to replace, must be on the same integer scale as the original texture: 1x, 2x, 3x, etc. {{AssetsPath}} can be used here",
+        default="{{AssetsPath}}/icon-gen/",
+        subtype="FILE_PATH",
+        update=update_custom_texture_path,
+     )),
+    ('texture_material',
+     bpy.props.PointerProperty(
+        name="Material",
+        description="Material that uses the texture. Used for mapping",
+        type=bpy.types.Material,
+        poll=poll_texture_materials,
+        update=update_texture_material,
+     )),
+    ('texture_mapping',
+     bpy.props.FloatVectorProperty(
+        name="Mapping",
+        description="Direct mapping of the texture",
+        size=2,
+        subtype="XYZ",
+        default=(0, 0),
+        min=0,
+        max=1,
+        update=update_texture_mapping
+     )),
+]
+
 SHINYPROPS = [
     ('shiny_color',
      bpy.props.FloatVectorProperty(
@@ -537,7 +648,13 @@ ADVANCEDPROPS = [
 ]
 
 ALLPROPS = [
-    MAINPROPS, ANIMATIONPROPS, CAMERAPROPS, LIGHTPROPS, SHINYPROPS, ADVANCEDPROPS
+    MAINPROPS,
+    ANIMATIONPROPS,
+    CAMERAPROPS,
+    LIGHTPROPS,
+    TEXTURESPROPS,
+    SHINYPROPS,
+    ADVANCEDPROPS
 ]
 
 
@@ -577,7 +694,7 @@ class PKXAnimationPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_subpanel(self, context, ANIMATIONPROPS)
+        init_simple_subpanel(self, context, ANIMATIONPROPS)
 
 
 class PKXCameraPanel(PKXPanel, bpy.types.Panel):
@@ -587,7 +704,7 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_subpanel(self, context, CAMERAPROPS)
+        init_simple_subpanel(self, context, CAMERAPROPS)
 
 
 class PKXLightPanel(PKXPanel, bpy.types.Panel):
@@ -597,7 +714,43 @@ class PKXLightPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_subpanel(self, context, LIGHTPROPS)
+        init_simple_subpanel(self, context, LIGHTPROPS)
+
+
+class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
+    bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
+    bl_idname = 'VIEW3D_PT_PKX_TEXTURES_PANEL'
+    bl_label = 'Textures'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
+        col = layout.column()
+        col.enabled = can_edit(EditMode[scene.mode], scene.secondary_enabled)
+        for (prop_name, _) in TEXTURESPROPS:
+            if prop_name == "current_texture_image":
+                row = col.row(align=True)
+                row.prop(scene, prop_name)
+            else:
+                image_col = col.column()
+                image_col.enabled = scene.current_texture_image is not None
+
+                if prop_name == "custom_texture_path":
+                    row = image_col.row(align=True)
+                    row.prop(scene, prop_name)
+
+                    if custom_texture_invalid:
+                        row = image_col.row(align=True)
+                        row.label(text="Path is invalid", icon="ERROR")
+                elif prop_name == "texture_mapping":
+                    row = image_col.row(align=True)
+                    row.enabled = scene.texture_material is not None
+                    row.prop(scene, prop_name)
+                else:
+                    row = image_col.row(align=True)
+                    row.prop(scene, prop_name)
 
 
 class PKXShinyPanel(PKXPanel, bpy.types.Panel):
@@ -611,7 +764,7 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
         return prd.shiny.hue is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
 
     def draw(self, context):
-        init_subpanel(self, context, SHINYPROPS)
+        init_simple_subpanel(self, context, SHINYPROPS)
 
 
 class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
@@ -621,11 +774,11 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        col = init_subpanel(self, context, ADVANCEDPROPS)
+        col = init_simple_subpanel(self, context, ADVANCEDPROPS)
         col.operator("wm.pkx_sync")
 
 
-def init_subpanel(self, context, props):
+def init_simple_subpanel(self, context, props):
     layout = self.layout
 
     col = layout.column()
@@ -642,6 +795,7 @@ CLASSES = [
     PKXAnimationPanel,
     PKXCameraPanel,
     PKXLightPanel,
+    PKXTexturesPanel,
     PKXShinyPanel,
     PKXAdvancedPanel,
 

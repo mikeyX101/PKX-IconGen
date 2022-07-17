@@ -16,35 +16,32 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 
-import sys
-import os
+from math import radians
 from typing import Optional
+# noinspection PyUnresolvedReferences
+from mathutils import Euler
+# noinspection PyUnresolvedReferences
+from mathutils import Vector as MUVector
 
-sys.path.append(os.getcwd())
 
-from data.pokemon_render_data import PokemonRenderData
-import utils
-from addon import register
+class Vector2(object):
+    
+    def __init__(self, x: float, y: float) -> 'Vector2':
+        self.x = x
+        self.y = y
 
-if __name__ == "__main__":
-    debug_json: Optional[str] = None
-    prd: PokemonRenderData
+    def to_mathutils_vector(self) -> MUVector:
+        return MUVector((
+            self.x,
+            self.y,
+        ))
 
-    utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
-    for arg, value in utils.cmd_args:
-        if arg == "--pkx-debug":
-            debug_json = value
+    @staticmethod
+    def parse_obj(obj: Optional[any]) -> Optional['Vector2']:
+        if obj is None:
+            return None
 
-    if debug_json is not None:
-        file = open(debug_json, "r")
-        json = file.readline()
-        file.close()
-
-        prd = PokemonRenderData.from_json(json)
-    else:
-        json = sys.stdin.readline()
-        print(json)
-        prd = PokemonRenderData.from_json(json)
-
-    utils.import_model(prd.render.model, prd.shiny.hue)
-    register(prd)
+        return Vector2(
+            obj.x,
+            obj.y
+        )

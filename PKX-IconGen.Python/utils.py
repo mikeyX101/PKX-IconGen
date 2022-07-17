@@ -18,9 +18,6 @@
 
 import getopt
 import math
-import os.path
-import sys
-
 import bpy
 from typing import List, Optional, Final
 
@@ -28,6 +25,7 @@ from data.color import Color
 from data.edit_mode import EditMode
 from data.pokemon_render_data import PokemonRenderData
 from data.shiny_info import ShinyInfo
+from data.texture import Texture
 from importer import import_hsd
 
 RGBNODE_NAME: Final[str] = "PKX_ShinyRGB"
@@ -37,33 +35,29 @@ cmd_args = None
 assets_path: Optional[str] = None
 
 
-def parse_cmd_args():
+def parse_cmd_args(script_args):
     global cmd_args
     global assets_path
 
     if cmd_args is None:
-        script_args = sys.argv[sys.argv.index("--") + 1:]
-
         cmd_args, _ = getopt.getopt(script_args, "", ["pkx-debug=", "assets-path="])
         for arg, value in cmd_args:
             if arg == "--assets-path" and value != "":
                 assets_path = value
 
-    return cmd_args
 
-
-def get_true_model_path(model: str, assets_path: str):
+def get_absolute_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}", assets_path)
 
 
-def get_clean_model_path(model: str) -> str:
+def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
 
 def import_model(model: str, shiny_hue: Optional[Color]):
     print(f"Assets Path: {assets_path}")
     if assets_path is not None:
-        true_path = get_true_model_path(model, assets_path)
+        true_path = get_absolute_asset_path(model)
     else:
         true_path = model
 
@@ -82,7 +76,7 @@ def import_model(model: str, shiny_hue: Optional[Color]):
                 bsdf.inputs[4].default_value = 0  # Metallic
                 bsdf.inputs[5].default_value = 0  # Specular
                 bsdf.inputs[7].default_value = 1  # Roughness
-            elif (3, 0, 0) <= blender_ver < (3, 1, 0):  # TODO Validate nodes in 3.1
+            elif (3, 0, 0) <= blender_ver < (3, 1, 0):  # TODO Validate nodes in 3.1 and 3.2
                 bsdf = tree.nodes["Principled BSDF"]
                 bsdf.inputs[6].default_value = 0  # Metallic
                 bsdf.inputs[7].default_value = 0  # Specular
@@ -177,6 +171,44 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
         raise Exception("PRD had no filter or alt model.")
 
 
+def get_image_nodes(image_obj):
+    nodes: list = list()
+    if image_obj is not None:
+        for mat in bpy.data.Materials:
+            node_tree = mat.node_tree
+            for node in node_tree.nodes:
+                if is_node_teximage_with_image(node, image_obj):
+                    nodes.append(node)
+                    break
+    return nodes
+
+
+def set_custom_image(image_obj, texture_path: str):
+    nodes = get_image_nodes(image_obj)
+    new_image = bpy.data.images.load(filepath=texture_path, check_existing=True)
+    for node in nodes:
+        node.image = new_image
+
+
+def reset_texture_images(texture: Texture):
+    original_image = bpy.data.images[texture.texture_name]
+    custom_image = bpy.data.images.load(filepath=texture.image_path, check_existing=True)
+
+    nodes = get_image_nodes(custom_image)
+
+    for node in nodes:
+        node.image = new_image
+
+
+def is_node_teximage_with_image(node, image_obj):
+    return node.bl_idname == "ShaderNodeTexImage" and node.image.name == image_obj.name
+
+
+def set_material_map(mat_obj, x: float, y: float):
+
+    pass
+
+
 def get_armature(prd: PokemonRenderData, mode: EditMode):
     objs = bpy.data.objects
     shiny_model = prd.shiny.render.model
@@ -269,7 +301,6 @@ def rgb2hue(rgb: List[float]) -> float:
 
 
 def convert_range(original_start: float, original_end: float, new_start: float, new_end: float, value: float) -> float:
-
     if original_start > value:
         raise ValueError("Value was smaller than the original range.")
 

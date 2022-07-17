@@ -24,9 +24,9 @@ from mathutils import Euler
 from mathutils import Vector as MUVector
 
 
-class Vector(object):
+class Vector3(object):
     
-    def __init__(self, x: float, y: float, z: float):
+    def __init__(self, x: float, y: float, z: float) -> 'Vector3':
         self.x = x
         self.y = y
         self.z = z
@@ -48,11 +48,11 @@ class Vector(object):
         )
 
     @staticmethod
-    def parse_obj(obj: Optional[any]) -> Optional['Vector']:
+    def parse_obj(obj: Optional[any]) -> Optional['Vector3']:
         if obj is None:
             return None
 
-        return Vector(
+        return Vector3(
             obj.x,
             obj.y,
             obj.z

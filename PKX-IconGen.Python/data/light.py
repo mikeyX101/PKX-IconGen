@@ -31,7 +31,7 @@ class LightType(IntEnum):
 
 class Light(object):
     
-    def __init__(self, type: LightType, strength: float, color: Color, distance: float):
+    def __init__(self, type: LightType, strength: float, color: Color, distance: float) -> 'Light':
         self.type = type
         self.strength = strength
         self.color = color

@@ -19,16 +19,16 @@
 from typing import Optional
 
 from .light import Light
-from .vector import Vector
+from .vector3 import Vector3
 
 
 class Camera(object):
     
-    def __init__(self, 
-                 pos: Vector, 
-                 focus: Vector,
+    def __init__(self,
+                 pos: Vector3,
+                 focus: Vector3,
                  fov: float,
-                 light: Light):
+                 light: Light) -> 'Camera':
         self.pos = pos
         self.focus = focus
         self.fov = fov
@@ -40,15 +40,15 @@ class Camera(object):
             return None
 
         return Camera(
-            Vector.parse_obj(obj.pos),
-            Vector.parse_obj(obj.focus),
+            Vector3.parse_obj(obj.pos),
+            Vector3.parse_obj(obj.focus),
             obj.fov,
             Light.parse_obj(obj.light))
 
     @staticmethod
     def default() -> 'Camera':
         return Camera(
-            Vector(14, -13.5, 5.5), 
-            Vector(0, 0, 0),
+            Vector3(14, -13.5, 5.5),
+            Vector3(0, 0, 0),
             40,
             Light.default())

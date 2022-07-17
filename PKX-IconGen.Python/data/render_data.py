@@ -20,6 +20,7 @@ from typing import Optional
 from typing import List
 
 from .camera import Camera
+from .texture import Texture
 
 
 class RenderData(object):
@@ -30,7 +31,8 @@ class RenderData(object):
                  animation_frame: int, 
                  main_camera: Camera, 
                  secondary_camera: Optional[Camera],
-                 removed_objects: List[str]):
+                 removed_objects: List[str],
+                 textures: Optional[List[Texture]]) -> 'RenderData':
         self.model = model
 
         self.animation_pose = animation_pose
@@ -40,6 +42,7 @@ class RenderData(object):
         self.secondary_camera = secondary_camera
 
         self.removed_objects = removed_objects
+        self.textures = textures or list[Texture]()
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['RenderData']:
@@ -54,10 +57,18 @@ class RenderData(object):
         if "secondary_camera" in obj.__dict__.keys():
             secondary_camera = obj.secondary_camera
 
+        textures: Optional[List[Texture]] = None
+        if "textures" in obj.__dict__.keys():
+            textures = list[Texture]()
+            for texture in obj.textures:
+                textures.append(Texture.parse_obj(texture))
+
         return RenderData(
             model,
             obj.animation_pose,
             obj.animation_frame,
             Camera.parse_obj(obj.main_camera),
             secondary_camera,
-            obj.removed_objects)
+            obj.removed_objects,
+            textures
+        )

@@ -25,5 +25,6 @@ __all__ = [
     "render_data",
     "render_job",
     "shiny_info",
-    "vector"
+    "vector2",
+    "vector3"
 ]

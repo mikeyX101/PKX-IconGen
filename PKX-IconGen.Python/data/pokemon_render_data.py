@@ -33,7 +33,7 @@ class PokemonRenderData(object):
                  name: str,
                  output_name: Optional[str],
                  render: RenderData,
-                 shiny: ShinyInfo):
+                 shiny: ShinyInfo) -> 'PokemonRenderData':
         self.name = name
         self.output_name = output_name
         self.render = render

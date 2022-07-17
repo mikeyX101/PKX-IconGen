@@ -45,6 +45,9 @@ namespace PKXIconGen.Core.Data
 
         [JsonPropertyName("removed_objects")]
         public SortedSet<string> RemovedObjects { get; init; }
+        
+        [JsonPropertyName("textures")]
+        public List<Texture> Textures { get; init; }
 
         public RenderData() {
             Model = null;
@@ -56,10 +59,11 @@ namespace PKXIconGen.Core.Data
             SecondaryCamera = null;
 
             RemovedObjects = new SortedSet<string>();
+            Textures = new List<Texture>();
         }
 
         [JsonConstructor]
-        public RenderData(string? model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, SortedSet<string> removedObjects)
+        public RenderData(string? model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, SortedSet<string> removedObjects, List<Texture>? textures)
         {
             Model = model;
 
@@ -70,6 +74,7 @@ namespace PKXIconGen.Core.Data
             SecondaryCamera = secondaryCamera;
 
             RemovedObjects = removedObjects;
+            Textures = textures ?? new List<Texture>();
         }
 
         public bool Equals(RenderData? other)
@@ -102,7 +107,15 @@ namespace PKXIconGen.Core.Data
             return Utils.GetTrueModelPath(Model, assetsPath);
         }
 
-        public override int GetHashCode() => (Model, AnimationPose, AnimationFrame, MainCamera, SecondaryCamera, RemovedObjects).GetHashCode();
+        public override int GetHashCode() => (
+            Model, 
+            AnimationPose, 
+            AnimationFrame, 
+            MainCamera, 
+            SecondaryCamera, 
+            RemovedObjects,
+            Textures
+        ).GetHashCode();
 
         public object Clone()
         {
@@ -112,7 +125,8 @@ namespace PKXIconGen.Core.Data
                 AnimationFrame, 
                 MainCamera, 
                 SecondaryCamera,
-                new SortedSet<string>(RemovedObjects)
+                new SortedSet<string>(RemovedObjects),
+                new List<Texture>(Textures)
             );
         }
     }

@@ -57,7 +57,7 @@ ccc = 4 #color component count
 
 
 
-def read_image_from_scene(tobj, image_path, import_into_memory = True):
+def read_image_from_scene(tobj, image_path, prefix, import_into_memory = True):
     imagedesc = tobj.imagedesc
     tlut = tobj.tlutdesc
     width = imagedesc.width
@@ -84,7 +84,7 @@ def read_image_from_scene(tobj, image_path, import_into_memory = True):
     image = None
     if import_into_memory:
         uses_alpha = True
-        name = 'imported_image_' + name_dict[imagedesc.format]
+        name = f"{prefix}_{name_dict[imagedesc.format]}"
         image = bpy.data.images.new(name, width, height, alpha=uses_alpha)
         temp_arr = [0] * width * height * ccc
 

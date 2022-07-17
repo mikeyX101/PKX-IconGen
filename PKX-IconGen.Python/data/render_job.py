@@ -33,7 +33,7 @@ class RenderJob(object):
                  main_path: str,
                  shiny_path: str,
                  secondary_path: str,
-                 shiny_secondary_path: str):
+                 shiny_secondary_path: str) -> 'RenderJob':
         self.data = data
         self.scale = scale
         self.game = game
