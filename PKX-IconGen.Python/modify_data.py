@@ -40,10 +40,12 @@ if __name__ == "__main__":
         json = file.readline()
         file.close()
 
+        print(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
     else:
         json = sys.stdin.readline()
-        print(json)
+
+        print(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
 
     utils.import_model(prd.render.model, prd.shiny.hue)

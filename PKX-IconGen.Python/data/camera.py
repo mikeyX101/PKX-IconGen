@@ -28,7 +28,7 @@ class Camera(object):
                  pos: Vector3,
                  focus: Vector3,
                  fov: float,
-                 light: Light) -> 'Camera':
+                 light: Light):
         self.pos = pos
         self.focus = focus
         self.fov = fov

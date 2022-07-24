@@ -18,10 +18,12 @@
 
 import getopt
 import math
+import sys
+
 import bpy
 from typing import List, Optional, Final
 
-from data.color import Color
+import blender_compat
 from data.edit_mode import EditMode
 from data.pokemon_render_data import PokemonRenderData
 from data.shiny_info import ShinyInfo
@@ -54,7 +56,7 @@ def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
 
-def import_model(model: str, shiny_hue: Optional[Color]):
+def import_model(model: str, shiny_hue: Optional[float]):
     print(f"Assets Path: {assets_path}")
     if assets_path is not None:
         true_path = get_absolute_asset_path(model)
@@ -64,23 +66,16 @@ def import_model(model: str, shiny_hue: Optional[Color]):
     print(f"Importing: {true_path}")
     import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
 
-    blender_ver = bpy.app.version
     mats = bpy.data.materials
     for mat in mats:
         tree = mat.node_tree
         if tree is not None:
             #  Rough Materials
-            #  TODO Vertex Lighting
-            if (2, 93, 0) <= blender_ver < (2, 94, 0):
-                bsdf = tree.nodes["Principled BSDF"]
-                bsdf.inputs[4].default_value = 0  # Metallic
-                bsdf.inputs[5].default_value = 0  # Specular
-                bsdf.inputs[7].default_value = 1  # Roughness
-            elif (3, 0, 0) <= blender_ver < (3, 1, 0):  # TODO Validate nodes in 3.1 and 3.2
-                bsdf = tree.nodes["Principled BSDF"]
-                bsdf.inputs[6].default_value = 0  # Metallic
-                bsdf.inputs[7].default_value = 0  # Specular
-                bsdf.inputs[9].default_value = 1  # Roughness
+            # TODO Vertex Lighting
+            bsdf = tree.nodes["Principled BSDF"]
+            bsdf.inputs[blender_compat.principaled_bsdf_in.metallic].default_value = 0
+            bsdf.inputs[blender_compat.principaled_bsdf_in.specular].default_value = 0
+            bsdf.inputs[blender_compat.principaled_bsdf_in.roughness].default_value = 1
 
             if shiny_hue is not None and tree.nodes.find(MIXNODE_NAME) == -1:
                 mix_node = tree.nodes.new("ShaderNodeMixRGB")
@@ -111,7 +106,7 @@ def show_shiny_mats():
                 mix_node = tree.nodes["PKX_MixRGB"]
                 mix_node.inputs[0].default_value = 1
             else:
-                raise Exception("Shiny material was not setup for material: " + mat.name)
+                raise Exception("Shiny nodes was not setup for material: " + mat.name)
 
 
 def hide_shiny_mats():
@@ -123,7 +118,7 @@ def hide_shiny_mats():
                 mix_node = tree.nodes["PKX_MixRGB"]
                 mix_node.inputs[0].default_value = 0
             else:
-                raise Exception("Shiny material was not setup for material: " + mat.name)
+                raise Exception("Shiny nodes was not setup for material: " + mat.name)
 
 
 def change_shiny_color(rgb: List[float]):
@@ -139,7 +134,6 @@ def change_shiny_color(rgb: List[float]):
 
 
 def show_message_box(message, title, icon='INFO'):
-
     def draw(self, context):
         self.layout.label(text=message)
 
@@ -174,39 +168,90 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
 def get_image_nodes(image_obj):
     nodes: list = list()
     if image_obj is not None:
-        for mat in bpy.data.Materials:
-            node_tree = mat.node_tree
-            for node in node_tree.nodes:
-                if is_node_teximage_with_image(node, image_obj):
-                    nodes.append(node)
-                    break
+        for mat in bpy.data.materials:
+            if mat.node_tree is not None:
+                for node in mat.node_tree.nodes:
+                    if is_node_teximage_with_image(node, image_obj):
+                        nodes.append(node)
     return nodes
 
 
-def set_custom_image(image_obj, texture_path: str):
+def get_image_materials(image_obj):
+    mats: list = list()
+    if image_obj is not None:
+        for mat in bpy.data.materials:
+            if mat.node_tree is not None:
+                for node in mat.node_tree.nodes:
+                    if is_node_teximage_with_image(node, image_obj):
+                        mats.append(mat)
+                        break
+    return mats
+
+
+def set_custom_image(image_obj, texture_path: str) -> bool:
+    success: bool = False
+
     nodes = get_image_nodes(image_obj)
-    new_image = bpy.data.images.load(filepath=texture_path, check_existing=True)
-    for node in nodes:
-        node.image = new_image
+    new_img = bpy.data.images.load(filepath=texture_path, check_existing=True)
+    if image_is_integer_scale(image_obj, new_img):
+        success = True
+        for node in nodes:
+            node.image = new_img
+    return success
+
+
+def image_is_integer_scale(original_img, new_img) -> bool:
+    o_width: int = original_img.size[0]
+    o_height: int = original_img.size[1]
+    n_width: int = new_img.size[0]
+    n_height: int = new_img.size[1]
+
+    width_scale_check: bool = n_width % o_width == 0
+    height_scale_check: bool = n_height % o_height == 0
+    ratio_check: bool = o_width / o_height == n_width / n_height
+
+    return width_scale_check and height_scale_check and ratio_check
+
+
+def set_textures(textures: List[Texture]):
+    for texture in textures:
+        original_img = bpy.data.images[texture.name]
+        custom_img = None
+        if texture.path is not None:
+            full_path: str = get_absolute_asset_path(texture.path)
+            set_custom_image(bpy.data.images[texture.name], full_path)
+            custom_img = bpy.data.images.load(filepath=full_path, check_existing=True)
+
+        for mat in texture.maps.keys():
+            set_material_map(custom_img or original_img, bpy.data.materials[mat],
+                             texture.maps[mat].x,
+                             texture.maps[mat].y)
 
 
 def reset_texture_images(texture: Texture):
-    original_image = bpy.data.images[texture.texture_name]
-    custom_image = bpy.data.images.load(filepath=texture.image_path, check_existing=True)
+    if texture.path is not None:
+        original_img = bpy.data.images[texture.name]
+        custom_img = bpy.data.images.load(filepath=get_absolute_asset_path(texture.path), check_existing=True)
 
-    nodes = get_image_nodes(custom_image)
+        nodes = get_image_nodes(custom_img)
 
-    for node in nodes:
-        node.image = new_image
+        for node in nodes:
+            node.image = original_img
 
 
-def is_node_teximage_with_image(node, image_obj):
+def is_node_teximage_with_image(node, image_obj) -> bool:
     return node.bl_idname == "ShaderNodeTexImage" and node.image.name == image_obj.name
 
 
-def set_material_map(mat_obj, x: float, y: float):
-
-    pass
+def set_material_map(image_obj, mat_obj, x: float, y: float):
+    tree = mat_obj.node_tree
+    if tree is not None:
+        for node in tree.nodes:
+            if is_node_teximage_with_image(node, image_obj):
+                img_vector_input_node = node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
+                if img_vector_input_node.bl_idname == "ShaderNodeMapping":
+                    img_vector_input_node.inputs[1].default_value[0] = x
+                    img_vector_input_node.inputs[1].default_value[1] = y
 
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):

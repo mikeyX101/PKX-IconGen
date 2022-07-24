@@ -26,7 +26,7 @@ from mathutils import Vector as MUVector
 
 class Vector2(object):
     
-    def __init__(self, x: float, y: float) -> 'Vector2':
+    def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
 

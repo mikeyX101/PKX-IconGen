@@ -24,7 +24,7 @@ from mathutils import Vector as MUVector
 
 class Color(object):
     
-    def __init__(self, r: float, g: float, b: float) -> 'Color':
+    def __init__(self, r: float, g: float, b: float):
         self.r = r
         self.b = b
         self.g = g

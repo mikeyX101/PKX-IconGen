@@ -171,6 +171,7 @@ namespace PKXIconGen.Core.Services
             
             cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
             PokemonRenderData? prd = null;
+            
             try
             {
                 await foreach (var cmdEvent in cmd.ListenAsync(token))
@@ -192,8 +193,14 @@ namespace PKXIconGen.Core.Services
                             string jsonPath = Path.Combine(Paths.TempFolder, TemplateName + ".json");
                             if (File.Exists(jsonPath))
                             {
-                                prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
-                                File.Delete(jsonPath);
+                                try
+                                {
+                                    prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
+                                }
+                                finally
+                                {
+                                    File.Delete(jsonPath);
+                                }
                             }
 
                             OnOutput?.Invoke($"Process exited; Code: {exited.ExitCode}".AsMemory());

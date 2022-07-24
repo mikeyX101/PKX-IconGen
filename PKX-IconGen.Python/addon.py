@@ -15,11 +15,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-
+import copy
 from typing import List, Optional
 import bpy
+import bpy.utils.previews
 import os
 
+import blender_compat
 import utils
 from data.color import Color
 from data.light import Light, LightType
@@ -49,7 +51,9 @@ mode: EditMode = EditMode.NORMAL
 prd: PokemonRenderData
 removed_objects: List[str] = list()
 render_textures: dict[str, Texture] = dict()
-custom_texture_invalid: bool = False
+custom_texture_path_invalid: bool = False
+custom_texture_scale_invalid: bool = False
+preview_textures = bpy.utils.previews.new()
 camera = None
 camera_focus = None
 camera_light = None
@@ -68,6 +72,23 @@ class ShowRegionUiOperator(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.wm.context_toggle(data_path="space_data.show_region_ui")
+        return {'FINISHED'}
+
+
+class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
+    """Replaces the full AssetsPath with {{AssetsPath}}, path and image needs to be valid. If path is empty, adds the full AssetsPath."""
+    bl_idname = "wm.pkx_assets_path"
+    bl_label = "{{AssetsPath}}"
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.scene.custom_texture_path) == 0 or (not custom_texture_path_invalid and not custom_texture_scale_invalid)
+
+    def execute(self, context):
+        if len(context.scene.custom_texture_path) == 0:
+            context.scene.custom_texture_path = utils.assets_path + "/icon-gen/"
+        else:
+            context.scene.custom_texture_path = context.scene.custom_texture_path.replace(utils.assets_path, "{{AssetsPath}}")
         return {'FINISHED'}
 
 
@@ -91,7 +112,6 @@ class PKXDeleteOperator(bpy.types.Operator):
         return len(context.selected_objects) > 0
 
     def execute(self, context):
-        global removed_objects
         objs = context.selected_objects
 
         removed_objects.extend([obj.name for obj in objs])
@@ -103,19 +123,60 @@ class PKXDeleteOperator(bpy.types.Operator):
 
 
 class PKXResetDeletedOperator(bpy.types.Operator):
-    """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
+    """Restores every deleted item"""
     bl_idname = "wm.pkx_reset_deleted"
     bl_label = "Reset deleted items"
 
     @classmethod
     def poll(cls, context):
-        global removed_objects
         return len(removed_objects) > 0
 
     def execute(self, context):
         global removed_objects
         removed_objects = []
         utils.show_armature(get_armature())
+
+        return {'FINISHED'}
+
+
+class PKXCopyRemovedObjectsOperator(bpy.types.Operator):
+    """Copy removed objects from the normal version"""
+    bl_idname = "wm.pkx_copy_removed_objects"
+    bl_label = "Copy removed objects"
+
+    @classmethod
+    def poll(cls, context):
+        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+
+    def execute(self, context):
+        global removed_objects
+        removed_objects = list(prd.render.removed_objects)
+        utils.show_armature(get_armature())
+        utils.remove_objects(removed_objects)
+
+        return {'FINISHED'}
+
+
+class PKXCopyTexturesOperator(bpy.types.Operator):
+    """Copy textures from the normal version"""
+    bl_idname = "wm.pkx_copy_textures"
+    bl_label = "Copy textures"
+
+    @classmethod
+    def poll(cls, context):
+        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+
+    def execute(self, context):
+        global render_textures
+        for texture in list(render_textures.values()):
+            utils.reset_texture_images(texture)
+
+        texture_copies: List[Texture] = list()
+        for texture in prd.render.textures:
+            texture_copies.append(copy.deepcopy(texture))
+        render_textures = make_texture_dict(texture_copies)
+        utils.set_textures(texture_copies)
+        context.scene.current_texture_image = None
 
         return {'FINISHED'}
 
@@ -128,11 +189,13 @@ class PKXSaveOperator(bpy.types.Operator):
     def execute(self, context):
         sync_props_to_prd()
 
+        json: str = prd.to_json()
+        print(f"Output: {json}")
         # Will not work if debugging, test saves from the C# PKX-IconGen application
         try:
             name: str = prd.output_name or prd.name
             with open('../Temp/' + name + '.json', 'w') as json_file:
-                json_file.write(prd.to_json())
+                json_file.write(json)
                 json_file.close()
             bpy.ops.wm.quit_blender()
         except:
@@ -186,6 +249,10 @@ def update_mode(self, context):
     value = self.mode
     global mode
     mode = EditMode[value]
+
+    for texture in list(render_textures.values()):
+        utils.reset_texture_images(texture)
+    self.current_texture_image = None
 
     utils.switch_model(prd.shiny, mode)
     sync_prd_to_props()
@@ -266,53 +333,109 @@ def update_shiny_color(self, context):
 # Textures Updates
 def update_current_texture_image(self, context):
     value = self.current_texture_image
-    name = value.name
 
-    texture: Texture = get_texture_obj(name)
-    self.custom_texture_path = texture.image_path
-    if len(texture.mapping) > 0:
-        first_material_name: str = list[str](texture.mapping)[0]
-        first_material_mapping: Vector2 = texture.mapping[first_material_name]
+    if value is not None:
+        if value.name not in preview_textures:
+            preview_tex = preview_textures.new(value.name)
+            preview_tex.image_size = value.size
+            preview_tex.image_pixels_float = value.pixels
 
-        self.texture_material = bpy.data.Materials[first_material_name]
-        self.texture_mapping = first_material_mapping.to_mathutils_vector()
+        texture: Texture = get_texture_obj(value.name)
+        self.custom_texture_path = texture.path or ""
+        if len(texture.maps) > 0:
+            first_material_name: str = next(iter(texture.maps.keys()))
+            first_material_mapping: Vector2 = texture.maps[first_material_name]
+
+            self.texture_material = bpy.data.materials[first_material_name]
+            self.texture_mapping = first_material_mapping.to_mathutils_vector()
 
 
 def update_custom_texture_path(self, context):
-    global custom_texture_invalid
+    global custom_texture_path_invalid
+    global custom_texture_scale_invalid
 
+    texture: Texture = get_texture_obj(self.current_texture_image.name)
     value = self.custom_texture_path
-    original_image = self.current_texture_image
+    original_img = self.current_texture_image
 
     if value is not None and value != "":
         texture_path: str = utils.get_absolute_asset_path(value)
         if os.path.isfile(texture_path):
-            custom_texture_invalid = False
-            utils.set_custom_image(original_image.name, texture_path)
+            custom_texture_path_invalid = False
+            if utils.set_custom_image(original_img, texture_path):
+                texture.path = value
+                custom_texture_scale_invalid = False
+            else:
+                custom_texture_scale_invalid = True
         else:
-            custom_texture_invalid = True
-    elif value is not None:
-        custom_texture_invalid = True
+            custom_texture_path_invalid = True
     else:
-        custom_texture_invalid = False
+        custom_texture_path_invalid = False
+
+        utils.reset_texture_images(texture)
+        texture.path = None
 
 
 def update_texture_material(self, context):
-    pass
+    value = self.texture_material
+
+    if value is not None:
+        texture: Texture = get_texture_obj(self.current_texture_image.name)
+        if value.name not in texture.maps.keys():
+            new_mapping: Vector2 = Vector2(0, 0)
+            texture.maps[value.name] = new_mapping
+
+        self.texture_mapping = texture.maps[value.name].to_mathutils_vector()
 
 
 def update_texture_mapping(self, context):
-    pass
+    value = self.texture_mapping
+
+    original_img = self.current_texture_image
+    texture: Texture = get_texture_obj(self.current_texture_image.name)
+    custom_img = None
+    if texture.path is not None:
+        custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
+
+    texture.maps[self.texture_material.name] = Vector2(value[0], value[1])
+
+    utils.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
 
 
-def get_texture_obj(name) -> Texture:
+def get_texture_obj(name: str) -> Texture:
     if name not in render_textures.keys():  # Should only be the case when selecting the image
-        new_texture: Texture = Texture(name, None, dict[str, Vector2]())
-        render_textures[name] = new_texture
+        render_textures[name] = Texture(name, None, get_initial_texture_mapping(name))
 
     return render_textures[name]
 
 
+def get_initial_texture_mapping(name: str) -> dict[str, Vector2]:
+    mat_maps: dict[str, Vector2] = dict[str, Vector2]()
+
+    image_obj = bpy.data.images[name]
+    mats = utils.get_image_materials(image_obj)
+
+    for mat in mats:
+        if mat.node_tree is not None:
+            for node in mat.node_tree.nodes:
+                if utils.is_node_teximage_with_image(node, image_obj):
+                    img_vector_input_node = node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
+                    if img_vector_input_node.bl_idname == "ShaderNodeMapping":
+                        x = img_vector_input_node.inputs[1].default_value[0]
+                        y = img_vector_input_node.inputs[1].default_value[1]
+                        mat_maps[mat.name] = Vector2(x, y)
+
+    return mat_maps
+
+
+def make_texture_dict(textures: List[Texture]) -> dict[str, Texture]:
+    texture_dict: dict[str, Texture] = dict[str, Texture]()
+    for texture in textures:
+        texture_dict[texture.name] = texture
+    return texture_dict
+
+
+# Out of date, see if scene sync is needed/worth to maintain
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
     armature = get_armature()
@@ -341,7 +464,6 @@ def sync_scene_to_props():
 
 
 def sync_props_to_scene():
-    global removed_objects
     scene = bpy.data.scenes["Scene"]
     armature = get_armature()
     camera = get_camera()
@@ -362,17 +484,22 @@ def sync_props_to_scene():
     camera.data.angle = radians(camera_fov)
 
     clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
-    armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
+    armature.animation_data.action = bpy.data.actions[
+        os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
+    utils.show_armature(armature)
     utils.remove_objects(removed_objects)
 
     if prd.shiny.hue is not None:
         utils.change_shiny_color(scene.shiny_color)
 
+    utils.set_textures(list(render_textures.values()))
+
 
 def sync_prd_to_props():
     global removed_objects
+    global render_textures
     scene = bpy.data.scenes["Scene"]
 
     prd_camera: Optional[Camera] = prd.get_mode_camera(mode)
@@ -400,6 +527,8 @@ def sync_prd_to_props():
     if prd.shiny.hue is not None:
         scene.shiny_color = utils.hue2rgb(prd.shiny.hue)
 
+    render_textures = make_texture_dict(prd.get_mode_textures(mode))
+
 
 def sync_props_to_prd():
     global prd
@@ -424,12 +553,19 @@ def sync_props_to_prd():
     animation_pose: float = scene.animation_pose
     animation_frame: float = scene.animation_frame
 
+    removed_objs: list[str] = list(removed_objects)
+
+    textures: list[Texture] = list(render_textures.values())
+
     prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, fov, light)
+
     if mode == EditMode.NORMAL:
         prd.render.main_camera = prd_camera
         prd.render.animation_pose = animation_pose
         prd.render.animation_frame = animation_frame
-        prd.render.removed_objects = list(removed_objects)
+        prd.render.removed_objects = removed_objs
+        prd.render.textures = textures
+
     elif mode == EditMode.NORMAL_SECONDARY:
         if secondary_enabled:
             prd.render.secondary_camera = prd_camera
@@ -437,13 +573,16 @@ def sync_props_to_prd():
             prd.render.secondary_camera = None
         prd.render.animation_pose = animation_pose
         prd.render.animation_frame = animation_frame
-        prd.render.removed_objects = list(removed_objects)
+        prd.render.removed_objects = removed_objs
+        prd.render.textures = textures
 
     elif mode == EditMode.SHINY:
         prd.shiny.render.main_camera = prd_camera
         prd.shiny.render.animation_pose = animation_pose
         prd.shiny.render.animation_frame = animation_frame
-        prd.shiny.render.removed_objects = list(removed_objects)
+        prd.shiny.render.removed_objects = removed_objs
+        prd.shiny.render.textures = textures
+
     elif mode == EditMode.SHINY_SECONDARY:
         if secondary_enabled:
             prd.shiny.render.secondary_camera = prd_camera
@@ -451,7 +590,8 @@ def sync_props_to_prd():
             prd.shiny.render.secondary_camera = None
         prd.shiny.render.animation_pose = animation_pose
         prd.shiny.render.animation_frame = animation_frame
-        prd.shiny.render.removed_objects = list(removed_objects)
+        prd.shiny.render.removed_objects = removed_objs
+        prd.shiny.render.textures = textures
 
     if prd.shiny.hue is not None:
         prd.shiny.hue = utils.rgb2hue(scene.shiny_color)
@@ -461,115 +601,115 @@ def sync_props_to_prd():
 MAINPROPS = [
     ('mode',
      bpy.props.EnumProperty(
-        name="Mode",
-        description="Edit mode",
-        items=[
-            ('NORMAL', "Normal", "Regular icon"),
-            ('NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
-            ('SHINY', "Shiny", "Shiny icon"),
-            ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
-        ],
-        update=update_mode
+         name="Mode",
+         description="Edit mode",
+         items=[
+             ('NORMAL', "Normal", "Regular icon"),
+             ('NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
+             ('SHINY', "Shiny", "Shiny icon"),
+             ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
+         ],
+         update=update_mode
      )),
     ('secondary_enabled',
      bpy.props.BoolProperty(
-        name="Enable secondary cameras",
-        description="Enable the secondary cameras for asymmetric Pokemon like Zangoose"
+         name="Enable secondary cameras",
+         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose"
      ))
 ]
 
 ANIMATIONPROPS = [
     ('animation_pose',
      bpy.props.IntProperty(
-        name="Animation Pose",
-        description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
-        min=0,
-        max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
-        update=update_animation_pose
+         name="Animation Pose",
+         description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
+         min=0,
+         max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
+         update=update_animation_pose
      )),
     ('animation_frame',
      bpy.props.IntProperty(
-        name="Animation Frame",
-        description="Animation frame of the pose",
-        min=0,
-        max=1000,
-        soft_min=0,
-        soft_max=500,
-        update=update_animation_frame
+         name="Animation Frame",
+         description="Animation frame of the pose",
+         min=0,
+         max=1000,
+         soft_min=0,
+         soft_max=500,
+         update=update_animation_frame
      ))
 ]
 
 CAMERAPROPS = [
     ('pos',
      bpy.props.FloatVectorProperty(
-        name='Position',
-        subtype="XYZ",
-        unit="NONE",
-        default=(14, -13.5, 5.5),
-        update=update_camera_pos
+         name='Position',
+         subtype="XYZ",
+         unit="NONE",
+         default=(14, -13.5, 5.5),
+         update=update_camera_pos
      )),
     ('focus',
      bpy.props.FloatVectorProperty(
-        name='Focus Position',
-        description="Brightness of the light",
-        subtype="XYZ",
-        unit="NONE",
-        default=(0, 0, 0),
-        update=update_focus
+         name='Focus Position',
+         description="Brightness of the light",
+         subtype="XYZ",
+         unit="NONE",
+         default=(0, 0, 0),
+         update=update_focus
      )),
     ('fov',
      bpy.props.IntProperty(
-        name='Field of View',
-        description="Field of view of the Camera in degrees",
-        subtype="ANGLE",
-        min=0,
-        default=40,
-        update=update_camera_fov
+         name='Field of View',
+         description="Field of view of the Camera in degrees",
+         subtype="ANGLE",
+         min=0,
+         default=40,
+         update=update_camera_fov
      ))
 ]
 
 LIGHTPROPS = [
     ('light_type',
      bpy.props.EnumProperty(
-        name="Light type",
-        description="Type of light, Point lights should usually do the trick",
-        items=[
-            ('POINT', "Point", "Point light"),
-            ('SUN', "Sun", "Sun"),
-            ('SPOT', "Spot", "Spot light"),
-            ('AREA', "Area", "Area light"),
-        ],
-        default=3,  # Area
-        update=update_light_type
+         name="Light type",
+         description="Type of light, Point lights should usually do the trick",
+         items=[
+             ('POINT', "Point", "Point light"),
+             ('SUN', "Sun", "Sun"),
+             ('SPOT', "Spot", "Spot light"),
+             ('AREA', "Area", "Area light"),
+         ],
+         default=3,  # Area
+         update=update_light_type
      )),
     ('light_strength',
      bpy.props.FloatProperty(
-        name="Light Strength",
-        description="Brightness of the light",
-        unit="POWER",
-        step=125,
-        default=125,
-        min=0,
-        update=update_light_strength
+         name="Light Strength",
+         description="Brightness of the light",
+         unit="POWER",
+         step=125,
+         default=125,
+         min=0,
+         update=update_light_strength
      )),
     ('light_color',
      bpy.props.FloatVectorProperty(
-        name="Color",
-        description="Color of the light",
-        subtype="COLOR",
-        default=(1, 1, 1),
-        min=0,
-        max=1,
-        update=update_light_color
+         name="Color",
+         description="Color of the light",
+         subtype="COLOR",
+         default=(1, 1, 1),
+         min=0,
+         max=1,
+         update=update_light_color
      )),
     ('light_distance',
      bpy.props.FloatProperty(
-        name="Light Distance",
-        description="Distance away from the focus point",
-        unit="NONE",
-        default=5,
-        min=0,
-        update=update_light_distance
+         name="Light Distance",
+         description="Distance away from the focus point",
+         unit="NONE",
+         default=5,
+         min=0,
+         update=update_light_distance
      ))
 ]
 
@@ -578,15 +718,20 @@ def poll_current_texture_image(scene, img):
     model: str = utils.get_relative_asset_path(prd.get_mode_model(mode))
     model_file: str = os.path.basename(model)
 
-    return img.type != "RENDER_RESULT" and img.name.startswith(model_file)
+    return img.type != "RENDER_RESULT" and img.name.startswith(model_file) and img.filepath == ""
 
 
-def poll_texture_materials(scene, mat):
-    image_obj = scene.current_texture_image
-    if image_obj is not None:
-        node_tree = mat.node_tree
-        for node in node_tree.nodes:
-            if utils.is_node_teximage_with_image(node, image_obj):
+def poll_texture_materials(scene, mat_obj):
+    original_img = scene.current_texture_image
+    texture: Texture = get_texture_obj(original_img.name)
+    custom_img = None
+    if texture.path is not None:
+        custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
+
+    if original_img is not None and mat_obj.node_tree is not None:
+        for node in mat_obj.node_tree.nodes:
+            if utils.is_node_teximage_with_image(node, original_img) or \
+                    (custom_img is not None and utils.is_node_teximage_with_image(node, custom_img)):
                 return True
 
     return False
@@ -595,51 +740,51 @@ def poll_texture_materials(scene, mat):
 TEXTURESPROPS = [
     ('current_texture_image',
      bpy.props.PointerProperty(
-        name="Texture",
-        description="Texture search",
-        type=bpy.types.Image,
-        poll=poll_current_texture_image,
-        update=update_current_texture_image,
+         name="Texture",
+         description="Texture search",
+         type=bpy.types.Image,
+         poll=poll_current_texture_image,
+         update=update_current_texture_image,
      )),
     ('custom_texture_path',
      bpy.props.StringProperty(
-        name="Custom Texture",
-        description="Texture to replace, must be on the same integer scale as the original texture: 1x, 2x, 3x, etc. {{AssetsPath}} can be used here",
-        default="{{AssetsPath}}/icon-gen/",
-        subtype="FILE_PATH",
-        update=update_custom_texture_path,
+         name="Custom Texture",
+         description="Path to texture used to replace the original one, must be on the same integer scale as the original texture: 1x, 2x, 3x, etc. {{AssetsPath}} can be used here",
+         default="",
+         subtype="FILE_PATH",
+         update=update_custom_texture_path,
      )),
     ('texture_material',
      bpy.props.PointerProperty(
-        name="Material",
-        description="Material that uses the texture. Used for mapping",
-        type=bpy.types.Material,
-        poll=poll_texture_materials,
-        update=update_texture_material,
+         name="Material",
+         description="Material that uses the texture. Used for mapping",
+         type=bpy.types.Material,
+         poll=poll_texture_materials,
+         update=update_texture_material,
      )),
     ('texture_mapping',
      bpy.props.FloatVectorProperty(
-        name="Mapping",
-        description="Direct mapping of the texture",
-        size=2,
-        subtype="XYZ",
-        default=(0, 0),
-        min=0,
-        max=1,
-        update=update_texture_mapping
+         name="Mapping",
+         description="Direct mapping of the texture for this material",
+         size=2,
+         subtype="XYZ",
+         default=(0, 0),
+         min=-50,
+         max=50,
+         update=update_texture_mapping
      )),
 ]
 
 SHINYPROPS = [
     ('shiny_color',
      bpy.props.FloatVectorProperty(
-        name="Color",
-        description="Filter to put on top of textures for the shiny effect",
-        subtype="COLOR",
-        default=(1, 1, 1),
-        min=0,
-        max=1,
-        update=update_shiny_color
+         name="Color",
+         description="Filter to put on top of textures for the shiny effect",
+         subtype="COLOR",
+         default=(1, 1, 1),
+         min=0,
+         max=1,
+         update=update_shiny_color
      )),
 ]
 
@@ -721,7 +866,7 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
     bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
     bl_idname = 'VIEW3D_PT_PKX_TEXTURES_PANEL'
     bl_label = 'Textures'
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
         layout = self.layout
@@ -733,6 +878,10 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
             if prop_name == "current_texture_image":
                 row = col.row(align=True)
                 row.prop(scene, prop_name)
+
+                if scene.current_texture_image is not None:
+                    preview_tex = preview_textures[scene.current_texture_image.name]
+                    col.template_icon(icon_value=preview_tex.icon_id, scale=5)
             else:
                 image_col = col.column()
                 image_col.enabled = scene.current_texture_image is not None
@@ -741,9 +890,14 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                     row = image_col.row(align=True)
                     row.prop(scene, prop_name)
 
-                    if custom_texture_invalid:
+                    if custom_texture_path_invalid:
                         row = image_col.row(align=True)
-                        row.label(text="Path is invalid", icon="ERROR")
+                        row.label(text="Path is invalid, texture will not be saved until the path is empty or valid.", icon="ERROR")
+                    if custom_texture_scale_invalid:
+                        row = image_col.row(align=True)
+                        row.label(text="Scale is invalid, texture will not be saved until the scale is an integer scale: 1x, 2x, 3x, etc.", icon="ERROR")
+                    row = image_col.row(align=True)
+                    row.operator(PKXReplaceByAssetsPathOperator.bl_idname)
                 elif prop_name == "texture_mapping":
                     row = image_col.row(align=True)
                     row.enabled = scene.texture_material is not None
@@ -764,7 +918,9 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
         return prd.shiny.hue is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
 
     def draw(self, context):
-        init_simple_subpanel(self, context, SHINYPROPS)
+        col = init_simple_subpanel(self, context, SHINYPROPS)
+        col.operator(PKXCopyRemovedObjectsOperator.bl_idname)
+        col.operator(PKXCopyTexturesOperator.bl_idname)
 
 
 class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
@@ -775,7 +931,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
 
     def draw(self, context):
         col = init_simple_subpanel(self, context, ADVANCEDPROPS)
-        col.operator("wm.pkx_sync")
+        col.operator(PKXSyncOperator.bl_idname)
 
 
 def init_simple_subpanel(self, context, props):
@@ -803,13 +959,17 @@ CLASSES = [
     PKXSaveOperator,
     PKXSyncOperator,
     PKXDeleteOperator,
-    PKXResetDeletedOperator
+    PKXResetDeletedOperator,
+    PKXReplaceByAssetsPathOperator,
+    PKXCopyRemovedObjectsOperator,
+    PKXCopyTexturesOperator
 ]
 
 
 # We cannot register without data, addon is not meant to be used standalone anyway
 def register(data: PokemonRenderData):
     global prd
+    global preview_textures
     prd = data
 
     for prop_list in ALLPROPS:
@@ -824,6 +984,9 @@ def register(data: PokemonRenderData):
 
     sync_prd_to_props()
     utils.remove_objects(removed_objects)
+
+    textures: List[Texture] = list(render_textures.values())
+    utils.set_textures(textures)
 
     # unselect on start
     for obj in bpy.context.selected_objects:

@@ -25,6 +25,7 @@ from .edit_mode import EditMode
 from .camera import Camera
 from .render_data import RenderData
 from .shiny_info import ShinyInfo
+from .texture import Texture
 
 
 class PokemonRenderData(object):
@@ -33,7 +34,7 @@ class PokemonRenderData(object):
                  name: str,
                  output_name: Optional[str],
                  render: RenderData,
-                 shiny: ShinyInfo) -> 'PokemonRenderData':
+                 shiny: ShinyInfo):
         self.name = name
         self.output_name = output_name
         self.render = render
@@ -42,7 +43,7 @@ class PokemonRenderData(object):
     def to_json(self) -> str:
         return json.dumps(self, default=vars, separators=(',', ':'))
 
-    def get_mode_model(self, mode: EditMode) -> RenderData:
+    def get_mode_model(self, mode: EditMode) -> str:
         if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
             return self.render.model
         elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
@@ -81,6 +82,10 @@ class PokemonRenderData(object):
     def get_mode_removed_objects(self, mode: EditMode) -> List[str]:
         render: RenderData = self.get_mode_render(mode)
         return render.removed_objects
+
+    def get_mode_textures(self, mode: EditMode) -> List[Texture]:
+        render: RenderData = self.get_mode_render(mode)
+        return render.textures
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['PokemonRenderData']:

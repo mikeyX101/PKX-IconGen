@@ -32,7 +32,7 @@ class RenderData(object):
                  main_camera: Camera, 
                  secondary_camera: Optional[Camera],
                  removed_objects: List[str],
-                 textures: Optional[List[Texture]]) -> 'RenderData':
+                 textures: Optional[List[Texture]]):
         self.model = model
 
         self.animation_pose = animation_pose
@@ -42,7 +42,7 @@ class RenderData(object):
         self.secondary_camera = secondary_camera
 
         self.removed_objects = removed_objects
-        self.textures = textures or list[Texture]()
+        self.textures = textures or list[Texture]()  # Optional for compatibility
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['RenderData']:

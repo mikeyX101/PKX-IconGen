@@ -29,15 +29,15 @@ namespace PKXIconGen.Core.Data;
 
 public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
 {
-    [JsonPropertyName("texture_name")]
+    [JsonPropertyName("name")]
     public readonly string TextureName { get; init; }
     /**
      * Can contain {{AssetsPath}}
      */
-    [JsonPropertyName("image_path")]
+    [JsonPropertyName("path")]
     public readonly string? ImagePath { get; init; }
 
-    [JsonPropertyName("mappings")]
+    [JsonPropertyName("maps")]
     public readonly Dictionary<string,JsonSerializableVector2> MaterialMappings { get; init; }
     
     [JsonConstructor]
@@ -54,8 +54,7 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
         return
             TextureName == other.TextureName &&
             ImagePath == other.ImagePath &&
-            MaterialMappings.Keys.SequenceEqual(other.MaterialMappings.Keys) &&
-            MaterialMappings.Values.SequenceEqual(other.MaterialMappings.Values);
+            MaterialMappings.SequenceEqual(other.MaterialMappings);
     }
     public override bool Equals(object? obj)
     {

@@ -30,6 +30,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
+using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using JetBrains.Annotations;
@@ -313,7 +314,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             );
             NewRenderDataCommand = ReactiveCommand.CreateFromTask(NewRenderData, renderDataOperationsEnabled);
             EditRenderDataCommand = ReactiveCommand.CreateFromTask<PokemonRenderData>(EditRenderData, renderDataOperationsEnabled);
-            
+
             SetInitialState(databaseLoadingTask);
         }
 
@@ -324,29 +325,32 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             
             Settings settings = await db.GetSettingsAsync();
             IEnumerable<PokemonRenderData> renderData = await db.GetPokemonRenderDataAsync();
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                PokemonRenderDataItemsSource.AddOrUpdate(renderData);
             
-            PokemonRenderDataItemsSource.AddOrUpdate(renderData);
+                // Fields
+                LogBlender = settings.LogBlender;
+
+                BlenderPath = settings.BlenderPath;
+                VerifyBlenderExecutable();
+
+                BlenderOptionalArguments = settings.BlenderOptionalArguments;
+
+                OutputPath = settings.OutputPath;
+
+                SelectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
+
+                SelectedRenderScale = settings.RenderScale;
+
+                EnableDeleteButton = false;
+                BuiltInsHidden = false;
+
+                AssetsPath = settings.AssetsPath;
             
-            // Fields
-            logBlender = settings.LogBlender;
-
-            blenderPath = settings.BlenderPath;
-            VerifyBlenderExecutable();
-
-            blenderOptionalArguments = settings.BlenderOptionalArguments;
-
-            outputPath = settings.OutputPath;
-
-            selectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
-
-            SelectedRenderScale = settings.RenderScale;
-
-            enableDeleteButton = false;
-            builtInsHidden = false;
-
-            assetsPath = settings.AssetsPath;
-            
-            InitialLoadingFinished = true;
+                InitialLoadingFinished = true;
+            }, DispatcherPriority.Background);
         }
 
         private async void AddRenderData(PokemonRenderData? data)

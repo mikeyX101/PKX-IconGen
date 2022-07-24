@@ -23,10 +23,10 @@ from .vector2 import Vector2
 
 class Texture(object):
 
-    def __init__(self, texture_name: str, image_path: Optional[str], mapping: dict[str, Vector2]) -> 'Texture':
-        self.texture_name = texture_name
-        self.image_path = image_path
-        self.mapping = mapping
+    def __init__(self, name: str, path: Optional[str], maps: dict[str, Vector2]):
+        self.name = name
+        self.path = path
+        self.maps = maps
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Texture']:
@@ -34,15 +34,16 @@ class Texture(object):
             return obj
 
         image_path: Optional[str] = None
-        if "image_path" in obj.__dict__.keys():
-            image_path = obj.image_path
+        if "path" in obj.__dict__.keys():
+            image_path = obj.path
 
-        mapping_dict: dict[str, Vector2] = dict()
-        for mat in obj.mapping:
-            mapping_dict[mat] = Vector2.parse_obj(obj.mapping[mat])
+        mappings_dict: dict[str, Vector2] = dict()
+        if "maps" in obj.__dict__.keys():
+            for mat_name in obj.maps.__dict__.keys():
+                mappings_dict[mat_name] = Vector2.parse_obj(obj.maps.__dict__[mat_name])
 
         return Texture(
-            obj.texture_name,
+            obj.name,
             image_path,
-            mapping_dict
+            mappings_dict
         )

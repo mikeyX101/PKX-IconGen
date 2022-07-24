@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+from typing import Optional
 
 import bpy
 import sys
@@ -29,6 +30,11 @@ from data.pokemon_render_data import PokemonRenderData
 from data.edit_mode import EditMode
 from data.render_job import RenderJob
 import utils
+
+
+def reset_mode_textures(prd: PokemonRenderData, mode: EditMode):
+    for texture in prd.get_mode_textures(mode):
+        utils.reset_texture_images(texture)
 
 
 def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
@@ -68,10 +74,13 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
     utils.remove_objects(prd.get_mode_removed_objects(mode))
 
+    utils.set_textures(prd.get_mode_textures(mode))
+
 
 if __name__ == "__main__":
-    utils.parse_cmd_args()
+    utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
 
+    last_rendered_mode: Optional[EditMode] = None
     job: RenderJob = RenderJob.from_json(sys.stdin.readline())
     utils.import_model(job.data.render.model, job.data.shiny.hue)
 
@@ -84,17 +93,24 @@ if __name__ == "__main__":
     sync_prd_to_scene(job.data, EditMode.NORMAL)
     blender_render.filepath = job.main_path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+    last_rendered_mode = EditMode.NORMAL
 
     if job.data.render.secondary_camera is not None:
+        reset_mode_textures(job.data, last_rendered_mode)
         sync_prd_to_scene(job.data, EditMode.NORMAL_SECONDARY)
         blender_render.filepath = job.secondary_path
         bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+        last_rendered_mode = EditMode.NORMAL_SECONDARY
 
+    reset_mode_textures(job.data, last_rendered_mode)
     sync_prd_to_scene(job.data, EditMode.SHINY)
     blender_render.filepath = job.shiny_path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+    last_rendered_mode = EditMode.SHINY
 
     if job.data.shiny.render.secondary_camera is not None:
+        reset_mode_textures(job.data, last_rendered_mode)
         sync_prd_to_scene(job.data, EditMode.SHINY_SECONDARY)
         blender_render.filepath = job.shiny_secondary_path
         bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+        last_rendered_mode = EditMode.SHINY_SECONDARY
