@@ -50,7 +50,7 @@ namespace PKXIconGen.Core.Migrations
                     b.HasIndex(new[] { "Id" }, "IDX_ID")
                         .IsUnique();
 
-                    b.ToTable("PokemonRenderData");
+                    b.ToTable("PokemonRenderData", (string)null);
                 });
 
             modelBuilder.Entity("PKXIconGen.Core.Data.Settings", b =>
@@ -87,7 +87,7 @@ namespace PKXIconGen.Core.Migrations
 
                     b.HasKey("InternalID");
 
-                    b.ToTable("Settings");
+                    b.ToTable("Settings", (string)null);
 
                     b.HasData(
                         new
