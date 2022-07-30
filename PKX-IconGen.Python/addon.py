@@ -37,7 +37,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 6, 0),
+    "version": (0, 7, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -289,11 +289,25 @@ def update_focus(self, context):
     focus.location = value
 
 
+def update_camera_is_ortho(self, context):
+    value = self.is_ortho
+    camera = get_camera()
+
+    camera.data.type = "ORTHO" if value else "PERSP"
+
+
 def update_camera_fov(self, context):
     value = self.fov
     camera = get_camera()
 
     camera.data.angle = radians(value)
+
+
+def update_camera_ortho_scale(self, context):
+    value = self.ortho_scale
+    camera = get_camera()
+
+    camera.data.ortho_scale = value
 
 
 def update_light_type(self, context):
@@ -435,6 +449,7 @@ def make_texture_dict(textures: List[Texture]) -> dict[str, Texture]:
     return texture_dict
 
 
+# State sync functions
 # Out of date, see if scene sync is needed/worth to maintain
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
@@ -443,13 +458,11 @@ def sync_scene_to_props():
     camera_focus = get_camera_focus()
     camera_light = get_camera_light()
 
-    camera_pos = camera.location
-    camera_focus_pos = camera_focus.location
-    camera_fov = camera.data.angle
-
-    scene.pos = camera_pos
-    scene.focus = camera_focus_pos
-    scene.fov = degrees(camera_fov)
+    scene.pos = camera.location
+    scene.focus = camera_focus.location
+    scene.is_ortho = camera.data.type == "ORTHO"
+    scene.fov = degrees(camera.data.angle)
+    scene.ortho_scale = camera.data.ortho_scale
 
     scene.light_type = camera_light.data.type
     scene.light_strength = camera_light.data.energy
@@ -470,18 +483,16 @@ def sync_props_to_scene():
     camera_focus = get_camera_focus()
     camera_light = get_camera_light()
 
-    camera_pos = scene.pos
-    camera_focus_pos = scene.focus
-    camera_fov = scene.fov
-
     camera_light.data.type = scene.light_type
     camera_light.data.energy = scene.light_strength
     camera_light.data.color = scene.light_color
     camera_light.location[2] = scene.light_distance
 
-    camera.location = camera_pos
-    camera_focus.location = camera_focus_pos
-    camera.data.angle = radians(camera_fov)
+    camera.location = scene.pos
+    camera_focus.location = scene.focus
+    camera.data.type = "ORTHO" if scene.is_ortho else "PERSP"
+    camera.data.angle = radians(scene.fov)
+    camera.data.ortho_scale = scene.ortho_scale
 
     clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
     armature.animation_data.action = bpy.data.actions[
@@ -511,7 +522,9 @@ def sync_prd_to_props():
 
     scene.pos = prd_camera.pos.to_mathutils_vector()
     scene.focus = prd_camera.focus.to_mathutils_vector()
+    scene.is_ortho = prd_camera.is_ortho
     scene.fov = prd_camera.fov
+    scene.ortho_scale = prd_camera.ortho_scale
 
     prd_light: Light = prd_camera.light
     scene.light_type = prd_light.type.name
@@ -539,7 +552,9 @@ def sync_props_to_prd():
 
     camera_pos_vector: Vector3 = Vector3(camera_pos[0], camera_pos[1], camera_pos[2])
     camera_focus_pos_vector: Vector3 = Vector3(camera_focus_pos[0], camera_focus_pos[1], camera_focus_pos[2])
+    is_ortho: bool = scene.is_ortho
     fov: float = scene.fov
+    ortho_scale: float = scene.ortho_scale
 
     light_color_list = scene.light_color
     light_type: LightType = LightType[scene.light_type]
@@ -557,7 +572,7 @@ def sync_props_to_prd():
 
     textures: list[Texture] = list(render_textures.values())
 
-    prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, fov, light)
+    prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, is_ortho, fov, ortho_scale, light)
 
     if mode == EditMode.NORMAL:
         prd.render.main_camera = prd_camera
@@ -643,6 +658,7 @@ CAMERAPROPS = [
     ('pos',
      bpy.props.FloatVectorProperty(
          name='Position',
+         description="Position of the camera",
          subtype="XYZ",
          unit="NONE",
          default=(14, -13.5, 5.5),
@@ -651,11 +667,18 @@ CAMERAPROPS = [
     ('focus',
      bpy.props.FloatVectorProperty(
          name='Focus Position',
-         description="Brightness of the light",
+         description="Position where the camera should look at",
          subtype="XYZ",
          unit="NONE",
          default=(0, 0, 0),
          update=update_focus
+     )),
+    ('is_ortho',
+     bpy.props.BoolProperty(
+         name='Use Orthographic Camera',
+         description="Use an orthographic camera instead of a perspective camera",
+         default=True,
+         update=update_camera_is_ortho
      )),
     ('fov',
      bpy.props.IntProperty(
@@ -665,6 +688,14 @@ CAMERAPROPS = [
          min=0,
          default=40,
          update=update_camera_fov
+     )),
+    ('ortho_scale',
+     bpy.props.FloatProperty(
+         name='Orthographic Scale (Zoom)',
+         description="\"Zoom\" of an orthographic camera",
+         min=0,
+         default=7.31429,
+         update=update_camera_ortho_scale
      ))
 ]
 
@@ -849,7 +880,23 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_simple_subpanel(self, context, CAMERAPROPS)
+        layout = self.layout
+        scene = context.scene
+
+        col = layout.column()
+        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+        for (prop_name, _) in CAMERAPROPS:
+            if prop_name == "fov":
+                if not scene.is_ortho:
+                    row = col.row(align=True)
+                    row.prop(scene, prop_name)
+            elif prop_name == "ortho_scale":
+                if scene.is_ortho:
+                    row = col.row(align=True)
+                    row.prop(scene, prop_name)
+            else:
+                row = col.row(align=True)
+                row.prop(scene, prop_name)
 
 
 class PKXLightPanel(PKXPanel, bpy.types.Panel):

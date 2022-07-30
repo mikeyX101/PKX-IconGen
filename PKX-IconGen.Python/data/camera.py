@@ -27,11 +27,15 @@ class Camera(object):
     def __init__(self,
                  pos: Vector3,
                  focus: Vector3,
+                 is_ortho: Optional[bool],
                  fov: float,
+                 ortho_scale: Optional[float],
                  light: Light):
         self.pos = pos
         self.focus = focus
         self.fov = fov
+        self.is_ortho = is_ortho if is_ortho is not None else True  # Optional for compatibility
+        self.ortho_scale = ortho_scale or 7.31429  # Optional for compatibility
         self.light = light
 
     @staticmethod
@@ -39,10 +43,20 @@ class Camera(object):
         if obj is None:
             return None
 
+        is_ortho: Optional[bool] = None
+        if "is_ortho" in obj.__dict__.keys():
+            is_ortho = obj.is_ortho
+
+        ortho_scale: Optional[float] = None
+        if "ortho_scale" in obj.__dict__.keys():
+            ortho_scale = obj.ortho_scale
+
         return Camera(
             Vector3.parse_obj(obj.pos),
             Vector3.parse_obj(obj.focus),
+            is_ortho,
             obj.fov,
+            ortho_scale,
             Light.parse_obj(obj.light))
 
     @staticmethod
@@ -50,5 +64,7 @@ class Camera(object):
         return Camera(
             Vector3(14, -13.5, 5.5),
             Vector3(0, 0, 0),
+            True,
             40,
+            7.31429,
             Light.default())

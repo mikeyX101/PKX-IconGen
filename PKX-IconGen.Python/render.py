@@ -52,13 +52,11 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     animation_pose: int = prd.get_mode_animation_pose(mode) or 0
     animation_frame: int = prd.get_mode_animation_frame(mode) or 0
 
-    camera_pos = prd_camera.pos.to_mathutils_vector()
-    focus_pos = prd_camera.focus.to_mathutils_vector()
-    camera_fov = prd_camera.fov
-
-    camera.location = camera_pos
-    focus.location = focus_pos
-    camera.data.angle = radians(camera_fov)
+    camera.location = prd_camera.pos.to_mathutils_vector()
+    focus.location = prd_camera.focus.to_mathutils_vector()
+    camera.data.type = "ORTHO" if prd_camera.is_ortho else "PERSP"
+    camera.data.angle = radians(prd_camera.fov)
+    camera.data.ortho_scale = prd_camera.ortho_scale
 
     light.data.type = prd_light.type.name
     light.data.energy = prd_light.strength

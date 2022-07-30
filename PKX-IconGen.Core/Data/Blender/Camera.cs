@@ -36,16 +36,23 @@ namespace PKXIconGen.Core.Data.Blender
 
         [JsonPropertyName("fov")]
         public readonly float FieldOfView { get; init; }
+        
+        [JsonPropertyName("is_ortho")]
+        public readonly bool IsOrthographic { get; init; }
+        [JsonPropertyName("ortho_scale")]
+        public readonly float OrthographicScale { get; init; }
 
         [JsonPropertyName("light")]
         public readonly Light Light { get; init; }
         
         [UsedImplicitly]
-        public Camera(Vector3 position, Vector3 focusPoint, float fieldOfView, Light light)
+        public Camera(Vector3 position, Vector3 focusPoint, float fieldOfView, bool isOrthographic, float orthographicScale, Light light)
         {
             Position = new JsonSerializableVector3(position);
             FocusPoint = new JsonSerializableVector3(focusPoint);
             FieldOfView = fieldOfView;
+            IsOrthographic = isOrthographic;
+            OrthographicScale = orthographicScale;
             Light = light;
         }
 
@@ -55,6 +62,8 @@ namespace PKXIconGen.Core.Data.Blender
                 Position.Equals(other.Position) &&
                 FocusPoint.Equals(other.FocusPoint) &&
                 Math.Abs(FieldOfView - other.FieldOfView) < 0.000000001 &&
+                IsOrthographic == other.IsOrthographic &&
+                Math.Abs(OrthographicScale - other.OrthographicScale) < 0.000000001 &&
                 Light.Equals(other.Light);
         }
         public override bool Equals(object? obj)
@@ -72,8 +81,8 @@ namespace PKXIconGen.Core.Data.Blender
             return !(left == right);
         }
 
-        public readonly override int GetHashCode() => (Position, FocusPoint, FieldOfView, Light).GetHashCode();
+        public readonly override int GetHashCode() => (Position, FocusPoint, FieldOfView, IsOrthographic, OrthographicScale, Light).GetHashCode();
 
-        public static Camera GetDefaultCamera() => new(new Vector3(14f, -13.5f, 5.5f), new Vector3(0f, 0f, 0f), 40f, Light.GetDefaultLight());
+        public static Camera GetDefaultCamera() => new(new Vector3(14f, -13.5f, 5.5f), new Vector3(0f, 0f, 0f), 40f, true, 7.31429f, Light.GetDefaultLight());
     }
 }
