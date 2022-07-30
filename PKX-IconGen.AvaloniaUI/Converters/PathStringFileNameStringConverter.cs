@@ -26,23 +26,15 @@ namespace PKXIconGen.AvaloniaUI.Converters
 {
     public class PathStringFileNameStringConverter : IValueConverter
     {
-        public static PathStringFileNameStringConverter Instance = new();
+        public static readonly PathStringFileNameStringConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
             if (value is string path && targetType.IsAssignableFrom(typeof(string)))
             {
                 return Path.GetFileName(path);
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

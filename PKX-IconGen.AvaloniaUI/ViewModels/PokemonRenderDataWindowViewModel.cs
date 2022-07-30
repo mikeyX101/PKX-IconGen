@@ -105,6 +105,22 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         #endregion
 
+        public Color Background
+        {
+            get => CurrentRenderData.Background;
+            set {
+                CurrentRenderData.Background = value;
+                this.RaisePropertyChanged();
+            }
+        }
+        public Color Glow {
+            get => CurrentRenderData.Glow;
+            set {
+                CurrentRenderData.Glow = value;
+                this.RaisePropertyChanged();
+            }
+        }
+        
         #region Blender Data
         public ushort AnimationPose => CurrentRenderData.AnimationPose;
         public ushort AnimationFrame => CurrentRenderData.AnimationFrame;
@@ -168,6 +184,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             this.RaisePropertyChanged(nameof(SecondaryLight));
 
             this.RaisePropertyChanged(nameof(RemovedObjects));
+            
+            this.RaisePropertyChanged(nameof(Background));
+            this.RaisePropertyChanged(nameof(Glow));
         }
 
         [UsedImplicitly]

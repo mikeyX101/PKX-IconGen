@@ -48,6 +48,22 @@ namespace PKXIconGen.Core.Data
         
         [JsonPropertyName("textures")]
         public List<Texture> Textures { get; init; }
+        
+        /**
+         * Background color for this render.
+         * This is not used in Blender, instead we apply it during post-processing.
+         * This also allows for transparent backgrounds or edge detected post-processing.
+         */
+        [JsonPropertyName("bg")]
+        public Color Background { get; set; } = new(0,0,0,1);
+
+        /**
+         * Glow color for this render.
+         * This is not used in Blender, instead we apply it during post-processing.
+         * If alpha is set to 0, the post-processing step for the glow is skipped.
+         */
+        [JsonPropertyName("glow")]
+        public Color Glow { get; set; } = new(1, 1, 1, 0);
 
         public RenderData() {
             Model = null;
@@ -114,7 +130,9 @@ namespace PKXIconGen.Core.Data
             MainCamera, 
             SecondaryCamera, 
             RemovedObjects,
-            Textures
+            Textures,
+            Background,
+            Glow
         ).GetHashCode();
 
         public object Clone()
@@ -127,7 +145,11 @@ namespace PKXIconGen.Core.Data
                 SecondaryCamera,
                 new SortedSet<string>(RemovedObjects),
                 new List<Texture>(Textures)
-            );
+            )
+            {
+                Background = this.Background,
+                Glow = this.Glow
+            };
         }
     }
 }

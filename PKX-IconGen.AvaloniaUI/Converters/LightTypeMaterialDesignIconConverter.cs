@@ -26,15 +26,10 @@ namespace PKXIconGen.AvaloniaUI.Converters
 {
     public class LightTypeMaterialDesignIconConverter : IValueConverter
     {
-        public static LightTypeMaterialDesignIconConverter Instance = new();
+        public static readonly LightTypeMaterialDesignIconConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return "mdi-lightbulb-on";
-            }
-
             if (value is LightType type && targetType.IsAssignableFrom(typeof(string)))
             {
                 return type switch
@@ -45,10 +40,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
                     LightType.Point or _ => "mdi-lightbulb-on",
                 };
             }
-            else
-            {
-                return "mdi-lightbulb-on";
-            }
+            return "mdi-lightbulb-on";
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

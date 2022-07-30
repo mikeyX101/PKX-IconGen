@@ -15,7 +15,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 -->
-<!--x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"-->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
@@ -23,8 +22,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:pkxuc="using:PKXIconGen.AvaloniaUI.Views.Controls"
         
-        mc:Ignorable="d" d:DesignWidth="1300" d:DesignHeight="850"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
         x:DataType="vm:PokemonRenderDataWindowViewModel" x:CompileBindings="True"
         
@@ -36,13 +36,12 @@
         ExtendClientAreaChromeHints="PreferSystemChrome"
         ExtendClientAreaToDecorationsHint="True"
         
-        MinWidth="1300" Width="1300" MinHeight="850" Height="900" CanResize="True">
+        MinWidth="1024" Width="1024" MinHeight="768" Height="768" CanResize="True">
   <Window.Resources>
     <conv:LightTypeMaterialDesignIconConverter x:Key="LightTypeMaterialDesignIconConverter"/>
     <conv:EnumerableSemiColonStringConverter x:Key="EnumerableSemiColonStringConverter"/>
-    <conv:PKXColorHexStringConverter x:Key="PkxColorHexStringConverter"/>
-    <conv:HueAvaloniaBrushConverter x:Key="HueAvaloniaBrushConverter"/>
-    <conv:PKXColorAvaloniaBrushConverter x:Key="PkxColorAvaloniaBrushConverter"/>
+    <conv:HueAvaloniaColorConverter x:Key="HueAvaloniaColorConverter"/>
+    <conv:PKXColorAvaloniaColorConverter x:Key="PkxColorAvaloniaColorConverter"/>
     <conv:PKXHeaderConverter x:Key="PkxHeaderConverter"/>
   </Window.Resources>
   <Window.Styles>
@@ -57,6 +56,12 @@
       <Setter Property="HorizontalAlignment" Value="Right" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="8" />
+    </Style>
+    <Style Selector="Border.ShinyEdit">
+      <Setter Property="Background" Value="#573866" />
+    </Style>
+    <Style Selector="Border.ShinyEditDark">
+      <Setter Property="Background" Value="#423349" />
     </Style>
   </Window.Styles>
 
@@ -79,10 +84,19 @@
       <TextBlock Text="(Cancelling will close Blender and all data in Blender will be lost.)" Margin="48" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="0" Grid.Row="1" />
     </Grid>
     
-    <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="50,50,50,115,*,50" Margin="16">
+    <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="50,50,50,50,115,*,50" Margin="16">
       <TextBlock Text="{Binding Name, Mode=OneWay, Converter={StaticResource PkxHeaderConverter}}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
 
-      <Grid ShowGridLines="False" ColumnDefinitions="100,*, 100,*" RowDefinitions="*" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
+      <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggle}" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
+        <ToolTip.Tip>
+          Toggle between Normal and Shiny data. Purple areas means that data switches between Normal and Shiny there.
+        </ToolTip.Tip>
+        <Panel>
+          <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Normal</TextBlock>
+          <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Shiny</TextBlock>
+        </Panel>
+      </ToggleButton>
+      <Grid ColumnDefinitions="100,*,100,*" RowDefinitions="*" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2">
         <TextBlock Text="Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
         <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="0">
           <ToolTip.Tip>
@@ -98,9 +112,8 @@ Output name for the rendered file. If unspecified, uses the Pokemon's name.
         </TextBox>
       </Grid>
       
-
-      <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="2" />
-      <Grid Grid.Column="1" Grid.Row="2" ColumnDefinitions="*,30,30" RowDefinitions="*">
+      <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
+      <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*,30,30" RowDefinitions="*">
         <TextBox Name="ModelTextBox" Text="{Binding Model, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0">
           <ToolTip.Tip>
 Path to the Pokemon model. It should be a .dat file.
@@ -120,22 +133,24 @@ Example: {{AssetsPath}}/pkx_lugia/lugia.pkx.dat
         </Button>
       </Grid>
 
-      <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="0" Grid.Row="3" />
-      <StackPanel Orientation="Vertical" Margin="0,0,0,16" Grid.Column="1" Grid.Row="3">
-        <ToolTip.Tip>
-Hue change or different model for the shiny version of the Pokemon. Color can be changed in Blender. Model file should be a .dat file.
+      <Grid ShowGridLines="False" ColumnDefinitions="100,*,100,*" RowDefinitions="*,*,*" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
+        <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="0" Grid.Row="0" />
+        <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="0">
+          <ToolTip.Tip>
+Hue change for the shiny version of the Pokemon. The color can be changed in Blender.
+          </ToolTip.Tip>
+          <RadioButton IsChecked="{Binding ShinyHue.HasValue}" Content="Color: " Name="ShinyFilter" GroupName="Shiny" Command="{ReflectionBinding UseShinyColor}" />
+          <pkxuc:ColorDisplay Color="{Binding ShinyHue, Mode=OneWay, Converter={StaticResource HueAvaloniaColorConverter}}" IsEnabled="False" />
+        </StackPanel>
+        <RadioButton IsChecked="{Binding !#ShinyFilter.IsChecked}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" Command="{ReflectionBinding UseShinyModel}" Grid.Column="1" Grid.Row="1">
+          <ToolTip.Tip>
+Model for the shiny version of the Pokemon. Model file should be a .dat file.
 
 If your shiny model is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
 Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
-        </ToolTip.Tip>
-        
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <RadioButton IsChecked="{Binding ShinyHue.HasValue}" Content="Color: " Name="ShinyFilter" GroupName="Shiny" Command="{ReflectionBinding UseShinyColor}" />
-          <Panel Width="30" Height="20" Background="{Binding ShinyHue, Mode=OneWay, Converter={StaticResource HueAvaloniaBrushConverter}}" />
-        </StackPanel>
-
-        <RadioButton IsChecked="{Binding !#ShinyFilter.IsChecked}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" Command="{ReflectionBinding UseShinyModel}" />
-        <Grid ColumnDefinitions="*,30,30" RowDefinitions="*">
+          </ToolTip.Tip>
+        </RadioButton>
+        <Grid ColumnDefinitions="*,30,30" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
           <TextBox Name="ShinyModelTextBox" IsEnabled="{Binding #ShinyModel.IsChecked}" Text="{Binding ShinyModel, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" />
           <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding InsertAssetsPath}" CommandParameter="{Binding #ShinyModelTextBox}" Grid.Column="1" Grid.Row="0">
             <ToolTip.Tip>
@@ -147,115 +162,100 @@ Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
           </Button>
         </Grid>
-      </StackPanel>
-
-      <Border CornerRadius="10" Background="#ff4f4f4f" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
-        <Grid ShowGridLines="False" ColumnDefinitions="100,75,*,75,*,75,*,75,*,75,*,75,*" RowDefinitions="50,*,20,*,*,*,*,*,50">
+        
+        <TextBlock Text="Background:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="0" />
+        <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="0">
+          <pkxuc:ColorDisplay Color="{Binding Background, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left">
+            <ToolTip.Tip>
+              Background color for this icon
+            </ToolTip.Tip>
+          </pkxuc:ColorDisplay>
+        </Border>
+        
+        
+        <TextBlock Text="Glow:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="1" />
+        <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="1">
+          <pkxuc:ColorDisplay Color="{Binding Glow, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left">
+            <ToolTip.Tip>
+              Glow color for this icon. Setting it to fully transparent will disable the effect.
+            </ToolTip.Tip>
+          </pkxuc:ColorDisplay>
+        </Border>
+      </Grid>
+      
+      <Border CornerRadius="10" Classes="ShinyEditDark" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2">
+        <Grid ShowGridLines="False" ColumnDefinitions="100,75,*,75,*,75,*,75,*,75,*,75,*" RowDefinitions="*,20,*,*,*,*,*,50">
+          <TextBlock Text="Animation:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
+          <TextBlock Text="Pose: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" />
+          <TextBox Text="{Binding AnimationPose, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="4" />
           
-          <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggle}" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="13">
-            <Panel>
-              <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Normal</TextBlock>
-              <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Shiny</TextBlock>
-            </Panel>
-          </ToggleButton>
+          <TextBlock Text="Frame: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="7" Grid.Row="0"/>
+          <TextBox Text="{Binding AnimationFrame, Mode=OneWay}" IsReadOnly="True" Grid.Column="8" Grid.Row="0" Grid.ColumnSpan="4" />
 
-          <TextBlock Text="Animation:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="1" />
-          <TextBlock Text="Pose: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" />
-          <TextBox Text="{Binding AnimationPose, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="4" />
+          <TextBlock Text="Main:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="2" />
           
-          <TextBlock Text="Frame: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="7" Grid.Row="1"/>
-          <TextBox Text="{Binding AnimationFrame, Mode=OneWay}" IsReadOnly="True" Grid.Column="8" Grid.Row="1" Grid.ColumnSpan="4" />
+          <TextBlock Text="Camera" HorizontalAlignment="Center" Margin="8" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6"/>
+          <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="2" />
+          <TextBox Text="{Binding MainCamera.Position.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="2" />
+          <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="2" />
+          <TextBox Text="{Binding MainCamera.Position.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="2" />
+          <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="2" />
+          <TextBox Text="{Binding MainCamera.Position.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="2" />
+          <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="3" />
+          <TextBox Text="{Binding MainCamera.FocusPoint.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="3" />
+          <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="3" />
+          <TextBox Text="{Binding MainCamera.FocusPoint.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="3" />
+          <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="3" />
+          <TextBox Text="{Binding MainCamera.FocusPoint.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="3" />
 
-          <TextBlock Text="Main:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
-          
-          <TextBlock Text="Camera" HorizontalAlignment="Center" Margin="8" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="6"/>
-          <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.Position.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="3" />
-          <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.Position.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="3" />
-          <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.Position.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="3" />
-          <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="4" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="4" />
-          <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="4" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="4" />
-          <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="4" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="4" />
+          <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="1" Grid.ColumnSpan="6" />
+          <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="2" />
+          <pkxuc:ColorDisplay Color="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" Grid.Column="8" Grid.Row="2" Grid.ColumnSpan="5" />
+          <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
+          <TextBox Text="{Binding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="2" />
+          <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="3" />
+          <i:Icon Value="{Binding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="3" />
+          <TextBox Text="{Binding MainLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="3" IsReadOnly="True" />
 
-          <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="2" Grid.ColumnSpan="6" />
-          <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
-          <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="5">
-            <Panel Width="30" Height="20" Background="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaBrushConverter}}" />
-            <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
-            <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding MainLight.Color.RValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-            <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding MainLight.Color.GValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-            <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding MainLight.Color.BValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-          </StackPanel>
-          <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="4" />
-          <TextBox Text="{Binding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="2" />
-          <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="4" />
-          <i:Icon Value="{Binding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="4" />
-          <TextBox Text="{Binding MainLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="4" IsReadOnly="True" />
+          <TextBlock Text="*Secondary:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="4" />
+          <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="4" />
+          <TextBox Text="{Binding SecondaryCamera.Value.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="4" />
+          <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="4" />
+          <TextBox Text="{Binding SecondaryCamera.Value.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="4" />
+          <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="4" />
+          <TextBox Text="{Binding SecondaryCamera.Value.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="4" />
+          <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="5" />
+          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="5" />
+          <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="5" />
+          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="5" />
+          <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="5" />
+          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
 
-          <TextBlock Text="*Secondary:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="5" />
-          <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="5" />
-          <TextBox Text="{Binding SecondaryCamera.Value.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="5" />
-          <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="5" />
-          <TextBox Text="{Binding SecondaryCamera.Value.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="5" />
-          <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="5" />
-          <TextBox Text="{Binding SecondaryCamera.Value.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
-          <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="6" />
-          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="6" />
-          <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="6" />
-          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="6" />
-          <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="6" />
-          <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="6" />
+          <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="4" />
+          <pkxuc:ColorDisplay Color="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
+          <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
+          <TextBox Text="{Binding SecondaryLight.Value.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
+          <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="5" />
+          <i:Icon Value="{Binding SecondaryLight.Value.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="5" />
+          <TextBox Text="{Binding SecondaryLight.Value.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="5" IsReadOnly="True" />
 
-          <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
-          <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="5">
-            <Panel Width="30" Height="20" Background="{Binding SecondaryLight.Value.Color, TargetNullValue=None, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaBrushConverter}}" />
-            <TextBlock Text="Hex:" Margin="8" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorHexStringConverter}}" Margin="8,0,32,0" VerticalAlignment="Center" />
-            <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding SecondaryLight.Value.Color.RValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-            <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding SecondaryLight.Value.Color.GValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-            <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding SecondaryLight.Value.Color.BValue, Mode=OneWay}" Margin="0,0,8,0" VerticalAlignment="Center" />
-          </StackPanel>
-          <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="6" />
-          <TextBox Text="{Binding SecondaryLight.Value.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="6" Grid.ColumnSpan="2" />
-          <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="6" />
-          <i:Icon Value="{Binding SecondaryLight.Value.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="6" />
-          <TextBox Text="{Binding SecondaryLight.Value.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="6" IsReadOnly="True" />
+          <TextBlock Text="Extras: " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="6" />
+          <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="*" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="12">
 
-          <TextBlock Text="Extras: " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="7" />
-          <Border CornerRadius="10" Background="#ff202020" Margin="8,0,8,0" Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="12">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" FontSize="12">
-              <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="*">
-
-                <TextBlock Text="Removed Objs:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="0">
-                  <TextBox HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="8,0,8,0" Text="{Binding RemovedObjects, Mode=OneWay, Converter={StaticResource EnumerableSemiColonStringConverter}}" IsReadOnly="True" />
-                </ScrollViewer>
-
-              </Grid>
+            <TextBlock Text="Removed Objs:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="0">
+              <TextBox HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="8,0,8,0" Text="{Binding RemovedObjects, Mode=OneWay, Converter={StaticResource EnumerableSemiColonStringConverter}}" IsReadOnly="True" />
             </ScrollViewer>
-          </Border>
 
-
-          <Panel Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="12">
+          </Grid>
+          <Panel Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="12">
             <Button Margin="64,0,64,0" Width="150" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ModifyBlenderDataCommand}">
               <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Modify in Blender</TextBlock>
             </Button>
           </Panel>
         </Grid>
       </Border>
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Grid.Column="1" Grid.Row="5">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Grid.Column="1" Grid.Row="6">
         <Button Margin="64,0,64,0" Width="60" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding SaveCommand}">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Save</TextBlock>
         </Button>

@@ -55,7 +55,7 @@ class RenderData(object):
 
         secondary_camera: Optional[Camera] = None
         if "secondary_camera" in obj.__dict__.keys():
-            secondary_camera = obj.secondary_camera
+            secondary_camera = Camera.parse_obj(obj.secondary_camera)
 
         textures: Optional[List[Texture]] = None
         if "textures" in obj.__dict__.keys():

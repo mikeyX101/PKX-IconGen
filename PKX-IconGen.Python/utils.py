@@ -18,7 +18,6 @@
 
 import getopt
 import math
-import sys
 
 import bpy
 from typing import List, Optional, Final

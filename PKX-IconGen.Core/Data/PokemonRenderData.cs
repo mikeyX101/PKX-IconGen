@@ -140,6 +140,15 @@ namespace PKXIconGen.Core.Data
             {
                 if (newData is not null)
                 {
+                    RenderData oldRender = Render;
+                    ShinyInfo oldShiny = Shiny;
+
+                    // Put non-Blender data back into new instances
+                    newData.Render.Background = oldRender.Background;
+                    newData.Shiny.Render.Background = oldShiny.Render.Background;
+                    newData.Render.Glow = oldRender.Glow;
+                    newData.Shiny.Render.Glow = oldShiny.Render.Glow;
+                    
                     Render = newData.Render;
                     Shiny = newData.Shiny;
                 }

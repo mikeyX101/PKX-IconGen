@@ -18,17 +18,29 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.ImageProcessing.Extensions;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Convolution;
 
 namespace PKXIconGen.Core.ImageProcessing
 {
     public class IconProcessor
     {
+        private enum IconMode : byte
+        {
+            Normal = 0,
+            NormalSecondary = 1,
+            Shiny = 2,
+            ShinySecondary = 3
+        }
+        
         private RenderJob Job { get; set; }
         private bool HasSecondary => Job.Data.Render.SecondaryCamera.HasValue;
 
@@ -43,23 +55,24 @@ namespace PKXIconGen.Core.ImageProcessing
             Game = job.Game;
         }
 
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public async Task ProcessJobAsync()
         {
-            Task<Image> mainTask = ProcessIconAsync(Job.MainPath);
-            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath);
-            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath) : null;
-            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath) : null;
+            Task<Image> mainTask = ProcessIconAsync(Job.MainPath, IconMode.Normal);
+            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath, IconMode.Shiny);
+            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath, IconMode.NormalSecondary) : null;
+            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath, IconMode.ShinySecondary) : null;
 
             Image[] mainImages = await Task.WhenAll(mainTask, shinyTask);
-            Image main = mainImages[0];
-            Image shiny = mainImages[1];
+            using Image main = mainImages[0];
+            using Image shiny = mainImages[1];
             main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
             if (secondaryTask != null && shinySecondaryTask != null)
             {
                 Image[] secondaryImages = await Task.WhenAll(secondaryTask, shinySecondaryTask);
-                Image secondary = secondaryImages[0];
-                Image shinySecondary = secondaryImages[1];
+                using Image secondary = secondaryImages[0];
+                using Image shinySecondary = secondaryImages[1];
                 secondary.Mutate(ctx => ctx.AddImageBottom(shinySecondary));
 
                 main.Mutate(ctx => ctx.AddImageRight(secondary));
@@ -68,9 +81,51 @@ namespace PKXIconGen.Core.ImageProcessing
             await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.Output + ".png"));
         }
 
-        private async Task<Image> ProcessIconAsync(string path)
+        private async Task<Image> ProcessIconAsync(string path, IconMode mode)
         {
             Image img = await Image.LoadAsync(path);
+            byte scale = (byte)Job.Scale;
+            float glowIntensity = (float)Math.Round(Math.Pow(scale * 2, 0.80));
+            CoreManager.Logger.Debug("Glow Radius: {Radius}", glowIntensity);
+            
+            switch (mode)
+            {
+                case IconMode.Normal or IconMode.NormalSecondary:
+                    img.Mutate(ctx =>
+                    {
+                        if (Job.Data.Render.Glow.Alpha != 0)
+                        {
+                            ctx.ApplyEdgeGlow(Job.Data.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
+                        }
+                        
+                        if (Job.Data.Render.Background.Alpha != 0)
+                        {
+                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Render.Background.ToPixel<Rgba32>());
+                            ctx.AddImageBehind(background);
+                        }
+                    });
+                    break;
+
+                case IconMode.Shiny or IconMode.ShinySecondary:
+                    img.Mutate(ctx =>
+                    {
+                        if (Job.Data.Shiny.Render.Glow.Alpha != 0)
+                        {
+                            ctx.ApplyEdgeGlow(Job.Data.Shiny.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
+                        }
+                        
+                        if (Job.Data.Shiny.Render.Background.Alpha != 0)
+                        {
+                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Shiny.Render.Background.ToPixel<Rgba32>());
+                            ctx.AddImageBehind(background);
+                        }
+                    });
+                    break;
+                
+                default:
+                    throw new InvalidOperationException("Selected mode was somehow not a value of the enum.");
+            }
+            
             return await GameProcess(img);
         }
 
@@ -90,6 +145,8 @@ namespace PKXIconGen.Core.ImageProcessing
                     case Game.PokemonBattleRevolution:
                         throw new NotImplementedException("Pokemon Battle Revolution is not yet implemented.");
 
+                    case Game.Undefined or _:
+                        throw new InvalidOperationException("Selected style was 'Undefined'.");
                 }
                 return img;
             });

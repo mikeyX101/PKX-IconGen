@@ -25,23 +25,15 @@ namespace PKXIconGen.AvaloniaUI.Converters
 {
     public class PKXHeaderConverter : IValueConverter
     {
-        public static PKXHeaderConverter Instance = new();
+        public static readonly PKXHeaderConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
             if (value is string name && targetType.IsAssignableFrom(typeof(string)))
             {
                 return $"Pokemon - {(name.Length > 0 ? name : "???")}";
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

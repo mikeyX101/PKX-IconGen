@@ -19,9 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
 
@@ -33,7 +35,7 @@ namespace PKXIconGen.Core.Services
     /// </summary>
     public static class JsonIO
     {
-        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, };
 
         public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
         {

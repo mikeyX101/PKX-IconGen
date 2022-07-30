@@ -25,31 +25,24 @@ using AvaloniaColor = Avalonia.Media.Color;
 
 namespace PKXIconGen.AvaloniaUI.Converters
 {
-    public class HueAvaloniaBrushConverter : IValueConverter
+    public class HueAvaloniaColorConverter : IValueConverter
     {
-        public static HueAvaloniaBrushConverter Instance = new();
+        public static readonly HueAvaloniaColorConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
+            if (value is float hue && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
             {
-                return null;
+                uint rgb = Core.Utils.HueToRgb(Core.Utils.ConvertRange(0, 1, 0, 360, hue));
+                return AvaloniaColor.FromUInt32(rgb);
             }
-
-            if (value is float hue && targetType.IsAssignableFrom(typeof(SolidColorBrush)))
-            {
-                return new SolidColorBrush(Core.Utils.HueToRgb(Core.Utils.ConvertRange(0, 1, 0, 360, hue)));
-            }
-            else
-            {
-                return null;
-            }
+            return Colors.Transparent;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting a Avalonia brush back to the original hue is not supported."),
+                new NotSupportedException("Converting a Avalonia color back to the original hue is not supported."),
                 Avalonia.Data.BindingErrorType.Error
             );
         }

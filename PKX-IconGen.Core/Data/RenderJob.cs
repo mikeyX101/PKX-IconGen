@@ -20,10 +20,10 @@ namespace PKXIconGen.Core.Data
         public Game Game { get; init; }
 
         [JsonIgnore]
-        internal string FinalOutput { get; init; }
+        private string FinalOutput { get; init; }
 
         [JsonIgnore]
-        internal string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
+        private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
 
         [JsonPropertyName("main_path")]
         public string MainPath => BlenderOutputPath + "_main.png";

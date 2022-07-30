@@ -18,6 +18,7 @@
 #endregion
 
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace PKXIconGen.Core.ImageProcessing.Extensions
@@ -50,6 +51,11 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
                     Position = AnchorPositionMode.TopLeft
                 })
                 .DrawImage(img, new Point(size.Width, 0), 1f);
+        }
+        
+        public static IImageProcessingContext AddImageBehind(this IImageProcessingContext ctx, Image img)
+        {
+            return ctx.DrawImage(img, new Point(0, 0), PixelColorBlendingMode.Normal, PixelAlphaCompositionMode.DestOver, 1f);
         }
     }
 }

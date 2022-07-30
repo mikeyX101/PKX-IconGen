@@ -52,9 +52,6 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     animation_pose: int = prd.get_mode_animation_pose(mode) or 0
     animation_frame: int = prd.get_mode_animation_frame(mode) or 0
 
-    if prd_camera is None:
-        prd_camera = Camera.default()
-
     camera_pos = prd_camera.pos.to_mathutils_vector()
     focus_pos = prd_camera.focus.to_mathutils_vector()
     camera_fov = prd_camera.fov
@@ -79,9 +76,11 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
 if __name__ == "__main__":
     utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
+    job_json: str = sys.stdin.readline()
+    print(f"Rendering: {job_json}")
 
     last_rendered_mode: Optional[EditMode] = None
-    job: RenderJob = RenderJob.from_json(sys.stdin.readline())
+    job: RenderJob = RenderJob.from_json(job_json)
     utils.import_model(job.data.render.model, job.data.shiny.hue)
 
     blender_render = bpy.data.scenes["Scene"].render

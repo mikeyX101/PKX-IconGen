@@ -544,7 +544,7 @@ def sync_props_to_prd():
     light_color_list = scene.light_color
     light_type: LightType = LightType[scene.light_type]
     light_strength: float = scene.light_strength
-    light_color: Color = Color(light_color_list[0], light_color_list[1], light_color_list[2])
+    light_color: Color = Color(light_color_list[0], light_color_list[1], light_color_list[2], 1)
     light_distance: float = scene.light_distance
     light: Light = Light(light_type, light_strength, light_color, light_distance)
 

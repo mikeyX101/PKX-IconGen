@@ -24,10 +24,11 @@ from mathutils import Vector as MUVector
 
 class Color(object):
     
-    def __init__(self, r: float, g: float, b: float):
+    def __init__(self, r: float, g: float, b: float, a: float):
         self.r = r
         self.b = b
         self.g = g
+        self.a = a
 
     def to_list(self) -> List[float]:
         return [
@@ -41,7 +42,7 @@ class Color(object):
             self.r,
             self.g,
             self.b,
-            1
+            self.a
         ]
 
     def to_mathutils_vector(self) -> MUVector:
@@ -59,12 +60,14 @@ class Color(object):
         return Color(
             obj.r,
             obj.g,
-            obj.b
+            obj.b,
+            obj.a
         )
 
     @staticmethod
     def default() -> 'Color':
         return Color(
+            1,
             1,
             1,
             1

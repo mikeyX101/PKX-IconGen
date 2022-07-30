@@ -20,48 +20,29 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
-using Avalonia.Media;
 using AvaloniaColor = Avalonia.Media.Color;
-using Color = PKXIconGen.Core.Data.Blender.Color;
 
 namespace PKXIconGen.AvaloniaUI.Converters
 {
-    public class PKXColorAvaloniaBrushConverter : IValueConverter
+    public class AvaloniaColorHexStringConverter : IValueConverter
     {
-        public static PKXColorAvaloniaBrushConverter Instance = new();
+        public static readonly AvaloniaColorHexStringConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
+            if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(string)))
             {
-                return null;
+                return $"#{color.ToUint32() & 0x00FFFFFF:X8}";
             }
-
-            if (value is Color color && targetType.IsAssignableFrom(typeof(SolidColorBrush)))
-            {
-                return new SolidColorBrush(color.ToUInt());
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
-            if (value is SolidColorBrush brush && targetType.IsAssignableFrom(typeof(Color)))
-            {
-                return Color.FromRgbInt(brush.Color.ToUint32());
-            }
-            else
-            {
-                return null;
-            }
+            return new Avalonia.Data.BindingNotification(
+                new NotSupportedException("Converting an hex string back to the original value is not supported."),
+                Avalonia.Data.BindingErrorType.Error
+            );
         }
     }
 }

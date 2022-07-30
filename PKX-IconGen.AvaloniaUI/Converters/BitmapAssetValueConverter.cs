@@ -40,13 +40,10 @@ namespace PKXIconGen.AvaloniaUI.Converters
     /// </summary>
     public class BitmapAssetValueConverter : IValueConverter
     {
-        public static BitmapAssetValueConverter Instance = new();
+        public static readonly BitmapAssetValueConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-                return null;
-
             if (value is string rawUri && targetType.IsAssignableFrom(typeof(Bitmap)))
             {
                 Uri? uri = null;

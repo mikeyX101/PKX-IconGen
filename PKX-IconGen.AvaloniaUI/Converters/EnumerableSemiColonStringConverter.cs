@@ -28,15 +28,10 @@ namespace PKXIconGen.AvaloniaUI.Converters
 {
     public class EnumerableSemiColonStringConverter : IValueConverter
     {
-        public static EnumerableSemiColonStringConverter Instance = new();
+        public static readonly EnumerableSemiColonStringConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
             if (value is IEnumerable items && targetType.IsAssignableFrom(typeof(string)))
             {
                 IEnumerable<object> objectItems = items.OfType<object>().ToList();
@@ -52,10 +47,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
                         .Aggregate((s1, s2) => $"{s1};{s2}");
                 }
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

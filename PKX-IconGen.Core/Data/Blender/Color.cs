@@ -18,8 +18,10 @@
 #endregion
 
 using System;
+using System.ComponentModel;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
+using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data.Blender
 {
@@ -34,29 +36,34 @@ namespace PKXIconGen.Core.Data.Blender
         public readonly float Green { get; init; }
         [JsonPropertyName("b")]
         public readonly float Blue { get; init; }
+        [JsonPropertyName("a")]
+        public readonly float Alpha { get; init; }
 
         [JsonIgnore]
-        public readonly byte RValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Red));
+        public readonly byte RValue => (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Red));
         [JsonIgnore]
-        public readonly byte GValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Green));
+        public readonly byte GValue => (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Green));
         [JsonIgnore]
-        public readonly byte BValue => (byte)Math.Floor(Utils.ConvertRange(0, 1, 0, 255, Blue));
+        public readonly byte BValue => (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Blue));
+        [JsonIgnore]
+        public readonly byte AValue => (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Alpha));
 
-        // Floats should be between 0 and 1. Otherwise they will be clamped to that range.
-        [UsedImplicitly]
-        public Color(float r, float g, float b)
+        /// Floats should be between 0 and 1. Otherwise they will be clamped to that range.
+        public Color(float r, float g, float b, float a)
         {
             Red = Math.Clamp(r, 0, 1);
             Green = Math.Clamp(g, 0, 1);
             Blue = Math.Clamp(b, 0, 1);
+            Alpha = Math.Clamp(a, 0, 1);
         }
 
         public bool Equals(Color other)
         {
             return
-                Red == other.Red &&
-                Green == other.Green &&
-                Blue == other.Blue;
+                Math.Abs(Red - other.Red) < 0.000000001 &&
+                Math.Abs(Green - other.Green) < 0.000000001 &&
+                Math.Abs(Blue - other.Blue) < 0.000000001 &&
+                Math.Abs(Alpha - other.Alpha) < 0.000000001;
         }
         public override bool Equals(object? obj)
         {
@@ -73,42 +80,40 @@ namespace PKXIconGen.Core.Data.Blender
             return !(left == right);
         }
 
-        public readonly override int GetHashCode() => (Red, Green, Blue).GetHashCode();
+        public readonly override int GetHashCode() => (Red, Green, Blue, Alpha).GetHashCode();
 
-        public uint ToUInt()
+        public uint ToRgbaUInt() => (uint)(RValue << 24 | GValue << 16 | BValue << 8 | AValue);
+        public uint ToArgbUInt() => (uint)(AValue << 24 | RValue << 16 | GValue << 8 | BValue);
+
+        public static Color FromRgbaUInt(uint rgba)
         {
-            byte red = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Red));
-            byte green = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Green));
-            byte blue = (byte)Math.Round(Utils.ConvertRange(0, 1, 0, 255, Blue));
+            byte red = (byte)(rgba >> 24 & 0x000000FF);
+            byte green = (byte)(rgba >> 16 & 0x000000FF);
+            byte blue = (byte)(rgba >> 8 & 0x000000FF);
+            byte alpha = (byte)(rgba & 0x000000FF);
 
-            return (uint)(0xFF << 24 | red << 16 | green << 8 | blue);
+            return FromBytes(red, green, blue, alpha);
         }
-
-        public static Color FromRgbInt(uint rgb)
+        public static Color FromArgbUInt(uint argb)
         {
-            return FromRgbInt(checked((int)(rgb & 0x00FFFFFF)));
+            byte alpha = (byte)(argb >> 24 & 0x000000FF);
+            byte red = (byte)(argb >> 16 & 0x000000FF);
+            byte green = (byte)(argb >> 8 & 0x000000FF);
+            byte blue = (byte)(argb & 0x000000FF);
+
+            return FromBytes(red, green, blue, alpha);
         }
-        public static Color FromRgbInt(int rgb)
+        public static Color FromBytes(byte red, byte green, byte blue, byte alpha)
         {
-            int red = rgb >> 16 & 0x0000FF;
-            int green = rgb >> 8 & 0x0000FF;
-            int blue = rgb & 0x0000FF;
-
-            return FromInts(red, green, blue);
-        }
-        public static Color FromInts(int red, int green, int blue)
-        {
-            red = Math.Clamp(red, 0, 255);
-            green = Math.Clamp(green, 0, 255);
-            blue = Math.Clamp(blue, 0, 255);
-
             float rangeR = Utils.ConvertRange(0, 255, 0, 1, red);
             float rangeG = Utils.ConvertRange(0, 255, 0, 1, green);
             float rangeB = Utils.ConvertRange(0, 255, 0, 1, blue);
+            float rangeA = Utils.ConvertRange(0, 255, 0, 1, alpha);
 
-            return new Color(rangeR, rangeG, rangeB);
+            return new Color(rangeR, rangeG, rangeB, rangeA);
         }
 
-        public static Color GetDefaultColor() => new(255, 255, 255);
+        public static Color GetDefaultColor() => new(1, 1, 1, 1);
     }
+    
 }

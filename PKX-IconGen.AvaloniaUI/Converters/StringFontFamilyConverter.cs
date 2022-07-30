@@ -26,23 +26,15 @@ namespace PKXIconGen.AvaloniaUI.Converters
 {
     public class StringFontFamilyConverter : IValueConverter
     {
-        public static StringFontFamilyConverter Instance = new();
+        public static readonly StringFontFamilyConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null)
-            {
-                return null;
-            }
-
             if (value is string fontName && targetType.IsAssignableFrom(typeof(FontFamily)))
             {
                 return new FontFamily(fontName);
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
