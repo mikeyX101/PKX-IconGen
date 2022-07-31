@@ -24,6 +24,7 @@ from typing import List, Optional, Final
 
 import blender_compat
 from data.edit_mode import EditMode
+from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
 from data.shiny_info import ShinyInfo
 from data.texture import Texture
@@ -289,6 +290,21 @@ def remove_objects(removed_objects: List[str]):
         obj = objs[obj_name]
         obj.hide_render = True
         obj.hide_viewport = True
+
+
+def update_shading(shading: ObjectShading, context=None):
+    context = context or bpy.context
+    current_selected = list(context.selected_objects)
+    bpy.ops.object.select_all(action="SELECT")
+
+    if shading == ObjectShading.FLAT:
+        bpy.ops.object.shade_flat()
+    elif shading == ObjectShading.SMOOTH:
+        bpy.ops.object.shade_smooth()
+
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in current_selected:
+        obj.select_set(True)
 
 
 def hue2rgb(hue: float) -> List[float]:

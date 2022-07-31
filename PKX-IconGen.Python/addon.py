@@ -25,6 +25,7 @@ import blender_compat
 import utils
 from data.color import Color
 from data.light import Light, LightType
+from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
 from data.camera import Camera
 from data.texture import Texture
@@ -37,7 +38,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 7, 0),
+    "version": (0, 8, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -344,6 +345,12 @@ def update_shiny_color(self, context):
     utils.change_shiny_color(value)
 
 
+def update_shading(self, context):
+    value = self.shading
+
+    utils.update_shading(ObjectShading[value], context)
+
+
 # Textures Updates
 def update_current_texture_image(self, context):
     value = self.current_texture_image
@@ -450,7 +457,7 @@ def make_texture_dict(textures: List[Texture]) -> dict[str, Texture]:
 
 
 # State sync functions
-# Out of date, see if scene sync is needed/worth to maintain
+# Out of date, see if scene sync is needed/worth to maintain, object shading cannot be supported
 def sync_scene_to_props():
     scene = bpy.data.scenes["Scene"]
     armature = get_armature()
@@ -507,6 +514,8 @@ def sync_props_to_scene():
 
     utils.set_textures(list(render_textures.values()))
 
+    utils.update_shading(ObjectShading[scene.shading], None)
+
 
 def sync_prd_to_props():
     global removed_objects
@@ -542,6 +551,8 @@ def sync_prd_to_props():
 
     render_textures = make_texture_dict(prd.get_mode_textures(mode))
 
+    scene.shading = prd.get_mode_shading(mode).name
+
 
 def sync_props_to_prd():
     global prd
@@ -572,6 +583,8 @@ def sync_props_to_prd():
 
     textures: list[Texture] = list(render_textures.values())
 
+    shading: ObjectShading = ObjectShading[scene.shading]
+
     prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, is_ortho, fov, ortho_scale, light)
 
     if mode == EditMode.NORMAL:
@@ -580,6 +593,7 @@ def sync_props_to_prd():
         prd.render.animation_frame = animation_frame
         prd.render.removed_objects = removed_objs
         prd.render.textures = textures
+        prd.render.shading = shading
 
     elif mode == EditMode.NORMAL_SECONDARY:
         if secondary_enabled:
@@ -590,6 +604,7 @@ def sync_props_to_prd():
         prd.render.animation_frame = animation_frame
         prd.render.removed_objects = removed_objs
         prd.render.textures = textures
+        prd.render.shading = shading
 
     elif mode == EditMode.SHINY:
         prd.shiny.render.main_camera = prd_camera
@@ -597,6 +612,7 @@ def sync_props_to_prd():
         prd.shiny.render.animation_frame = animation_frame
         prd.shiny.render.removed_objects = removed_objs
         prd.shiny.render.textures = textures
+        prd.shiny.render.shading = shading
 
     elif mode == EditMode.SHINY_SECONDARY:
         if secondary_enabled:
@@ -607,6 +623,7 @@ def sync_props_to_prd():
         prd.shiny.render.animation_frame = animation_frame
         prd.shiny.render.removed_objects = removed_objs
         prd.shiny.render.textures = textures
+        prd.shiny.render.shading = shading
 
     if prd.shiny.hue is not None:
         prd.shiny.hue = utils.rgb2hue(scene.shiny_color)
@@ -820,7 +837,17 @@ SHINYPROPS = [
 ]
 
 ADVANCEDPROPS = [
-
+    ('shading',
+     bpy.props.EnumProperty(
+         name="Object Shading:",
+         description="Determines how the objects are shaded, sometimes Smooth shading can give better results, but can break or look weird in other cases",
+         items=[
+             ('FLAT', "Flat", "Flat Shading, default and the most stable"),
+             ('SMOOTH', "Smooth", "Smooth shading, can give better results for more round Pokemon, can cause visual \"weirdness\".")
+         ],
+         default=0,  # Flat
+         update=update_shading
+     ))
 ]
 
 ALLPROPS = [
@@ -957,7 +984,7 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
 class PKXShinyPanel(PKXPanel, bpy.types.Panel):
     bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
     bl_idname = 'VIEW3D_PT_PKX_SHINY_PANEL'
-    bl_label = 'Shiny Info'
+    bl_label = 'Shiny'
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     @classmethod
@@ -977,7 +1004,13 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        col = init_simple_subpanel(self, context, ADVANCEDPROPS)
+        layout = self.layout
+
+        col = layout.column()
+        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+        row = col.row()
+        row.label(text="Shading:")
+        row.prop(context.scene, "shading", expand=True)
         col.operator(PKXSyncOperator.bl_idname)
 
 
@@ -1034,6 +1067,8 @@ def register(data: PokemonRenderData):
 
     textures: List[Texture] = list(render_textures.values())
     utils.set_textures(textures)
+
+    utils.update_shading(ObjectShading[scene.shading], None)
 
     # unselect on start
     for obj in bpy.context.selected_objects:

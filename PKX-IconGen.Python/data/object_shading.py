@@ -16,16 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-__all__ = [
-    "camera", 
-    "color",
-    "edit_mode",
-    "light",
-    "object_shading",
-    "pokemon_render_data",
-    "render_data",
-    "render_job",
-    "shiny_info",
-    "vector2",
-    "vector3"
-]
+from enum import IntEnum
+
+
+class ObjectShading(IntEnum):
+    FLAT = 0
+    SMOOTH = 1

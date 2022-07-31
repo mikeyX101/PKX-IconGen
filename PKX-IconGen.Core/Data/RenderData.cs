@@ -49,6 +49,9 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("textures")]
         public List<Texture> Textures { get; init; }
         
+        [JsonPropertyName("shading")]
+        public ObjectShading ObjectShading { get; init; }
+
         /**
          * Background color for this render.
          * This is not used in Blender, instead we apply it during post-processing.
@@ -76,10 +79,20 @@ namespace PKXIconGen.Core.Data
 
             RemovedObjects = new SortedSet<string>();
             Textures = new List<Texture>();
+
+            ObjectShading = ObjectShading.Flat;
         }
 
         [JsonConstructor]
-        public RenderData(string? model, ushort animationPose, ushort animationFrame, Camera mainCamera, Camera? secondaryCamera, SortedSet<string> removedObjects, List<Texture>? textures)
+        public RenderData(
+            string? model, 
+            ushort animationPose, 
+            ushort animationFrame, 
+            Camera mainCamera, 
+            Camera? secondaryCamera, 
+            SortedSet<string> removedObjects, 
+            List<Texture>? textures, 
+            ObjectShading objectShading)
         {
             Model = model;
 
@@ -91,6 +104,8 @@ namespace PKXIconGen.Core.Data
 
             RemovedObjects = removedObjects;
             Textures = textures ?? new List<Texture>();
+
+            ObjectShading = objectShading;
         }
 
         public bool Equals(RenderData? other)
@@ -101,7 +116,11 @@ namespace PKXIconGen.Core.Data
                 AnimationFrame == other.AnimationFrame &&
                 MainCamera.Equals(other.MainCamera) &&
                 (SecondaryCamera?.Equals(other.SecondaryCamera) ?? other.SecondaryCamera == null) &&
-                RemovedObjects.SequenceEqual(other.RemovedObjects);
+                RemovedObjects.SequenceEqual(other.RemovedObjects) &&
+                Textures.SequenceEqual(other.Textures) &&
+                ObjectShading == other.ObjectShading &&
+                Background.Equals(other.Background) &&
+                Glow.Equals(other.Glow);
         }
         public override bool Equals(object? obj)
         {
@@ -131,6 +150,7 @@ namespace PKXIconGen.Core.Data
             SecondaryCamera, 
             RemovedObjects,
             Textures,
+            ObjectShading,
             Background,
             Glow
         ).GetHashCode();
@@ -144,7 +164,8 @@ namespace PKXIconGen.Core.Data
                 MainCamera, 
                 SecondaryCamera,
                 new SortedSet<string>(RemovedObjects),
-                new List<Texture>(Textures)
+                new List<Texture>(Textures),
+                ObjectShading
             )
             {
                 Background = this.Background,

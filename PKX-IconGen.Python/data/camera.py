@@ -34,8 +34,8 @@ class Camera(object):
         self.pos = pos
         self.focus = focus
         self.fov = fov
-        self.is_ortho = is_ortho if is_ortho is not None else True  # Optional for compatibility
-        self.ortho_scale = ortho_scale or 7.31429  # Optional for compatibility
+        self.is_ortho = is_ortho if is_ortho is not None else True  # Optional for compatibility, should always be not null
+        self.ortho_scale = ortho_scale or 7.31429  # Optional for compatibility, should always be not null
         self.light = light
 
     @staticmethod

@@ -71,6 +71,8 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
     utils.set_textures(prd.get_mode_textures(mode))
 
+    utils.update_shading(prd.get_mode_shading(mode), None)
+
 
 if __name__ == "__main__":
     utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])

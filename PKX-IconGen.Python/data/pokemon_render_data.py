@@ -23,6 +23,7 @@ from typing import Optional, List
 
 from .edit_mode import EditMode
 from .camera import Camera
+from .object_shading import ObjectShading
 from .render_data import RenderData
 from .shiny_info import ShinyInfo
 from .texture import Texture
@@ -86,6 +87,10 @@ class PokemonRenderData(object):
     def get_mode_textures(self, mode: EditMode) -> List[Texture]:
         render: RenderData = self.get_mode_render(mode)
         return render.textures
+
+    def get_mode_shading(self, mode: EditMode) -> ObjectShading:
+        render: RenderData = self.get_mode_render(mode)
+        return render.shading
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['PokemonRenderData']:

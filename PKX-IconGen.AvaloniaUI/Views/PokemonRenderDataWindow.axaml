@@ -188,7 +188,7 @@ Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
 
           <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="1" Grid.ColumnSpan="6" />
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="2" />
-          <pkxuc:ColorDisplay Color="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" Grid.Column="8" Grid.Row="2" Grid.ColumnSpan="5" />
+          <pkxuc:ColorDisplay Color="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="2" Grid.ColumnSpan="5" />
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
           <TextBox Text="{Binding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="3" />
@@ -210,7 +210,7 @@ Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
           <TextBox Text="{Binding SecondaryCamera.Value.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
 
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="4" />
-          <pkxuc:ColorDisplay Color="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
+          <pkxuc:ColorDisplay Color="{Binding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
           <TextBox Text="{Binding SecondaryLight.Value.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="5" />
