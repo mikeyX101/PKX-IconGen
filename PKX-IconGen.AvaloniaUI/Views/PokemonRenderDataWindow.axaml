@@ -113,25 +113,14 @@ Output name for the rendered file. If unspecified, uses the Pokemon's name.
       </Grid>
       
       <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
-      <Grid Grid.Column="1" Grid.Row="3" ColumnDefinitions="*,30,30" RowDefinitions="*">
-        <TextBox Name="ModelTextBox" Text="{Binding Model, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0">
-          <ToolTip.Tip>
-Path to the Pokemon model. It should be a .dat file.
+      <pkxuc:FileTextField Path="{Binding Model}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." Grid.Column="1" Grid.Row="3">
+        <ToolTip.Tip>
+          Path to the Pokemon model. It should be a .dat file.
 
-If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
-Example: {{AssetsPath}}/pkx_lugia/lugia.pkx.dat
-          </ToolTip.Tip>
-        </TextBox>
-        <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding InsertAssetsPath}" CommandParameter="{Binding #ModelTextBox}" Grid.Column="1" Grid.Row="0">
-          <ToolTip.Tip>
-            Insert "{{AssetsPath}}" to the current caret location
-          </ToolTip.Tip>
-          <i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />
-        </Button>
-        <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseModelPath}" Grid.Column="2" Grid.Row="0">
-          <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
-        </Button>
-      </Grid>
+          If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
+          Example: {{AssetsPath}}/pkx_lugia/lugia.pkx.dat
+        </ToolTip.Tip>
+      </pkxuc:FileTextField>
 
       <Grid ShowGridLines="False" ColumnDefinitions="100,*,100,*" RowDefinitions="*,*,*" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
         <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="0" Grid.Row="0" />
@@ -150,18 +139,7 @@ If your shiny model is in the assets folder, you can specify {{AssetsPath}} inst
 Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
           </ToolTip.Tip>
         </RadioButton>
-        <Grid ColumnDefinitions="*,30,30" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
-          <TextBox Name="ShinyModelTextBox" IsEnabled="{Binding #ShinyModel.IsChecked}" Text="{Binding ShinyModel, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" />
-          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding InsertAssetsPath}" CommandParameter="{Binding #ShinyModelTextBox}" Grid.Column="1" Grid.Row="0">
-            <ToolTip.Tip>
-              Insert "{{AssetsPath}}" to the current caret location
-            </ToolTip.Tip>
-            <i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />
-          </Button>
-          <Button IsEnabled="{Binding #ShinyModel.IsChecked}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseShinyModelPath}" Grid.Column="2" Grid.Row="0">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
-          </Button>
-        </Grid>
+        <pkxuc:FileTextField Path="{Binding ShinyModel}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." Grid.Column="1" Grid.Row="2" />
         
         <TextBlock Text="Background:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="0" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="0">

@@ -32,7 +32,7 @@ namespace PKXIconGen.AvaloniaUI.Services
             {
                 AllowMultiple = false,
                 Title = title,
-                Filters = filters ?? new List<FileDialogFilter>(),
+                Filters = filters,
                 Directory = initialDirectory
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
@@ -45,7 +45,7 @@ namespace PKXIconGen.AvaloniaUI.Services
             SaveFileDialog fileDialog = new()
             {
                 Title = title,
-                Filters = filters ?? new List<FileDialogFilter>(),
+                Filters = filters,
                 InitialFileName = initialFileName,
                 Directory = initialDirectory
             };
@@ -59,18 +59,19 @@ namespace PKXIconGen.AvaloniaUI.Services
             {
                 AllowMultiple = true,
                 Title = title,
-                Filters = filters ?? new List<FileDialogFilter>(),
+                Filters = filters,
                 Directory = initialDirectory
             };
             string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
             return files;
         }
 
-        public static async Task<string?> GetFolder(string title)
+        public static async Task<string?> GetFolder(string title, string? initialDirectory = null)
         {
             OpenFolderDialog folderDialog = new()
             {
-                Title = title
+                Title = title,
+                Directory = initialDirectory
             };
             string? folder = await folderDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
             return folder;

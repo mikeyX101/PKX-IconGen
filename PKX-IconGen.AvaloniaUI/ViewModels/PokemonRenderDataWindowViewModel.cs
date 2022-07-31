@@ -188,53 +188,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             this.RaisePropertyChanged(nameof(Background));
             this.RaisePropertyChanged(nameof(Glow));
         }
-
-        [UsedImplicitly]
-        public async void BrowseModelPath()
-        {
-            string? path = await SelectModel();
-            if (path != null)
-            {
-                Model = path;
-            }
-        }
-
-        [UsedImplicitly]
-        public async void BrowseShinyModelPath()
-        {
-            string? path = await SelectModel();
-            if (path != null)
-            {
-                ShinyModel = path;
-            }
-        }
-
-        private async Task<string?> SelectModel()
-        {
-            List<FileDialogFilter>? filters = null;
-            if (IsWindows)
-            {
-                filters = new List<FileDialogFilter>();
-                List<string> extensions = new()
-                {
-                    "dat"
-                };
-                filters.Add(new FileDialogFilter { Extensions = extensions, Name = "GCN/WII Pokemon Model" });
-            }
-
-            return await FileDialogHelper.GetFile("Select a model...", filters, !string.IsNullOrWhiteSpace(Model) ? Model : null);
-        }
-
-        [UsedImplicitly]
-        public void InsertAssetsPath(TextBox textBox)
-        {
-            const string toInsert = "{{AssetsPath}}";
-
-            textBox.Text = textBox.Text is null ? toInsert : textBox.Text.Insert(textBox.CaretIndex, toInsert);
-            textBox.Focus();
-            textBox.CaretIndex += toInsert.Length;
-        }
-
+        
         #region Modify in Blender
         private CancellationTokenSource? modifyBlenderDataCancelTokenSource;
         [UsedImplicitly]

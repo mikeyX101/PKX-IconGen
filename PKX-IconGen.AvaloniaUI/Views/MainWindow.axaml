@@ -21,6 +21,7 @@
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
         xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+        xmlns:pkxcon="using:PKXIconGen.AvaloniaUI.Views.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
@@ -70,9 +71,8 @@
       <Grid ShowGridLines="False" ColumnDefinitions="0.25*,1.3*,1*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,35">
         <!--Blender Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
-        <Grid Grid.Column="1" Grid.Row="1" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
-            <ToolTip.Tip>
+        <pkxcon:FileTextField Path="{Binding BlenderPath}" Type="Executable" Title="Select a Blender executable..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="1">
+          <ToolTip.Tip>
 Path to the Blender executable. No need to have the import addon installed, it is included with PKX-IconGen.
 Tested versions:
   2.83.18: Crashes on import
@@ -84,12 +84,8 @@ On Windows: Path to the Blender executable.
 On MacOS: The default path is included, if any aliases have been made for Blender for different versions, you can specify that alias for Blender here. I also have no idea how OSX works exactly to be honest. 😂
 
 On Linux: Path to the Blender executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_293".
-            </ToolTip.Tip>
-          </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseBlenderPath}" Grid.Column="1" Grid.Row="0">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
-          </Button>
-        </Grid>
+          </ToolTip.Tip>
+        </pkxcon:FileTextField>
         <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
           <i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
           <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText, Mode=OneWay}" Grid.Column="1" Grid.Row="0" />
@@ -109,16 +105,11 @@ USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
 
         <!--Output Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4">Output Path:</TextBlock>
-        <Grid Grid.Column="1" Grid.Row="4" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding OutputPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0">
-            <ToolTip.Tip>
-Output path for the generated icons.
-            </ToolTip.Tip>
-          </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseOutputPath}" Grid.Column="1" Grid.Row="0">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
-          </Button>
-        </Grid>
+        <pkxcon:FileTextField Path="{Binding OutputPath}" Type="Directory" Title="Select an output path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="4">
+          <ToolTip.Tip>
+            Output path for the generated icons.
+          </ToolTip.Tip>
+        </pkxcon:FileTextField>
 
         <!--Icon Style-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
@@ -202,7 +193,7 @@ Please note that this can drastically increase the rendering and processing time
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
                   <i:Icon IsVisible="{Binding BuiltIn}" VerticalAlignment="Center" FontSize="16" Value="mdi-check" Grid.Column="2" />
                   <Panel HorizontalAlignment="Right" Grid.Column="3">
-                    <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand}" CommandParameter="{Binding .}">
+                    <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand, FallbackValue=None}" CommandParameter="{Binding .}">
                       <i:Icon FontSize="16" Value="mdi-pencil" />
                     </Button>
                   </Panel>
@@ -213,24 +204,19 @@ Please note that this can drastically increase the rendering and processing time
 
         <!--Assets Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
-        <Grid Grid.Column="1" Grid.Row="18" ColumnDefinitions="*,30" RowDefinitions="*">
-          <TextBox Text="{Binding AssetsPath, Mode=TwoWay}" Margin="0,0,5,0" Height="32" Grid.Column="0" Grid.Row="0" Classes.Error="{Binding !AssetsPathIsValid}">
-            <ToolTip.Tip>
+        <pkxcon:FileTextField Path="{Binding AssetsPath}" Type="Directory" Title="Select the assets path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="18">
+          <ToolTip.Tip>
 Optional if custom Pokemon are used, needed for default built-in Pokemon. Useful when exporting and sharing Pokemon data.
 
 From there you can include {{AssetsPath}} in a model path. Don't include a trailing slash or backslash.
 This is the "Game Files" folder from Colosseum Tool or GoD-Tool. Make sure to "export" everything containing "pkx".
-              
+  
 In Colosseum/GoD Tool:
 Go in 4. Import/Export files
 Filter with "pkx"
 Enter "export"
-            </ToolTip.Tip>
-          </TextBox>
-          <Button Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding BrowseAssetsPath}" Grid.Column="1" Grid.Row="0">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
-          </Button>
-        </Grid>
+          </ToolTip.Tip>
+        </pkxcon:FileTextField>
 
         <!--Log-->
         <Grid Margin="16,0,16,8" Grid.Column="2" Grid.Row="0" Grid.RowSpan="18" ColumnDefinitions="*" RowDefinitions="20,*">

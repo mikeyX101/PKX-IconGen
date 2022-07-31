@@ -365,7 +365,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
 
-        #region Paths Logic
         private void VerifyBlenderExecutable()
         {
             BlenderCheckResult? blenderCheckResult = BlenderVersionChecker.CheckExecutable(BlenderPath);
@@ -391,48 +390,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             BlenderWarningClass = "Error";
             BlenderWarningText = "Please specify a Blender executable.";
         }
-
-        [UsedImplicitly]
-        public async void BrowseBlenderPath()
-        {
-            List<FileDialogFilter>? filters = null;
-            if (IsWindows)
-            {
-                filters = new List<FileDialogFilter>();
-                List<string> extensions = new() {
-                    "exe"
-                };
-                filters.Add(new FileDialogFilter { Extensions = extensions, Name = "Blender" });
-            }
-
-            string? path = await FileDialogHelper.GetFile("Select a Blender executable...", filters);
-            if (path != null)
-            {
-                BlenderPath = path;
-            }
-        }
-
-        [UsedImplicitly]
-        public async void BrowseOutputPath()
-        {
-            string? folder = await FileDialogHelper.GetFolder("Select an output path...");
-            if (folder != null)
-            {
-                OutputPath = folder;
-            }
-        }
-
-        [UsedImplicitly]
-        public async void BrowseAssetsPath()
-        {
-            string? folder = await FileDialogHelper.GetFolder("Select the assets path...");
-            if (folder != null)
-            {
-                AssetsPath = folder;
-            }
-        }
-        #endregion
-
+        
         #region Pokemon List
         private void PokemonRenderDataSelection_SelectionChanged(object? sender, SelectionModelSelectionChangedEventArgs<PokemonRenderData> e)
         {

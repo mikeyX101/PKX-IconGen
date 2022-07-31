@@ -1,19 +1,18 @@
-<UserControl 
-        xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
-        xmlns:cp="using:AvaloniaColorPicker"
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+             xmlns:cp="using:AvaloniaColorPicker"
         
-        mc:Ignorable="d" d:DesignWidth="512" d:DesignHeight="768"
-        x:Class="PKXIconGen.AvaloniaUI.Views.Controls.ColorDisplay"
-        Name="Root" Width="315" Height="40">
+             mc:Ignorable="d" d:DesignWidth="512" d:DesignHeight="768"
+             x:Class="PKXIconGen.AvaloniaUI.Views.Controls.ColorDisplay"
+             Name="Root" Width="315" Height="40">
     <UserControl.Resources>
         <conv:AvaloniaColorHexStringConverter x:Key="AvaloniaColorHexStringConverter"/>
     </UserControl.Resources>
     <StackPanel Orientation="Horizontal">
-        <cp:ColorButton Margin="2" Color="{Binding #Root.Color, Mode=TwoWay }" IsEnabled="{Binding #Root.IsEnabled}" />
+        <cp:ColorButton Margin="2" Color="{Binding #Root.Color, Mode=TwoWay}" IsEnabled="{Binding #Root.IsEnabled}" />
         <StackPanel Orientation="Horizontal">
             <TextBlock Text="{Binding #Root.Color, Converter={StaticResource AvaloniaColorHexStringConverter}}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
