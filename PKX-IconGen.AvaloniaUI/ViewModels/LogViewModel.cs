@@ -37,7 +37,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public LogViewModel()
         {
-            logBuilder = new StringBuilder(1024);
+            logBuilder = new StringBuilder(4096);
         }
 
         [UsedImplicitly]
@@ -50,6 +50,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public void WriteLine(ReadOnlyMemory<char> line)
         {
             logBuilder.Append(line).Append(NewLine);
+            ScheduleUpdate();
+        }
+        public void Write(ReadOnlyMemory<char> line)
+        {
+            logBuilder.Append(line);
             ScheduleUpdate();
         }
 

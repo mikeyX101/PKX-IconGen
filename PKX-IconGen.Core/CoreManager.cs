@@ -26,6 +26,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using LinqToDB.EntityFrameworkCore;
+using Serilog.Core;
 
 namespace PKXIconGen.Core
 {
@@ -50,7 +51,7 @@ namespace PKXIconGen.Core
                 return NullableLogger ?? throw new ArgumentNullException(nameof(NullableLogger), "CoreManager.Initiate must be called before using the Logger.");
             }
         }
-        private static ILogger? NullableLogger { get; set; }
+        private static Logger? NullableLogger { get; set; }
 
         public static Task? DatabaseMigrationTask { get; private set; }
         
@@ -100,7 +101,7 @@ namespace PKXIconGen.Core
 #endif
                 .WriteTo.Console(textFormatter)
                 .CreateLogger();
-
+            
             LinqToDBForEFTools.Initialize();
             
             Logger.Information("Starting database migration Task");

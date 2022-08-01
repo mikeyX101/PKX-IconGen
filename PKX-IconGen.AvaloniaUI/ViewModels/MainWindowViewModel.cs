@@ -462,8 +462,17 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     break;
                 }
 
-                await job.RenderAsync(this, renderCancelTokenSource.Token, LogVM.WriteLine);
-                NbOfPokemonRendered++;
+                try
+                {
+                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutput: LogVM.Write);
+                    NbOfPokemonRendered++;
+                }
+                catch (OperationCanceledException)
+                {
+                    LogVM.WriteLine("Rendering cancelled.".AsMemory());
+
+                    break;
+                }
             }
 
             EndRender();

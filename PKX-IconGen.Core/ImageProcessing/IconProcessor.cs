@@ -20,6 +20,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.ImageProcessing.Extensions;
@@ -47,7 +48,7 @@ namespace PKXIconGen.Core.ImageProcessing
         private string FinalOutput { get; init; }
 
         private Game Game { get; set; }
-
+        
         public IconProcessor(RenderJob job, string finalOutput)
         {
             Job = job;
@@ -56,16 +57,20 @@ namespace PKXIconGen.Core.ImageProcessing
         }
 
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-        public async Task ProcessJobAsync()
+        public async Task ProcessJobAsync(CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
-            Task<Image> mainTask = ProcessIconAsync(Job.MainPath, IconMode.Normal);
-            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath, IconMode.Shiny);
-            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath, IconMode.NormalSecondary) : null;
-            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath, IconMode.ShinySecondary) : null;
+            Task<Image> mainTask = ProcessIconAsync(Job.MainPath, IconMode.Normal, token, stepOutput);
+            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath, IconMode.Shiny, token, stepOutput);
+            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath, IconMode.NormalSecondary, token, stepOutput) : null;
+            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath, IconMode.ShinySecondary, token, stepOutput) : null;
 
             Image[] mainImages = await Task.WhenAll(mainTask, shinyTask);
             using Image main = mainImages[0];
             using Image shiny = mainImages[1];
+            
+            token?.ThrowIfCancellationRequested();
+            stepOutput?.Invoke($"Combining images for {Job.Data.Output}...".AsMemory());
+            CoreManager.Logger.Information("Combining images for {Name}...", Job.Data.Output);
             main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
             if (secondaryTask != null && shinySecondaryTask != null)
@@ -77,16 +82,18 @@ namespace PKXIconGen.Core.ImageProcessing
 
                 main.Mutate(ctx => ctx.AddImageRight(secondary));
             }
+            stepOutput?.Invoke("Done!\n".AsMemory());
+            CoreManager.Logger.Information("Combining images for {Name}...Done!", Job.Data.Output);
 
             await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.Output + ".png"));
         }
 
-        private async Task<Image> ProcessIconAsync(string path, IconMode mode)
+        private async Task<Image> ProcessIconAsync(string path, IconMode mode, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
             Image img = await Image.LoadAsync(path);
             byte scale = (byte)Job.Scale;
             float glowIntensity = (float)Math.Round(Math.Pow(scale * 2, 0.80));
-            CoreManager.Logger.Debug("Glow Radius: {Radius}", glowIntensity);
+            token?.ThrowIfCancellationRequested();
             
             switch (mode)
             {
@@ -95,11 +102,15 @@ namespace PKXIconGen.Core.ImageProcessing
                     {
                         if (Job.Data.Render.Glow.Alpha != 0)
                         {
+                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Output}\n".AsMemory());
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}", mode, Job.Data.Output);
                             ctx.ApplyEdgeGlow(Job.Data.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
                         }
-                        
+                        token?.ThrowIfCancellationRequested();
                         if (Job.Data.Render.Background.Alpha != 0)
                         {
+                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Output}\n".AsMemory());
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}", mode, Job.Data.Output);
                             using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Render.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
                         }
@@ -111,11 +122,15 @@ namespace PKXIconGen.Core.ImageProcessing
                     {
                         if (Job.Data.Shiny.Render.Glow.Alpha != 0)
                         {
+                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Output}\n".AsMemory());
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}", mode, Job.Data.Output);
                             ctx.ApplyEdgeGlow(Job.Data.Shiny.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
                         }
-                        
+                        token?.ThrowIfCancellationRequested();
                         if (Job.Data.Shiny.Render.Background.Alpha != 0)
                         {
+                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Output}\n".AsMemory());
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}", mode, Job.Data.Output);
                             using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Shiny.Render.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
                         }
@@ -125,14 +140,17 @@ namespace PKXIconGen.Core.ImageProcessing
                 default:
                     throw new InvalidOperationException("Selected mode was somehow not a value of the enum.");
             }
+            token?.ThrowIfCancellationRequested();
             
             return await GameProcess(img);
         }
 
-        private Task<Image> GameProcess(Image img)
+        private Task<Image> GameProcess(Image img, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
             return Task.Run(() =>
             {
+                stepOutput?.Invoke($"Applying style for game {Game} for {Job.Data.Output}...".AsMemory());
+                CoreManager.Logger.Information("Applying style for game {Game} for {Name}...", Game, Job.Data.Output);
                 switch (Game)
                 {
                     case Game.PokemonColosseum:
@@ -148,6 +166,8 @@ namespace PKXIconGen.Core.ImageProcessing
                     case Game.Undefined or _:
                         throw new InvalidOperationException("Selected style was 'Undefined'.");
                 }
+                stepOutput?.Invoke("Done!\n".AsMemory());
+                CoreManager.Logger.Information("Applying style for game {Game} for {Name}...Done!", Game, Job.Data.Output);
                 return img;
             });
         }

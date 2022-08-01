@@ -129,7 +129,10 @@ namespace PKXIconGen.Core.Services
 
         private void Log(ReadOnlyMemory<char> s)
         {
-            CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
+            if (LogBlender)
+            {
+                CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
+            }
         }
 
         public async Task RunAsync(CancellationToken? cancellationToken = null)

@@ -98,8 +98,6 @@ On Linux: Path to the Blender executable. It is possible to specify a link or an
 Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
 
 USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
-
-&lt;List used args here&gt;
           </ToolTip.Tip>
         </TextBox>
 

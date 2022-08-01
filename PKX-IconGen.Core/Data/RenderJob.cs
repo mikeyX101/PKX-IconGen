@@ -42,7 +42,7 @@ namespace PKXIconGen.Core.Data
             FinalOutput = finalOutput;
         }
         
-        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken token, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null)
+        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
             IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(blenderRunnerInfo, this);
             if (onOutput != null)
@@ -53,11 +53,15 @@ namespace PKXIconGen.Core.Data
             {
                 runner.OnFinish += onFinish;
             }
-            
+
+            stepOutput?.Invoke($"Rendering {Data.Output}...".AsMemory());
+            CoreManager.Logger.Information("Rendering {Name}...", Data.Output);
             await runner.RunAsync(token);
+            stepOutput?.Invoke("Done!\n".AsMemory());
+            CoreManager.Logger.Information("Rendering {Name}...Done!", Data.Output);
 
             IconProcessor iconProcessor = new(this, FinalOutput);
-            await iconProcessor.ProcessJobAsync();
+            await iconProcessor.ProcessJobAsync(token, stepOutput);
         }
     }
 }
