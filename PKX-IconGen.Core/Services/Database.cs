@@ -196,8 +196,6 @@ namespace PKXIconGen.Core.Services
             if (PokemonRenderDataTable != null)
             {
                 await using IDataContext ctx = this.CreateLinqToDbContext();
-
-                prd.BuiltIn = false;
                 return await ctx.UpdateAsync(prd);
             }
             

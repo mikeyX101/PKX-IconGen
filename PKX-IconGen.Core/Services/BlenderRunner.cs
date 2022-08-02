@@ -45,7 +45,7 @@ namespace PKXIconGen.Core.Services
         internal static class BlenderRunners
         {
             internal static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, RenderJob job) => 
-                new BlenderRunner(blenderRunnerInfo, null, new string[]
+                new BlenderRunner(blenderRunnerInfo, "render", new string[]
                 {
                     "--background",
                     "--python", Paths.Render
@@ -71,7 +71,7 @@ namespace PKXIconGen.Core.Services
 
         private BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string? templateName, string[] arguments, string input)
         {
-            TemplateName = templateName ?? "";
+            TemplateName = templateName ?? "template";
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
             AssetsPath = blenderRunnerInfo.AssetsPath;

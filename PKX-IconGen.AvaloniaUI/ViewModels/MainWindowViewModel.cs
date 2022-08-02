@@ -165,17 +165,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref enableDeleteButton, value);
         }
 
-        private bool builtInsHidden;
-        public bool BuiltInsHidden
-        {
-            get => builtInsHidden;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref builtInsHidden, value);
-                PokemonRenderDataItemsSource.Refresh();
-            }
-        }
-
         #endregion
 
         #region Assets Path
@@ -255,13 +244,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .AutoRefresh(prd => prd.Name)
                 .AutoRefresh(prd => prd.Render)
-                .AutoRefresh(prd => prd.BuiltIn)
                 .BindToObservableList(out IObservableList<PokemonRenderData> observableList)
                 .Subscribe();
             
             observableList.Connect()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Filter(prd => !builtInsHidden || !prd.BuiltIn)
                 .Sort(SortExpressionComparer<PokemonRenderData>.Ascending(prd => prd.Name))
                 .Bind(out pokemonRenderDataItems)
                 .Subscribe();
@@ -345,7 +332,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 SelectedRenderScale = settings.RenderScale;
 
                 EnableDeleteButton = false;
-                BuiltInsHidden = false;
 
                 AssetsPath = settings.AssetsPath;
             
@@ -394,7 +380,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #region Pokemon List
         private void PokemonRenderDataSelection_SelectionChanged(object? sender, SelectionModelSelectionChangedEventArgs<PokemonRenderData> e)
         {
-            EnableDeleteButton = SelectedPokemonRenderData.Count > 0 && SelectedPokemonRenderData.All(prd => !prd.BuiltIn);
+            EnableDeleteButton = SelectedPokemonRenderData.Count > 0;
             NbOfRenders = SelectedPokemonRenderData.Count;
         }
 
@@ -433,6 +419,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 if (await DoDBQueryAsync(db => db.DeletePokemonRenderDataAsync(PokemonRenderDataSelection.SelectedItems)) > 0)
                 {
                     PokemonRenderDataItemsSource.Remove(PokemonRenderDataSelection.SelectedItems);
+                    PokemonRenderDataSelection.Clear();
                 }
             }
         }
@@ -464,7 +451,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
                 try
                 {
-                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutput: LogVM.Write);
+                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutput: LogVM.WriteLine);
                     NbOfPokemonRendered++;
                 }
                 catch (OperationCanceledException)

@@ -171,12 +171,9 @@ Please note that this can drastically increase the rendering and processing time
           </Panel>
         </Grid>
         <!--Pokemon-->
-        <TextBlock Text="Hide Built-Ins" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="10" />
-        <CheckBox IsChecked="{Binding BuiltInsHidden}" IsThreeState="False" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="11" />
         <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
           <TextBlock Text="Name" Grid.Column="0" />
           <TextBlock Text="Model" Grid.Column="1" />
-          <TextBlock Text="Built In" HorizontalAlignment="Center" Grid.Column="2" />
         </Grid>
         <ListBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
@@ -186,11 +183,10 @@ Please note that this can drastically increase the rendering and processing time
           </ListBox.Styles>
           <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type data:PokemonRenderData}">
-                <Grid ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*">
+                <Grid ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
-                  <i:Icon IsVisible="{Binding BuiltIn}" VerticalAlignment="Center" FontSize="16" Value="mdi-check" Grid.Column="2" />
-                  <Panel HorizontalAlignment="Right" Grid.Column="3">
+                  <Panel HorizontalAlignment="Right" Grid.Column="2">
                     <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand, FallbackValue=None}" CommandParameter="{Binding .}">
                       <i:Icon FontSize="16" Value="mdi-pencil" />
                     </Button>
@@ -204,7 +200,7 @@ Please note that this can drastically increase the rendering and processing time
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
         <pkxcon:FileTextField Path="{Binding AssetsPath}" Type="Directory" Title="Select the assets path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="18">
           <ToolTip.Tip>
-Optional if custom Pokemon are used, needed for default built-in Pokemon. Useful when exporting and sharing Pokemon data.
+Optional if custom Pokemon are used, needed for default Pokemon. Useful when exporting and sharing Pokemon data.
 
 From there you can include {{AssetsPath}} in a model path. Don't include a trailing slash or backslash.
 This is the "Game Files" folder from Colosseum Tool or GoD-Tool. Make sure to "export" everything containing "pkx".

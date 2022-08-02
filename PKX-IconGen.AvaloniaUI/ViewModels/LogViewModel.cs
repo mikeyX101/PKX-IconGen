@@ -30,7 +30,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private readonly StringBuilder logBuilder;
         public string LogText => logBuilder.ToString();
 
-        private const ushort UpdateRate = 1000;
+        private const ushort UpdateRate = 250;
         private Task? updatePendingTask;
 
         public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
@@ -67,6 +67,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     this.RaisePropertyChanged(nameof(LogText));
                 });
                 await updatePendingTask;
+                
+                updatePendingTask.Dispose();
                 updatePendingTask = null;
             }
         }

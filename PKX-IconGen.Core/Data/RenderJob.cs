@@ -57,7 +57,6 @@ namespace PKXIconGen.Core.Data
             stepOutput?.Invoke($"Rendering {Data.Output}...".AsMemory());
             CoreManager.Logger.Information("Rendering {Name}...", Data.Output);
             await runner.RunAsync(token);
-            stepOutput?.Invoke("Done!\n".AsMemory());
             CoreManager.Logger.Information("Rendering {Name}...Done!", Data.Output);
 
             IconProcessor iconProcessor = new(this, FinalOutput);

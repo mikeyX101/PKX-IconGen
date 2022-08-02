@@ -64,18 +64,6 @@ namespace PKXIconGen.Core.Data
         [JsonIgnore]
         public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
 
-        private bool builtIn;
-        [Column, JsonIgnore] 
-        public bool BuiltIn
-        {
-            get => builtIn;
-            set
-            {
-                builtIn = value;
-                OnPropertyChanged();
-            }
-        }
-
         private RenderData render;
         [Column, JsonPropertyName("render")]
         public RenderData Render
@@ -101,21 +89,21 @@ namespace PKXIconGen.Core.Data
 
         public PokemonRenderData()
         {
+            Id = 0;
+            
             name = "";
             OutputName = "";
-            builtIn = false;
 
             render = new RenderData();
             shiny = new ShinyInfo();
         }
         
-        public PokemonRenderData(uint id, string name, string? outputName, bool builtIn, RenderData render, ShinyInfo shiny)
+        public PokemonRenderData(uint id, string name, string? outputName, RenderData render, ShinyInfo shiny)
         {
             Id = id;
 
             this.name = name;
             OutputName = !string.IsNullOrEmpty(outputName) ? outputName : null;
-            this.builtIn = builtIn;
 
             this.render = render;
             this.shiny = shiny;
@@ -123,7 +111,7 @@ namespace PKXIconGen.Core.Data
 
         [JsonConstructor]
         public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny) 
-            : this(0, name, outputName, false, render, shiny)
+            : this(0, name, outputName, render, shiny)
         {
 
         }
@@ -162,7 +150,6 @@ namespace PKXIconGen.Core.Data
             return other is not null &&
                 Id == other.Id &&
                 Name == other.Name &&
-                BuiltIn == other.BuiltIn &&
                 Render.Equals(other.Render) &&
                 Shiny.Equals(other.Shiny);
         }
@@ -186,14 +173,13 @@ namespace PKXIconGen.Core.Data
                 Id, 
                 Name,
                 OutputName,
-                BuiltIn,
                 Render,
                 Shiny
             ).GetHashCode();
 
         public object Clone()
         {
-            return new PokemonRenderData(Id, Name, OutputName, BuiltIn, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
+            return new PokemonRenderData(Id, Name, OutputName, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
