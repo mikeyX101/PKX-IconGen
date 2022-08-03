@@ -77,13 +77,29 @@ def import_model(model: str, shiny_hue: Optional[float]):
             bsdf.inputs[blender_compat.principaled_bsdf_in.specular].default_value = 0
             bsdf.inputs[blender_compat.principaled_bsdf_in.roughness].default_value = 1
 
+            #  Fix alpha output being in Emission Strength/Transmission Roughness
+            transmission_roughness_input = bsdf.inputs[blender_compat.principaled_bsdf_in.transmission_roughness]
+            if len(transmission_roughness_input.links) > 0:
+                alpha_link = transmission_roughness_input.links[0]
+                alpha_node = alpha_link.from_node
+                tree.links.remove(alpha_link)
+                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.alpha])
+
+            emission_strength_input = bsdf.inputs[blender_compat.principaled_bsdf_in.emission_strength]
+            if len(emission_strength_input.links) > 0:
+                alpha_link = emission_strength_input.links[0]
+                alpha_node = alpha_link.from_node
+                tree.links.remove(alpha_link)
+                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.alpha])
+
             if shiny_hue is not None and tree.nodes.find(MIXNODE_NAME) == -1:
                 mix_node = tree.nodes.new("ShaderNodeMixRGB")
                 mix_node.name = MIXNODE_NAME
                 mix_node.blend_type = "HUE"
 
-                color_data_node = tree.nodes["Principled BSDF"].inputs[0].links[0].from_node  # Base Color
-                tree.links.remove(tree.nodes["Principled BSDF"].inputs[0].links[0])
+                color_link = bsdf.inputs[blender_compat.principaled_bsdf_in.base_color].links[0]
+                color_data_node = color_link.from_node  # Base Color
+                tree.links.remove(color_link)
 
                 rgb_node = tree.nodes.new("ShaderNodeRGB")
                 rgb_node.name = RGBNODE_NAME
@@ -93,7 +109,7 @@ def import_model(model: str, shiny_hue: Optional[float]):
                 rgb.append(0)
                 rgb_node.outputs[0].default_value = rgb
                 tree.links.new(color_data_node.outputs[0], mix_node.inputs[1])
-                tree.links.new(mix_node.outputs[0], tree.nodes["Principled BSDF"].inputs[0])
+                tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.base_color])
                 mix_node.inputs[0].default_value = 0
 
 

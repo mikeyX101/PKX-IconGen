@@ -27,10 +27,21 @@ class MappingInputs(object):
 
 class PrincipaledBSDFInputs(object):
 
-    def __init__(self, metallic, specular, roughness):
+    def __init__(self,
+                 base_color,
+                 metallic,
+                 specular,
+                 roughness,
+                 transmission_roughness,
+                 emission_strength,
+                 alpha):
+        self.base_color = base_color
         self.metallic = metallic
         self.specular = specular
         self.roughness = roughness
+        self.transmission_roughness = transmission_roughness
+        self.emission_strength = emission_strength
+        self.alpha = alpha
 
 
 class PrincipaledBSDFOutputs(object):
@@ -49,9 +60,13 @@ blender_ver = bpy.app.version
 
 # Defaults, Blender 2.93 LTS
 principaled_bsdf_in: PrincipaledBSDFInputs = PrincipaledBSDFInputs(
+    base_color=0,
     metallic=4,
     specular=5,
-    roughness=7
+    roughness=7,
+    transmission_roughness=16,
+    emission_strength=18,
+    alpha=19
 )
 principaled_bsdf_out: PrincipaledBSDFOutputs = PrincipaledBSDFOutputs(
     bsdf=0
@@ -66,7 +81,11 @@ tex_image_in: TexImageInputs = TexImageInputs(
 # Overrides
 if (3, 0, 0) <= blender_ver < (3, 3, 0):
     principaled_bsdf_in = PrincipaledBSDFInputs(
+        base_color=0,
         metallic=6,
         specular=7,
-        roughness=9
+        roughness=9,
+        transmission_roughness=18,
+        emission_strength=20,
+        alpha=21
     )

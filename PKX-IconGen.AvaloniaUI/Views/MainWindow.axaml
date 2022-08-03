@@ -125,7 +125,7 @@ Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Ba
 
 Pokémon Colosseum has no cropping.
 
-Pokémon XD uses the same rendering as Colosseum, but circle crops are used for each icon.
+Pokémon XD uses the same rendering as Colosseum, but rounded corners are used for each icon.
 
 Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline. NOT AVAILABLE YET.
           </ToolTip.Tip>
@@ -171,7 +171,7 @@ Please note that this can drastically increase the rendering and processing time
           </Panel>
         </Grid>
         <!--Pokemon-->
-        <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.25*, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
+        <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
           <TextBlock Text="Name" Grid.Column="0" />
           <TextBlock Text="Model" Grid.Column="1" />
         </Grid>

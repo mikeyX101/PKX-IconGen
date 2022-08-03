@@ -162,7 +162,7 @@ namespace PKXIconGen.Core.ImageProcessing
                         break;
 
                     case Game.PokemonXDGaleOfDarkness:
-                        img.Mutate(ctx => ctx.CircleCrop());
+                        img.Mutate(ctx => ctx.PokemonXDCrop());
                         break;
 
                     case Game.PokemonBattleRevolution:

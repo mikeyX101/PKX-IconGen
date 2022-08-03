@@ -37,6 +37,16 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
                 Mode = ResizeMode.Crop
             }).ApplyRoundedCorners(size.Width / 2);
         }
+        
+        public static IImageProcessingContext PokemonXDCrop(this IImageProcessingContext processingContext)
+        {
+            Size size = processingContext.GetCurrentSize();
+            return processingContext.Resize(new ResizeOptions
+            {
+                Size = processingContext.GetCurrentSize(),
+                Mode = ResizeMode.Crop
+            }).ApplyRoundedCorners(size.Width / 2.5f);
+        }
 
         // This method can be seen as an inline implementation of an `IImageProcessor`:
         // (The combination of `IImageOperations.Apply()` + this could be replaced with an `IImageProcessor`)
