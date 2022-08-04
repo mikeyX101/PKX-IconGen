@@ -37,7 +37,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class MenuViewModel : ViewModelBase
     {
-        private MainWindowViewModel MainWindow { get; }
+        public MainWindowViewModel MainWindow { get; init; }
 
         public MenuViewModel(MainWindowViewModel mainWindow)
         {
@@ -134,6 +134,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public void ToggleLogBlender()
         {
             MainWindow.LogBlender = !MainWindow.LogBlender;
+        }
+        
+        [UsedImplicitly]
+        public void ToggleSaturationBoost()
+        {
+            MainWindow.SaturationBoost = !MainWindow.SaturationBoost;
         }
         
         [UsedImplicitly]

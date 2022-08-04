@@ -45,6 +45,9 @@ namespace PKXIconGen.Core.Data
 
         [Column]
         public bool LogBlender { get; set; }
+        
+        [Column, DefaultValue(true)]
+        public bool SaturationBoost { get; set; }
 
         public Settings()
         {
@@ -56,6 +59,7 @@ namespace PKXIconGen.Core.Data
             RenderScale = RenderScale.X1;
             AssetsPath = "";
             LogBlender = false;
+            SaturationBoost = true;
         }
     }
 }

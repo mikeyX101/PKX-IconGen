@@ -48,7 +48,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public LogViewModel LogVM { get; init; }
         #endregion
 
-        #region Log Blender
+        #region Other Settings
         private bool logBlender;
         public bool LogBlender
         {
@@ -56,6 +56,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             set { 
                 DoDBQuery(db => db.SaveSettingsProperty(s => s.LogBlender, value));
                 this.RaiseAndSetIfChanged(ref logBlender, value); 
+            }
+        }
+        
+        private bool saturationBoost;
+        public bool SaturationBoost
+        {
+            get => saturationBoost;
+            set { 
+                DoDBQuery(db => db.SaveSettingsProperty(s => s.SaturationBoost, value));
+                this.RaiseAndSetIfChanged(ref saturationBoost, value); 
             }
         }
         #endregion
@@ -319,6 +329,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             
                 // Fields
                 LogBlender = settings.LogBlender;
+                SaturationBoost = settings.SaturationBoost;
 
                 BlenderPath = settings.BlenderPath;
                 VerifyBlenderExecutable();
@@ -442,7 +453,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             NbOfPokemonRendered = 0;
             CurrentlyRendering = true;
 
-            foreach (RenderJob job in SelectedPokemonRenderData.Select(prd => new RenderJob(prd, SelectedRenderScale, SelectedIconStyle.Game, OutputPath)))
+            Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
+            foreach (RenderJob job in SelectedPokemonRenderData.Select(prd => new RenderJob(prd, settings)))
             {
                 if (renderCancelTokenSource.IsCancellationRequested)
                 {

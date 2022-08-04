@@ -14,13 +14,13 @@ namespace PKXIconGen.Core.Data
         public PokemonRenderData Data { get; init; }
 
         [JsonPropertyName("scale")]
-        public RenderScale Scale { get; init; }
+        public RenderScale Scale => Settings.RenderScale;
 
-        [JsonPropertyName("game")]
-        public Game Game { get; init; }
+        [JsonPropertyName("game")] 
+        public Game Game => Settings.CurrentGame;
 
         [JsonIgnore]
-        private string FinalOutput { get; init; }
+        private Settings Settings { get; init; }
 
         [JsonIgnore]
         private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
@@ -34,12 +34,10 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("shiny_secondary_path")]
         public string ShinySecondaryPath => BlenderOutputPath + "_shiny_secondary.png";
 
-        public RenderJob(PokemonRenderData data, RenderScale scale, Game game, string finalOutput)
+        public RenderJob(PokemonRenderData data, Settings settings)
         {
             Data = data;
-            Scale = scale;
-            Game = game;
-            FinalOutput = finalOutput;
+            Settings = settings;
         }
         
         public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
@@ -59,7 +57,7 @@ namespace PKXIconGen.Core.Data
             await runner.RunAsync(token);
             CoreManager.Logger.Information("Rendering {Name}...Done!", Data.Output);
 
-            IconProcessor iconProcessor = new(this, FinalOutput);
+            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost);
             await iconProcessor.ProcessJobAsync(token, stepOutput);
         }
     }

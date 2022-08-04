@@ -46,13 +46,16 @@ namespace PKXIconGen.Core.ImageProcessing
         private bool HasSecondary => Job.Data.Render.SecondaryCamera.HasValue;
 
         private string FinalOutput { get; init; }
+        
+        private bool SaturationBoost { get; init; }
 
         private Game Game { get; set; }
         
-        public IconProcessor(RenderJob job, string finalOutput)
+        public IconProcessor(RenderJob job, string finalOutput, bool saturationBoost)
         {
             Job = job;
             FinalOutput = finalOutput;
+            SaturationBoost = saturationBoost;
             Game = job.Game;
         }
 
@@ -92,6 +95,11 @@ namespace PKXIconGen.Core.ImageProcessing
         private async Task<Image> ProcessIconAsync(string path, IconMode mode, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
             Image img = await Image.LoadAsync(path);
+            if (SaturationBoost)
+            {
+                img.Mutate(ctx => ctx.Saturate(1.1f));
+            }
+            
             byte scale = (byte)Job.Scale;
             float glowIntensity = (float)Math.Round(Math.Pow(scale * 2, 0.80));
             token?.ThrowIfCancellationRequested();

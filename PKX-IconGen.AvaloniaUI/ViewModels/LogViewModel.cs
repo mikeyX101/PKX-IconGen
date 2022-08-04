@@ -27,17 +27,19 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public class LogViewModel : ViewModelBase
     {
+        public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
+        
         private readonly StringBuilder logBuilder;
         public string LogText => logBuilder.ToString();
 
         private const ushort UpdateRate = 250;
         private Task? updatePendingTask;
 
-        public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
-
+        private const int initialCapacity = 8192;
+        private const int maxCapacity = initialCapacity * 4;
         public LogViewModel()
         {
-            logBuilder = new StringBuilder(4096);
+            logBuilder = new StringBuilder(initialCapacity, maxCapacity);
         }
 
         [UsedImplicitly]
@@ -49,15 +51,35 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private const char NewLine = '\n';
         public void WriteLine(ReadOnlyMemory<char> line)
         {
+            AssureMaxCapacity(line, true);
             logBuilder.Append(line).Append(NewLine);
             ScheduleUpdate();
         }
         public void Write(ReadOnlyMemory<char> line)
         {
+            AssureMaxCapacity(line, false);
             logBuilder.Append(line);
             ScheduleUpdate();
         }
 
+        private void AssureMaxCapacity(ReadOnlyMemory<char> line, bool hasNewLine)
+        {
+            int lengthToInsert = line.Length + (hasNewLine ? 1 : 0);
+            while (logBuilder.Length + lengthToInsert > maxCapacity)
+            {
+                int lastNewLineIndex = logBuilder.Length - 1;
+                for (int i = 0; i < logBuilder.Length; i++)
+                {
+                    if (logBuilder[i] == '\n')
+                    {
+                        lastNewLineIndex = i;
+                        break;
+                    }
+                }
+                // Remove lines until new line is insertable
+                logBuilder.Remove(0, lastNewLineIndex + 1);
+            }
+        }
         private async void ScheduleUpdate()
         {
             if (updatePendingTask == null)

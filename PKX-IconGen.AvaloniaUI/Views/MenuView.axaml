@@ -22,57 +22,65 @@
              xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
+             x:DataType="vm:MenuViewModel" x:CompileBindings="True"
              x:Class="PKXIconGen.AvaloniaUI.Views.MenuView">
   <Menu>
     <MenuItem Header="_File">
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Import..." Command="{Binding Import}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Import..." Command="{ReflectionBinding Import}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-import" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{Binding ExportCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{ReflectionBinding ExportCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{ReflectionBinding ExportBlenderCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-blender-software" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="Quit" Command="{Binding Quit}">
+      <MenuItem Header="Quit" Command="{ReflectionBinding Quit}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-close-thick" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Settings">
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Log Blender to Logs folder" Command="{Binding ToggleLogBlender}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Log Blender to Logs folder" Command="{ReflectionBinding ToggleLogBlender}">
         <MenuItem.Icon>
           <i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Clean temporary folders" Command="{Binding CleanTempFolders}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="10% Saturation Boost" Command="{ReflectionBinding ToggleSaturationBoost}">
+        <MenuItem.Icon>
+          <i:Icon IsVisible="{Binding MainWindow.SaturationBoost}" Value="mdi-check" />
+        </MenuItem.Icon>
+      </MenuItem>
+    </MenuItem>
+    <MenuItem Header="_Tools">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Clean temporary folders" Command="{ReflectionBinding CleanTempFolders}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-delete-clock" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Help">
-      <MenuItem Header="PKX-IconGen on Github" Command="{Binding GitHub}">
+      <MenuItem Header="PKX-IconGen on Github" Command="{ReflectionBinding GitHub}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-github" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Importer Addon on Github" Command="{Binding ImporterAddon}">
+      <MenuItem Header="Importer Addon on Github" Command="{ReflectionBinding ImporterAddon}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-github" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="About" Command="{Binding About}">
+      <MenuItem Header="About" Command="{ReflectionBinding About}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-help-circle" />
         </MenuItem.Icon>
