@@ -21,11 +21,13 @@ __all__ = [
     "color",
     "edit_mode",
     "light",
+    "material",
     "object_shading",
     "pokemon_render_data",
     "render_data",
     "render_job",
     "shiny_info",
+    "texture",
     "vector2",
     "vector3"
 ]

@@ -38,7 +38,7 @@ namespace PKXIconGen.Core.Data
 
         public ShinyInfo(float? hue, RenderData renderData)
         {
-            Hue = hue;
+            Hue = hue.HasValue ? Math.Clamp(hue.Value, 0, 1) : hue;
             Render = renderData;
         }
 

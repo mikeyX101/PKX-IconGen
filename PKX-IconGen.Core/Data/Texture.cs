@@ -37,16 +37,16 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
     [JsonPropertyName("path")]
     public readonly string? ImagePath { get; init; }
 
-    [JsonPropertyName("maps")]
-    public readonly Dictionary<string,JsonSerializableVector2> MaterialMappings { get; init; }
+    [JsonPropertyName("mats")]
+    public readonly List<Material> Materials { get; init; }
     
     [JsonConstructor]
-    public Texture(string textureName, string? imagePath, Dictionary<string,JsonSerializableVector2> materialMappings)
+    public Texture(string textureName, string? imagePath, List<Material>? materials)
     {
         TextureName = textureName;
         ImagePath = imagePath;
 
-        MaterialMappings = materialMappings;
+        Materials = materials ?? new List<Material>();
     }
     
     public bool Equals(Texture other)
@@ -54,7 +54,7 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
         return
             TextureName == other.TextureName &&
             ImagePath == other.ImagePath &&
-            MaterialMappings.SequenceEqual(other.MaterialMappings);
+            Materials.SequenceEqual(other.Materials);
     }
     public override bool Equals(object? obj)
     {
@@ -71,5 +71,5 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
         return !(left == right);
     }
 
-    public readonly override int GetHashCode() => (TextureName, ImagePath, MaterialMappings).GetHashCode();
+    public readonly override int GetHashCode() => (TextureName, ImagePath, Materials).GetHashCode();
 }

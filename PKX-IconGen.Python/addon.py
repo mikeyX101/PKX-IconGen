@@ -25,6 +25,7 @@ import blender_compat
 import utils
 from data.color import Color
 from data.light import Light, LightType
+from data.material import Material
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
 from data.camera import Camera
@@ -176,7 +177,9 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
         for texture in prd.render.textures:
             texture_copies.append(copy.deepcopy(texture))
         render_textures = make_texture_dict(texture_copies)
-        utils.set_textures(texture_copies)
+
+        shiny_hue = utils.rgb2hue(context.scene.shiny_color) if prd.shiny.hue is not None else None
+        utils.set_textures(texture_copies, shiny_hue, mode)
         context.scene.current_texture_image = None
 
         return {'FINISHED'}
@@ -253,7 +256,8 @@ def update_mode(self, context):
 
     for texture in list(render_textures.values()):
         utils.reset_texture_images(texture)
-    self.current_texture_image = None
+
+    reset_texture_props(self)
 
     utils.switch_model(prd.shiny, mode)
     sync_prd_to_props()
@@ -356,6 +360,7 @@ def update_current_texture_image(self, context):
     value = self.current_texture_image
 
     if value is not None:
+        self.texture_material = None
         if value.name not in preview_textures:
             preview_tex = preview_textures.new(value.name)
             preview_tex.image_size = value.size
@@ -363,12 +368,11 @@ def update_current_texture_image(self, context):
 
         texture: Texture = get_texture_obj(value.name)
         self.custom_texture_path = texture.path or ""
-        if len(texture.maps) > 0:
-            first_material_name: str = next(iter(texture.maps.keys()))
-            first_material_mapping: Vector2 = texture.maps[first_material_name]
+        if len(texture.mats) > 0:
+            first_material: Material = next(iter(texture.mats))
 
-            self.texture_material = bpy.data.materials[first_material_name]
-            self.texture_mapping = first_material_mapping.to_mathutils_vector()
+            # Materials updates are made in update_texture_material()
+            self.texture_material = bpy.data.materials[first_material.name]
 
 
 def update_custom_texture_path(self, context):
@@ -402,36 +406,81 @@ def update_texture_material(self, context):
 
     if value is not None:
         texture: Texture = get_texture_obj(self.current_texture_image.name)
-        if value.name not in texture.maps.keys():
-            new_mapping: Vector2 = Vector2(0, 0)
-            texture.maps[value.name] = new_mapping
+        mat: Optional[Material] = texture.get_material_by_name(value.name)
+        if mat is None:
+            mat = Material(value.name, Vector2(0, 0), None)
+            texture.mats.append(mat)
 
-        self.texture_mapping = texture.maps[value.name].to_mathutils_vector()
+        self.texture_mapping = mat.map.to_mathutils_vector()
+        if mat.hue is not None:
+            self.texture_hue = utils.hue2rgb(mat.hue)
+    else:
+        self.texture_mapping = Vector2(0, 0).to_mathutils_vector()
+        self.texture_use_hue = False
 
 
 def update_texture_mapping(self, context):
     value = self.texture_mapping
 
     original_img = self.current_texture_image
-    texture: Texture = get_texture_obj(self.current_texture_image.name)
-    custom_img = None
-    if texture.path is not None:
-        custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
+    selected_mat = self.texture_material
+    if original_img is not None and selected_mat is not None:
+        texture: Texture = get_texture_obj(self.current_texture_image.name)
+        mat: Optional[Material] = texture.get_material_by_name(self.texture_material.name)
+        custom_img = None
+        if texture.path is not None:
+            custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
 
-    texture.maps[self.texture_material.name] = Vector2(value[0], value[1])
+        mat.map = Vector2(value[0], value[1])
 
-    utils.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
+        utils.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
+
+
+def update_texture_use_hue(self, context):
+    value = self.texture_use_hue
+
+    original_img = self.current_texture_image
+    selected_mat = self.texture_material
+    if original_img is not None and selected_mat is not None:
+        texture: Texture = get_texture_obj(original_img.name)
+        mat: Optional[Material] = texture.get_material_by_name(selected_mat.name)
+        if value and mat.hue is None:
+            mat.hue = 1
+            self.texture_hue = [1, 0, 0]
+        elif not value:
+            mat.hue = None
+
+            shiny_hue = utils.rgb2hue(self.shiny_color) if prd.shiny.hue is not None else None
+            utils.set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
+
+
+def update_texture_hue(self, context):
+    value = self.texture_hue
+
+    original_img = self.current_texture_image
+    selected_mat = self.texture_material
+    if original_img is not None and selected_mat is not None:
+        texture: Texture = get_texture_obj(original_img.name)
+
+        mat: Optional[Material] = texture.get_material_by_name(selected_mat.name)
+        mat.hue = utils.rgb2hue(value) if value is not None else None
+
+        shiny_hue = utils.rgb2hue(self.shiny_color) if prd.shiny.hue is not None else None
+        utils.set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
+
+        if not self.texture_use_hue and value is not None:
+            self.texture_use_hue = True
 
 
 def get_texture_obj(name: str) -> Texture:
     if name not in render_textures.keys():  # Should only be the case when selecting the image
-        render_textures[name] = Texture(name, None, get_initial_texture_mapping(name))
+        render_textures[name] = Texture(name, None, get_initial_texture_materials(name))
 
     return render_textures[name]
 
 
-def get_initial_texture_mapping(name: str) -> dict[str, Vector2]:
-    mat_maps: dict[str, Vector2] = dict[str, Vector2]()
+def get_initial_texture_materials(name: str) -> list[Material]:
+    mats_data: list[Material] = list[Material]()
 
     image_obj = bpy.data.images[name]
     mats = utils.get_image_materials(image_obj)
@@ -439,14 +488,12 @@ def get_initial_texture_mapping(name: str) -> dict[str, Vector2]:
     for mat in mats:
         if mat.node_tree is not None:
             for node in mat.node_tree.nodes:
-                if utils.is_node_teximage_with_image(node, image_obj):
-                    img_vector_input_node = node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
-                    if img_vector_input_node.bl_idname == "ShaderNodeMapping":
-                        x = img_vector_input_node.inputs[1].default_value[0]
-                        y = img_vector_input_node.inputs[1].default_value[1]
-                        mat_maps[mat.name] = Vector2(x, y)
+                if node.bl_idname == "ShaderNodeMapping":
+                    x = node.inputs[1].default_value[0]
+                    y = node.inputs[1].default_value[1]
+                    mats_data.append(Material(mat.name, Vector2(x, y), None))
 
-    return mat_maps
+    return mats_data
 
 
 def make_texture_dict(textures: List[Texture]) -> dict[str, Texture]:
@@ -454,6 +501,11 @@ def make_texture_dict(textures: List[Texture]) -> dict[str, Texture]:
     for texture in textures:
         texture_dict[texture.name] = texture
     return texture_dict
+
+
+def reset_texture_props(scene):
+    scene.current_texture_image = None
+    scene.texture_material = None
 
 
 # State sync functions
@@ -512,7 +564,8 @@ def sync_props_to_scene():
     if prd.shiny.hue is not None:
         utils.change_shiny_color(scene.shiny_color)
 
-    utils.set_textures(list(render_textures.values()))
+    shiny_hue = utils.rgb2hue(scene.shiny_color) if prd.shiny.hue is not None else None
+    utils.set_textures(list(render_textures.values()), shiny_hue, mode)
 
     utils.update_shading(ObjectShading[scene.shading], None)
 
@@ -821,6 +874,23 @@ TEXTURESPROPS = [
          max=50,
          update=update_texture_mapping
      )),
+    ('texture_use_hue',
+     bpy.props.BoolProperty(
+         name="Use texture hue",
+         description="Use custom hue for this texture",
+         default=False,
+         update=update_texture_use_hue
+     )),
+    ('texture_hue',
+     bpy.props.FloatVectorProperty(
+         name="Texture hue",
+         description="Filter to put on top of this texture for the shiny effect, goes over the general color",
+         subtype="COLOR",
+         default=(1, 1, 1),
+         min=0,
+         max=1,
+         update=update_texture_hue
+     )),
 ]
 
 SHINYPROPS = [
@@ -972,9 +1042,13 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                         row.label(text="Scale is invalid, texture will not be saved until the scale is an integer scale: 1x, 2x, 3x, etc.", icon="ERROR")
                     row = image_col.row(align=True)
                     row.operator(PKXReplaceByAssetsPathOperator.bl_idname)
-                elif prop_name == "texture_mapping":
+                elif prop_name == "texture_mapping" or prop_name == "texture_use_hue":
                     row = image_col.row(align=True)
                     row.enabled = scene.texture_material is not None
+                    row.prop(scene, prop_name)
+                elif prop_name == "texture_hue":
+                    row = image_col.row(align=True)
+                    row.enabled = scene.texture_use_hue
                     row.prop(scene, prop_name)
                 else:
                     row = image_col.row(align=True)
@@ -1066,7 +1140,7 @@ def register(data: PokemonRenderData):
     utils.remove_objects(removed_objects)
 
     textures: List[Texture] = list(render_textures.values())
-    utils.set_textures(textures)
+    utils.set_textures(textures, prd.shiny.hue, mode)
 
     utils.update_shading(ObjectShading[scene.shading], None)
 

@@ -18,6 +18,8 @@
 
 import getopt
 import math
+import os
+import sys
 
 import bpy
 from typing import List, Optional, Final
@@ -30,11 +32,26 @@ from data.shiny_info import ShinyInfo
 from data.texture import Texture
 from importer import import_hsd
 
-RGBNODE_NAME: Final[str] = "PKX_ShinyRGB"
-MIXNODE_NAME: Final[str] = "PKX_MixRGB"
+SHINYRGBNODE_NAME: Final[str] = "PKX_ShinyRGB"
+SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"
 
 cmd_args = None
 assets_path: Optional[str] = None
+
+
+def attach_debugger(debug_egg: str):
+    # https://github.com/sybrenstuvel/random-blender-addons/blob/main/remote_debugger.py
+    eggpath = os.path.abspath(debug_egg)
+
+    if not os.path.exists(eggpath):
+        print(f'Unable to find debug egg at {eggpath}.')
+    else:
+        if not any('pycharm-debug' in p for p in sys.path):
+            sys.path.append(eggpath)
+
+        import pydevd_pycharm
+        pydevd_pycharm.settrace('localhost', port=1090, stdoutToServer=True, stderrToServer=True,
+                                suspend=False)
 
 
 def parse_cmd_args(script_args):
@@ -42,7 +59,7 @@ def parse_cmd_args(script_args):
     global assets_path
 
     if cmd_args is None:
-        cmd_args, _ = getopt.getopt(script_args, "", ["pkx-debug=", "assets-path="])
+        cmd_args, _ = getopt.getopt(script_args, "", ["pkx-debug=", "debug-egg=", "assets-path="])
         for arg, value in cmd_args:
             if arg == "--assets-path" and value != "":
                 assets_path = value
@@ -92,9 +109,9 @@ def import_model(model: str, shiny_hue: Optional[float]):
                 tree.links.remove(alpha_link)
                 tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.alpha])
 
-            if shiny_hue is not None and tree.nodes.find(MIXNODE_NAME) == -1:
+            if tree.nodes.find(SHINYMIXNODE_NAME) == -1:
                 mix_node = tree.nodes.new("ShaderNodeMixRGB")
-                mix_node.name = MIXNODE_NAME
+                mix_node.name = SHINYMIXNODE_NAME
                 mix_node.blend_type = "HUE"
 
                 color_link = bsdf.inputs[blender_compat.principaled_bsdf_in.base_color].links[0]
@@ -102,11 +119,14 @@ def import_model(model: str, shiny_hue: Optional[float]):
                 tree.links.remove(color_link)
 
                 rgb_node = tree.nodes.new("ShaderNodeRGB")
-                rgb_node.name = RGBNODE_NAME
+                rgb_node.name = SHINYRGBNODE_NAME
                 tree.links.new(rgb_node.outputs[0], mix_node.inputs[2])
 
-                rgb = hue2rgb(shiny_hue)
-                rgb.append(0)
+                if shiny_hue is not None:
+                    rgb = hue2rgb(shiny_hue)
+                    rgb.append(0)
+                else:
+                    rgb = [0, 0, 0, 0]
                 rgb_node.outputs[0].default_value = rgb
                 tree.links.new(color_data_node.outputs[0], mix_node.inputs[1])
                 tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.base_color])
@@ -118,8 +138,8 @@ def show_shiny_mats():
     for mat in mats:
         tree = mat.node_tree
         if tree is not None:
-            if tree.nodes.find("PKX_MixRGB") != -1:
-                mix_node = tree.nodes["PKX_MixRGB"]
+            if tree.nodes.find(SHINYMIXNODE_NAME) != -1:
+                mix_node = tree.nodes[SHINYMIXNODE_NAME]
                 mix_node.inputs[0].default_value = 1
             else:
                 raise Exception("Shiny nodes was not setup for material: " + mat.name)
@@ -130,8 +150,8 @@ def hide_shiny_mats():
     for mat in mats:
         tree = mat.node_tree
         if tree is not None:
-            if tree.nodes.find("PKX_MixRGB") != -1:
-                mix_node = tree.nodes["PKX_MixRGB"]
+            if tree.nodes.find(SHINYMIXNODE_NAME) != -1:
+                mix_node = tree.nodes[SHINYMIXNODE_NAME]
                 mix_node.inputs[0].default_value = 0
             else:
                 raise Exception("Shiny nodes was not setup for material: " + mat.name)
@@ -146,7 +166,7 @@ def change_shiny_color(rgb: List[float]):
     for mat in mats:
         tree = mat.node_tree
         if tree is not None:
-            tree.nodes[RGBNODE_NAME].outputs[0].default_value = rgba
+            tree.nodes[SHINYRGBNODE_NAME].outputs[0].default_value = rgba
 
 
 def show_message_box(message, title, icon='INFO'):
@@ -229,7 +249,7 @@ def image_is_integer_scale(original_img, new_img) -> bool:
     return width_scale_check and height_scale_check and ratio_check
 
 
-def set_textures(textures: List[Texture]):
+def set_textures(textures: List[Texture], shiny_hue: Optional[float], mode: EditMode):
     for texture in textures:
         original_img = bpy.data.images[texture.name]
         custom_img = None
@@ -238,10 +258,12 @@ def set_textures(textures: List[Texture]):
             set_custom_image(bpy.data.images[texture.name], full_path)
             custom_img = bpy.data.images.load(filepath=full_path, check_existing=True)
 
-        for mat in texture.maps.keys():
-            set_material_map(custom_img or original_img, bpy.data.materials[mat],
-                             texture.maps[mat].x,
-                             texture.maps[mat].y)
+        for mat in texture.mats:
+            set_material_map(custom_img or original_img,
+                             bpy.data.materials[mat.name],
+                             mat.map.x,
+                             mat.map.y)
+            set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
 
 
 def reset_texture_images(texture: Texture):
@@ -268,6 +290,32 @@ def set_material_map(image_obj, mat_obj, x: float, y: float):
                 if img_vector_input_node.bl_idname == "ShaderNodeMapping":
                     img_vector_input_node.inputs[1].default_value[0] = x
                     img_vector_input_node.inputs[1].default_value[1] = y
+
+
+def set_material_hue(mat_obj, texture_hue: Optional[float], shiny_hue: Optional[float], mode: EditMode):
+    tree = mat_obj.node_tree
+    if tree is not None:
+        for node in tree.nodes:
+            if node.name == SHINYRGBNODE_NAME:
+                if texture_hue == 1 or texture_hue is None:
+                    if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
+                        node.outputs[0].default_value = [1, 1, 1, 1]
+                    elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+                        if shiny_hue is not None:
+                            rgb = hue2rgb(shiny_hue)
+                            rgb.append(0)
+                        else:
+                            rgb = [1, 1, 1, 1]
+                        node.outputs[0].default_value = rgb
+                else:
+                    rgb = hue2rgb(texture_hue)
+                    rgb.append(0)
+                    node.outputs[0].default_value = rgb
+            elif node.name == SHINYMIXNODE_NAME:
+                if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY or shiny_hue is None:
+                    node.inputs[0].default_value = 0 if texture_hue == 1 or texture_hue is None else 1
+                elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+                    node.inputs[0].default_value = 1
 
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):
@@ -330,7 +378,7 @@ def hue2rgb(hue: float) -> List[float]:
     hue = convert_range(0, 1, 0, 360, hue)
 
     c: float = sat * val
-    m: float = 0
+    m: float = val - c
     h: float = hue / 60
     x: float = c * (1 - math.fabs(h % 2 - 1))
 
@@ -349,7 +397,7 @@ def hue2rgb(hue: float) -> List[float]:
         rgb = [c, 0, x]
 
     for i in range(len(rgb)):
-        rgb[i] = round(rgb[i] + m)
+        rgb[i] += m
     return rgb
 
 

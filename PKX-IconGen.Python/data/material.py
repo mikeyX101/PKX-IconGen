@@ -18,47 +18,27 @@
 
 from typing import Optional
 
-from .material import Material
 from .vector2 import Vector2
 
 
-class Texture(object):
+class Material(object):
 
-    def __init__(self, name: str, path: Optional[str], mats: Optional[list[Material]]):
+    def __init__(self, name: str, map: Vector2, hue: Optional[float]):
         self.name = name
-        self.path = path
-        self.mats = mats or list()
-
-    def get_material_by_name(self, name: str) -> Optional[Material]:
-        for mat in self.mats:
-            if mat.name == name:
-                return mat
-
-        return None
-
-    def apply_texture(self, name: str) -> Optional[Material]:
-        for mat in self.mats:
-            if mat.name == name:
-                return mat
-
-        return None
+        self.map = map
+        self.hue = hue
 
     @staticmethod
-    def parse_obj(obj: Optional[any]) -> Optional['Texture']:
+    def parse_obj(obj: Optional[any]) -> Optional['Material']:
         if obj is None:
             return obj
 
-        image_path: Optional[str] = None
-        if "path" in obj.__dict__.keys():
-            image_path = obj.path
+        hue: Optional[float] = None
+        if "hue" in obj.__dict__.keys():
+            hue = obj.hue
 
-        mats: list[Material] = list[Material]()
-        if "mats" in obj.__dict__.keys():
-            for material in obj.mats:
-                mats.append(Material.parse_obj(material))
-
-        return Texture(
+        return Material(
             obj.name,
-            image_path,
-            mats
+            Vector2.parse_obj(obj.map),
+            hue
         )

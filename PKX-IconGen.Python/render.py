@@ -69,18 +69,39 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
     utils.remove_objects(prd.get_mode_removed_objects(mode))
 
-    utils.set_textures(prd.get_mode_textures(mode))
+    utils.set_textures(prd.get_mode_textures(mode), prd.shiny.hue, mode)
 
     utils.update_shading(prd.get_mode_shading(mode), None)
 
 
 if __name__ == "__main__":
+    debug_json: Optional[str] = None
+    debug_egg: Optional[str] = None
+    job: RenderJob
+
     utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
-    job_json: str = sys.stdin.readline()
-    print(f"Rendering: {job_json}")
+    for arg, value in utils.cmd_args:
+        if arg == "--pkx-debug":
+            debug_json = value
+        elif arg == "--debug-egg":
+            debug_egg = value
+
+    if debug_json is not None:
+        utils.attach_debugger(debug_egg)
+
+        file = open(debug_json, "r")
+        json = file.readline()
+        file.close()
+
+        print(f"Rendering: {json}")
+        job: RenderJob = RenderJob.from_json(json)
+    else:
+        json = sys.stdin.readline()
+
+        print(f"Rendering: {json}")
+        job: RenderJob = RenderJob.from_json(json)
 
     last_rendered_mode: Optional[EditMode] = None
-    job: RenderJob = RenderJob.from_json(job_json)
     utils.import_model(job.data.render.model, job.data.shiny.hue)
 
     blender_render = bpy.data.scenes["Scene"].render

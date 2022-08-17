@@ -28,14 +28,19 @@ from addon import register
 
 if __name__ == "__main__":
     debug_json: Optional[str] = None
+    debug_egg: Optional[str] = None
     prd: PokemonRenderData
 
     utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
     for arg, value in utils.cmd_args:
         if arg == "--pkx-debug":
             debug_json = value
+        elif arg == "--debug-egg":
+            debug_egg = value
 
     if debug_json is not None:
+        utils.attach_debugger(debug_egg)
+
         file = open(debug_json, "r")
         json = file.readline()
         file.close()
