@@ -35,6 +35,7 @@ using DynamicData;
 using DynamicData.Binding;
 using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Services;
+using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
@@ -189,10 +190,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 DoDBQuery(db => db.SaveSettingsProperty(s => s.AssetsPath, value));
                 this.RaiseAndSetIfChanged(ref assetsPath, value);
                 this.RaisePropertyChanged(nameof(AssetsPathIsValid));
+                this.RaisePropertyChanged(nameof(DefinedAssetsPathIsValid));
             }
         }
         
         public bool AssetsPathIsValid => string.IsNullOrWhiteSpace(AssetsPath) || Directory.Exists(AssetsPath);
+        public bool DefinedAssetsPathIsValid => !string.IsNullOrWhiteSpace(AssetsPath) && Directory.Exists(AssetsPath);
         #endregion
 
         #region Progress
@@ -472,6 +475,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
                     break;
                 }
+                catch (Exception)
+                {
+                    LogVM.WriteLine("An error occured while rendering: Enable Blender logging, try to render again and see logs for details.".AsMemory());
+
+                    break;
+                }
             }
 
             EndRender();
@@ -482,6 +491,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             DisposeCancelToken();
             CurrentlyRendering = false;
+            LogVM.WriteLine("Rendering ended.".AsMemory());
         }
 
         private void DisposeCancelToken()

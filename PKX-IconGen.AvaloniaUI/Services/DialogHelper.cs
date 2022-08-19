@@ -29,7 +29,7 @@ namespace PKXIconGen.AvaloniaUI.Services
 {
     public static class DialogHelper
     {
-        private static Dictionary<Type, Type> windowTypeCache = new();
+        private static readonly Dictionary<Type, Type> windowTypeCache = new();
 
         public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
         {

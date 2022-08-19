@@ -195,7 +195,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ReactiveCommand<Unit, Unit> ModifyBlenderDataCommand { get; }
         private async void ModifyBlenderData()
         {
-            DisposeCancelRenderToken();
+            DisposeCancelModifyDataToken();
             modifyBlenderDataCancelTokenSource = new CancellationTokenSource();
 
             CurrentlyModifying = true;
@@ -205,10 +205,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             UpdateBindings();
             
-            DisposeCancelRenderToken();
+            DisposeCancelModifyDataToken();
             CurrentlyModifying = false;
         }
-        private void DisposeCancelRenderToken()
+        private void DisposeCancelModifyDataToken()
         {
             // Make sure tokens are canceled
             if (modifyBlenderDataCancelTokenSource != null)
@@ -256,7 +256,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public void Dispose()
         {
-            DisposeCancelRenderToken();
+            DisposeCancelModifyDataToken();
         }
     }
 }

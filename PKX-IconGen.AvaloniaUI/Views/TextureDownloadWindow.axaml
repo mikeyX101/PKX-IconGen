@@ -1,0 +1,66 @@
+<!--
+    PKX-IconGen.AvaloniaUI - Avalonia user interface for PKX-IconGen.Core
+    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
+        xmlns:core_serv="using:PKXIconGen.Core.Services"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="285"
+        x:Class="PKXIconGen.AvaloniaUI.Views.TextureDownloadWindow"
+        x:DataType="vm:TextureDownloadWindowViewModel" x:CompileBindings="True"
+        Title="Texture Download"
+        Icon="/Assets/gen-icon.ico"
+        
+        Width="500" Height="285" CanResize="False">
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            BackgroundSource="Digger"
+            TintColor="Black"
+            TintOpacity="0.75"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <Panel Margin="16">
+      <StackPanel Orientation="Vertical">
+        <TextBlock LineHeight="25">
+This will download the HD textures for Pokemon from my texture pack.
+The download is around 200MB. It is required for the HD built-ins.
+The textures will be installed in "{{AssetsPath}}/icon-gen/hd-mikeyx/".
+The download is "latest.zip" from the folder from the link below.
+        </TextBlock>
+        <TextBox Margin="8" IsReadOnly="True" Text="{x:Static core_serv:TexturesInstaller.MEGA_FOLDER_URL}"></TextBox>
+        <TextBlock Margin="0,8,8,8" HorizontalAlignment="Center" Text="{Binding StatusText}" />
+        <ProgressBar Margin="8" Height="20" VerticalAlignment="Bottom" Minimum="0" Maximum="100" Value="{Binding Progress}" Width="400" />
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+          <Button IsVisible="{Binding !Downloading}" Width="150" Margin="8" Command="{ReflectionBinding Download}">
+            <TextBlock TextAlignment="Center">Download &amp; Install</TextBlock>
+          </Button>
+          
+          <Button IsVisible="{Binding Downloading}" Width="150" Margin="8" Command="{ReflectionBinding Cancel}">
+            <TextBlock TextAlignment="Center">Cancel</TextBlock>
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </Panel>
+  </Panel>
+  
+</Window>

@@ -34,19 +34,14 @@ namespace PKXIconGen.Core
     {
         internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
 
-        private static Assembly? _lastLoggingAssembly;
         private static IDisposable? _disposableProperty;
         public static ILogger Logger
         {
             get {
                 // Update calling assembly
                 Assembly callingAssembly = Assembly.GetCallingAssembly();
-                if (callingAssembly != _lastLoggingAssembly)
-                {
-                    _disposableProperty?.Dispose();
-                    _disposableProperty = Serilog.Context.LogContext.PushProperty(LoggingAssemblyPropertyName, callingAssembly.GetName().Name);
-                    _lastLoggingAssembly = callingAssembly;
-                }
+                _disposableProperty?.Dispose();
+                _disposableProperty = Serilog.Context.LogContext.PushProperty(LoggingAssemblyPropertyName, callingAssembly.GetName().Name);
                 
                 return NullableLogger ?? throw new ArgumentNullException(nameof(NullableLogger), "CoreManager.Initiate must be called before using the Logger.");
             }

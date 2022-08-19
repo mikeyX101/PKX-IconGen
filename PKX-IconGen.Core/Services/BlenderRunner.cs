@@ -80,7 +80,10 @@ namespace PKXIconGen.Core.Services
             Input = Encoding.UTF8.GetBytes(input);
             ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
 
-            OnOutput += Log;
+            if (LogBlender)
+            {
+                OnOutput += Log;
+            }
         }
 
         #region Event
@@ -129,10 +132,7 @@ namespace PKXIconGen.Core.Services
 
         private void Log(ReadOnlyMemory<char> s)
         {
-            if (LogBlender)
-            {
-                CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
-            }
+            CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
         }
 
         public async Task RunAsync(CancellationToken? cancellationToken = null)
@@ -220,6 +220,8 @@ namespace PKXIconGen.Core.Services
             {
                 OnOutput?.Invoke(("EXCEPTION> An error occured :\n" + e.StackTrace).AsMemory());
                 OnOutput?.Invoke("Check Blender Path, it is probably invalid.".AsMemory());
+                
+                throw;
             }
             catch (CliWrap.Exceptions.CommandExecutionException e)
             {
@@ -231,10 +233,14 @@ namespace PKXIconGen.Core.Services
                 {
                     OnOutput?.Invoke(("EXCEPTION> An error occured in Blender, see logs for further details :\n" + e.StackTrace).AsMemory());
                 }
+
+                throw;
             }
             catch (Exception e)
             {
                 OnOutput?.Invoke(("EXCEPTION> An unknown error occured :\n" + e.StackTrace).AsMemory());
+                
+                throw;
             }
             finally
             {

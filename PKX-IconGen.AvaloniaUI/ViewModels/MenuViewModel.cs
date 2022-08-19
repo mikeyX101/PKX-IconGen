@@ -145,11 +145,18 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public async void CleanTempFolders()
         {
-            bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder.\nThis operation is irreversible.");
+            bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder and the downloaded HD textures. The HD textures will remain installed.\nThis operation is irreversible.");
             if (delete)
             {
                 await Core.Utils.CleanTempFolders();
             }
+        }
+        
+        [UsedImplicitly]
+        public async void DownloadTextures()
+        {
+            using TextureDownloadWindowViewModel vm = new(MainWindow.AssetsPath);
+            await DialogHelper.ShowWindowDialog<TextureDownloadWindowViewModel, object>(vm);
         }
 
         [UsedImplicitly]

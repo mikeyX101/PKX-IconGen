@@ -20,6 +20,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using JetBrains.Annotations;
 using ReactiveUI;
 
@@ -48,11 +49,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             logBuilder.Clear();
             this.RaisePropertyChanged(nameof(LogText));
         }
-        private const char NewLine = '\n';
         public void WriteLine(ReadOnlyMemory<char> line)
         {
             AssureMaxCapacity(line, true);
-            logBuilder.Append(line).Append(NewLine);
+            logBuilder.Append(line).Append('\n');
             ScheduleUpdate();
         }
         public void Write(ReadOnlyMemory<char> line)
@@ -86,7 +86,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             {
                 updatePendingTask = Task.Run(async () => {
                     await Task.Delay(UpdateRate);
-                    this.RaisePropertyChanged(nameof(LogText));
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        this.RaisePropertyChanged(nameof(LogText));
+                    });
                 });
                 await updatePendingTask;
                 
