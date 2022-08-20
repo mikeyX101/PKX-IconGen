@@ -27,9 +27,7 @@ using AvaloniaColorPicker;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
 using PKXIconGen.Core;
-using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
-using Serilog.Core;
 
 namespace PKXIconGen.AvaloniaUI
 {

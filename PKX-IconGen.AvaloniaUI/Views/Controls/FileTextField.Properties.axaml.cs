@@ -17,7 +17,6 @@
 */
 #endregion
 
-using System;
 using Avalonia;
 using Avalonia.Data;
 using JetBrains.Annotations;

@@ -18,10 +18,7 @@
 #endregion
 
 using System;
-using System.ComponentModel;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data.Blender
 {

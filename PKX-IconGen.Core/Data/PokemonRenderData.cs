@@ -26,7 +26,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore;
 using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data

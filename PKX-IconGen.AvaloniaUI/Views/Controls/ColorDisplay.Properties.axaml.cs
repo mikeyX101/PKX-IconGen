@@ -19,8 +19,6 @@
 
 using Avalonia;
 using Avalonia.Data;
-using Avalonia.Media;
-using AvaloniaColorPicker;
 using JetBrains.Annotations;
 using AvaloniaColor = Avalonia.Media.Color;
 

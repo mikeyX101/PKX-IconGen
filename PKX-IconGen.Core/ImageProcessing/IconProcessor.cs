@@ -25,10 +25,8 @@ using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.ImageProcessing.Extensions;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Convolution;
 
 namespace PKXIconGen.Core.ImageProcessing
 {

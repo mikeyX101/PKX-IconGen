@@ -17,16 +17,16 @@
 */
 #endregion
 
-using PKXIconGen.Core.Logging;
-using PKXIconGen.Core.Services;
-using Serilog;
-using Serilog.Exceptions;
 using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using LinqToDB.EntityFrameworkCore;
+using PKXIconGen.Core.Logging;
+using PKXIconGen.Core.Services;
+using Serilog;
 using Serilog.Core;
+using Serilog.Exceptions;
 
 namespace PKXIconGen.Core
 {

@@ -17,7 +17,6 @@
 */
 #endregion
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
