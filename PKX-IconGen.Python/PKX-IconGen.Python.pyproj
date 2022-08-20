@@ -40,18 +40,23 @@
     <Compile Include="importer\util.py" />
     <Compile Include="importer\__init__.py" />
     <Compile Include="modify_data.py" />
-    <Compile Include="scene_generator.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="importer\" />
     <Folder Include="data\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="blender_compat.py" />
+    <Content Include="debugging\debug.blend" />
+    <Content Include="debugging\debug.sh" />
+    <Content Include="debugging\omstar.json" />
     <Content Include="importer\.gitignore" />
     <Content Include="importer\changes.txt" />
     <Content Include="importer\github.txt" />
     <Content Include="importer\LICENSE" />
     <Content Include="importer\README.md" />
+    <Content Include="render.py" />
+    <Content Include="utils.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

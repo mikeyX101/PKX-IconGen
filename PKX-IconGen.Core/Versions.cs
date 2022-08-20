@@ -26,6 +26,6 @@ namespace PKXIconGen.Core
         public static string ImporterCommit => "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
         public static DateTime ImporterDate => new(2021, 08, 27);
 
-        public static string AddonVersion => "0.8.0";
+        public static string AddonVersion => "0.2.8";
     }
 }

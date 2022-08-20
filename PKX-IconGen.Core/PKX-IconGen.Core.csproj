@@ -10,7 +10,7 @@
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.3.2</AssemblyVersion>
+    <AssemblyVersion>0.2.4</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.4.0</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
@@ -19,7 +19,7 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.3.2</PackageVersion>
+    <PackageVersion>0.2.4</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
