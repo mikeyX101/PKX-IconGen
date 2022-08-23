@@ -52,7 +52,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private RenderData CurrentRenderData => ShowShiny ? Data.Shiny.Render : Data.Render;
 
         public string Title { get; init; }
-        private IBlenderRunnerInfo BlenderRunnerInfo { get; init; }
+        public IBlenderRunnerInfo BlenderRunnerInfo { get; init; }
 
         #region General
         public string Name

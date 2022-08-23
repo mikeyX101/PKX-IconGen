@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -109,10 +110,11 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         
         private async Task<string?> OpenDialog()
         {
+            string initialDirectory = string.IsNullOrWhiteSpace(Path) || Regex.IsMatch(Path, "^{{AssetsPath}}/?$") ? AssetsPath + '/' : Path;
             return Type switch
             {
-                FileSelectType.Directory => await FileDialogHelper.GetFolder(Title,!string.IsNullOrWhiteSpace(Path) ? Path : AssetsPath),
-                FileSelectType.ModelDat or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters,!string.IsNullOrWhiteSpace(Path) ? Path : AssetsPath),
+                FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),
+                FileSelectType.ModelDat or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters, initialDirectory),
                 _ => throw new InvalidOperationException("Unknown FileSelectType, somehow?")
             };
         }

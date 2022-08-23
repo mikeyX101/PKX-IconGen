@@ -113,7 +113,7 @@ Output name for the rendered file. If unspecified, uses the Pokemon's name.
       </Grid>
       
       <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
-      <pkxuc:FileTextField Path="{Binding Model}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." Grid.Column="1" Grid.Row="3">
+      <pkxuc:FileTextField Path="{Binding Model}" AssetsPath="{Binding BlenderRunnerInfo.AssetsPath}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." Grid.Column="1" Grid.Row="3">
         <ToolTip.Tip>
           Path to the Pokemon model. It should be a .dat file.
 
@@ -139,7 +139,7 @@ If your shiny model is in the assets folder, you can specify {{AssetsPath}} inst
 Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
           </ToolTip.Tip>
         </RadioButton>
-        <pkxuc:FileTextField Path="{Binding ShinyModel}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." IsEnabled="{Binding #ShinyModel.IsChecked}" Grid.Column="1" Grid.Row="2" />
+        <pkxuc:FileTextField Path="{Binding ShinyModel}" AssetsPath="{Binding BlenderRunnerInfo.AssetsPath}" IsAssetsPathField="True" Type="ModelDat" Title="Select a model..." IsEnabled="{Binding #ShinyModel.IsChecked}" Grid.Column="1" Grid.Row="2" />
         
         <TextBlock Text="Background:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="0" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="0">
