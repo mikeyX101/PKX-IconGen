@@ -21,7 +21,8 @@ import bpy
 import bpy.utils.previews
 import os
 
-import blender_compat
+import bpy_extras.view3d_utils
+
 import utils
 from data.color import Color
 from data.light import Light, LightType
@@ -183,6 +184,81 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
         context.scene.current_texture_image = None
 
         return {'FINISHED'}
+
+
+# From operator_modal_view3d_raycast.py
+class PKXCameraFocusOperator(bpy.types.Operator):
+    """Move camera focus to a place you leftclick, rightclick or 'esc' to cancel"""
+    bl_idname = "view3d.pkx_camera_focus_cast"
+    bl_label = "Click Focus"
+
+    def modal(self, context, event):
+        if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
+            # allow navigation
+            return {'PASS_THROUGH'}
+        elif event.type == 'LEFTMOUSE':
+            """Run this function on left mouse, execute the ray cast"""
+            # get the context arguments
+            scene = context.scene
+            region = context.region
+            rv3d = context.region_data
+            coord = event.mouse_region_x, event.mouse_region_y
+
+            # get the ray from the viewport and mouse
+            view_vector = bpy_extras.view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+            ray_origin = bpy_extras.view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+
+            ray_target = ray_origin + view_vector
+
+            def visible_objects_and_duplis():
+                """Loop over (object, matrix) pairs (mesh only)"""
+
+                depsgraph = context.evaluated_depsgraph_get()
+                for dup in depsgraph.object_instances:
+                    if dup.is_instance:  # Real dupli instance
+                        obj = dup.instance_object
+                        yield obj, dup.matrix_world.copy()
+                    else:  # Usual object
+                        obj = dup.object
+                        yield obj, obj.matrix_world.copy()
+
+            def obj_ray_cast(obj, matrix):
+                """Wrapper for ray casting that moves the ray into object space"""
+
+                # get the ray relative to the object
+                matrix_inv = matrix.inverted()
+                ray_origin_obj = matrix_inv @ ray_origin
+                ray_target_obj = matrix_inv @ ray_target
+                ray_direction_obj = ray_target_obj - ray_origin_obj
+
+                # cast the ray
+                success, location, normal, face_index = obj.ray_cast(ray_origin_obj, ray_direction_obj)
+
+                if success:
+                    return location, normal, face_index
+                else:
+                    return None, None, None
+
+            for obj, matrix in visible_objects_and_duplis():
+                if obj.type == 'MESH':
+                    hit, normal, face_index = obj_ray_cast(obj, matrix)
+                    if hit is not None:
+                        hit_world = matrix @ hit
+                        scene.focus = hit_world
+
+            return {'FINISHED'}
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        if context.space_data.type == 'VIEW_3D':
+            context.window_manager.modal_handler_add(self)
+            return {'RUNNING_MODAL'}
+        else:
+            self.report({'WARNING'}, "Active space must be a View3d")
+            return {'CANCELLED'}
 
 
 class PKXSaveOperator(bpy.types.Operator):
@@ -983,7 +1059,12 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         col = layout.column()
         col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
         for (prop_name, _) in CAMERAPROPS:
-            if prop_name == "fov":
+            if prop_name == "focus":
+                if scene.is_ortho:
+                    row = col.row(align=True)
+                    row.prop(scene, prop_name)
+                    col.operator(PKXCameraFocusOperator.bl_idname)
+            elif prop_name == "fov":
                 if not scene.is_ortho:
                     row = col.row(align=True)
                     row.prop(scene, prop_name)
@@ -1116,6 +1197,7 @@ CLASSES = [
     PKXResetDeletedOperator,
     PKXReplaceByAssetsPathOperator,
     PKXCopyRemovedObjectsOperator,
+    PKXCameraFocusOperator,
     PKXCopyTexturesOperator
 ]
 
