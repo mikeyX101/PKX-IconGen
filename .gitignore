@@ -460,6 +460,7 @@ $RECYCLE.BIN/
 !PKX-IconGen.Python/debugging/*
 PKX-IconGen.Python/debugging/debug.blend
 PKX-IconGen.Python/debugging/*.json
+PKX-IconGen.Python/debugging/*.blend1
 
 # PKX/DAT
 *.pkx

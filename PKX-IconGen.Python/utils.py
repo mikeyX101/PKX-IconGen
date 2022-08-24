@@ -281,6 +281,14 @@ def is_node_teximage_with_image(node, image_obj) -> bool:
     return node.bl_idname == "ShaderNodeTexImage" and node.image.name == image_obj.name
 
 
+def is_custom_texture_used(texture_path: str, textures: List[Texture]):
+    for texture in textures:
+        if texture.path is not None and get_absolute_asset_path(texture.path) == texture_path:
+            return True
+
+    return False
+
+
 def set_material_map(image_obj, mat_obj, x: float, y: float):
     tree = mat_obj.node_tree
     if tree is not None:

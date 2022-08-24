@@ -56,6 +56,7 @@ removed_objects: List[str] = list()
 render_textures: dict[str, Texture] = dict()
 custom_texture_path_invalid: bool = False
 custom_texture_scale_invalid: bool = False
+custom_texture_reused: bool = False
 preview_textures = bpy.utils.previews.new()
 camera = None
 camera_focus = None
@@ -85,7 +86,7 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return len(context.scene.custom_texture_path) == 0 or (not custom_texture_path_invalid and not custom_texture_scale_invalid)
+        return len(context.scene.custom_texture_path) == 0 or (not custom_texture_path_invalid and not custom_texture_scale_invalid and not custom_texture_reused)
 
     def execute(self, context):
         if len(context.scene.custom_texture_path) == 0:
@@ -454,6 +455,7 @@ def update_current_texture_image(self, context):
 def update_custom_texture_path(self, context):
     global custom_texture_path_invalid
     global custom_texture_scale_invalid
+    global custom_texture_reused
 
     texture: Texture = get_texture_obj(self.current_texture_image.name)
     value = self.custom_texture_path
@@ -461,17 +463,21 @@ def update_custom_texture_path(self, context):
 
     if value is not None and value != "":
         texture_path: str = utils.get_absolute_asset_path(value)
-        if os.path.isfile(texture_path):
-            custom_texture_path_invalid = False
-            if utils.set_custom_image(original_img, texture_path):
-                texture.path = value
-                custom_texture_scale_invalid = False
-            else:
-                custom_texture_scale_invalid = True
-        else:
-            custom_texture_path_invalid = True
+        custom_texture_path_invalid = not os.path.isfile(texture_path)
+        if not custom_texture_path_invalid:
+            other_textures = list(render_textures.values())
+            other_textures.remove(texture)
+            custom_texture_reused = utils.is_custom_texture_used(texture_path, other_textures)
+            if not custom_texture_reused:
+                custom_texture_reused = False
+                utils.reset_texture_images(texture)
+                custom_texture_scale_invalid = not utils.set_custom_image(original_img, texture_path)
+                if not custom_texture_scale_invalid:
+                    texture.path = value
     else:
         custom_texture_path_invalid = False
+        custom_texture_scale_invalid = False
+        custom_texture_reused = False
 
         utils.reset_texture_images(texture)
         texture.path = None
@@ -1121,6 +1127,9 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                     if custom_texture_scale_invalid:
                         row = image_col.row(align=True)
                         row.label(text="Scale is invalid, texture will not be saved until the scale is an integer scale: 1x, 2x, 3x, etc.", icon="ERROR")
+                    if custom_texture_reused:
+                        row = image_col.row(align=True)
+                        row.label(text="Custom texture cannot be reused due to limitations. Make a copy of the texture and use the copy.", icon="ERROR")
                     row = image_col.row(align=True)
                     row.operator(PKXReplaceByAssetsPathOperator.bl_idname)
                 elif prop_name == "texture_mapping" or prop_name == "texture_use_hue":
