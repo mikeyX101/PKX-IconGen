@@ -21,7 +21,7 @@ namespace PKXIconGen.AvaloniaUI.Models.Dialog
 {
     public enum DialogType
     {
-        Text    = 0,
+        Info    = 0,
         Warning = 1,
         Error   = 2
     }
@@ -34,7 +34,7 @@ namespace PKXIconGen.AvaloniaUI.Models.Dialog
             {
                 DialogType.Warning      => "mdi-alert",
                 DialogType.Error        => "mdi-close-circle",
-                DialogType.Text or _    => ""
+                DialogType.Info or _    => "mdi-information"
             };
         }
 
@@ -44,7 +44,7 @@ namespace PKXIconGen.AvaloniaUI.Models.Dialog
             {
                 DialogType.Warning      => 0xffffc107,
                 DialogType.Error        => 0xffff0000,
-                DialogType.Text or _    => 0xffffffff
+                DialogType.Info or _    => 0xffffffff
             };
         }
         public static string GetTitle(this DialogType dialogType)
@@ -53,7 +53,7 @@ namespace PKXIconGen.AvaloniaUI.Models.Dialog
             {
                 DialogType.Warning      => "Warning",
                 DialogType.Error        => "Error",
-                DialogType.Text or _    => ""
+                DialogType.Info or _    => "Information"
             };
         }
     }

@@ -21,7 +21,7 @@ namespace PKXIconGen.AvaloniaUI.Models;
 
 public enum FileSelectType : byte
 {
-    ModelDat = 0,
+    GCNModel = 0,
     Directory = 1,
     Executable = 2
 }

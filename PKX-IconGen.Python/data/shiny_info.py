@@ -19,12 +19,14 @@
 from typing import Optional
 
 from .render_data import RenderData
+from .shiny_color import ShinyColor
 
 
 class ShinyInfo(object):
     
-    def __init__(self, hue: Optional[float], render: RenderData):
-        self.hue = hue
+    def __init__(self, color1: Optional[ShinyColor], color2: Optional[ShinyColor], render: RenderData):
+        self.color1 = color1
+        self.color2 = color2
         self.render = render
 
     @staticmethod
@@ -32,11 +34,16 @@ class ShinyInfo(object):
         if obj is None:
             return obj
 
-        hue: Optional[float] = None
-        if "hue" in obj.__dict__.keys():
-            hue = obj.hue
+        color1: Optional[ShinyColor] = None
+        if "color1" in obj.__dict__.keys():
+            color1 = ShinyColor.parse_obj(obj.color1)
+
+        color2: Optional[ShinyColor] = None
+        if "color2" in obj.__dict__.keys():
+            color2 = ShinyColor.parse_obj(obj.color2)
 
         return ShinyInfo(
-            hue,
+            color1,
+            color2,
             RenderData.parse_obj(obj.render)
         )

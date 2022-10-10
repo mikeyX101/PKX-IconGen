@@ -28,11 +28,13 @@ import blender_compat
 from data.edit_mode import EditMode
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
+from data.shiny_color import ColorChannel, ShinyColors, ShinyColor
 from data.shiny_info import ShinyInfo
 from data.texture import Texture
 from importer import import_hsd
 
-SHINYRGBNODE_NAME: Final[str] = "PKX_ShinyRGB"
+SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
+SHINYCOLOR2_NAME: Final[str] = "PKX_ShinyColor2"
 SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"
 
 cmd_args = None
@@ -73,7 +75,7 @@ def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
 
-def import_model(model: str, shiny_hue: Optional[float]):
+def import_model(model: str, color1: ShinyColor, color2: ShinyColor):
     print(f"Assets Path: {assets_path}")
     if assets_path is not None:
         true_path = get_absolute_asset_path(model)
@@ -90,47 +92,61 @@ def import_model(model: str, shiny_hue: Optional[float]):
             #  Rough Materials
             # TODO Vertex Lighting
             bsdf = tree.nodes["Principled BSDF"]
-            bsdf.inputs[blender_compat.principaled_bsdf_in.metallic].default_value = 0
-            bsdf.inputs[blender_compat.principaled_bsdf_in.specular].default_value = 0
-            bsdf.inputs[blender_compat.principaled_bsdf_in.roughness].default_value = 1
+            bsdf.inputs[blender_compat.principled_bsdf_in.metallic].default_value = 0
+            bsdf.inputs[blender_compat.principled_bsdf_in.specular].default_value = 0
+            bsdf.inputs[blender_compat.principled_bsdf_in.roughness].default_value = 1
 
             #  Fix alpha output being in Emission Strength/Transmission Roughness
-            transmission_roughness_input = bsdf.inputs[blender_compat.principaled_bsdf_in.transmission_roughness]
+            transmission_roughness_input = bsdf.inputs[blender_compat.principled_bsdf_in.transmission_roughness]
             if len(transmission_roughness_input.links) > 0:
                 alpha_link = transmission_roughness_input.links[0]
                 alpha_node = alpha_link.from_node
                 tree.links.remove(alpha_link)
-                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.alpha])
+                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
-            emission_strength_input = bsdf.inputs[blender_compat.principaled_bsdf_in.emission_strength]
+            emission_strength_input = bsdf.inputs[blender_compat.principled_bsdf_in.emission_strength]
             if len(emission_strength_input.links) > 0:
                 alpha_link = emission_strength_input.links[0]
                 alpha_node = alpha_link.from_node
                 tree.links.remove(alpha_link)
-                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.alpha])
+                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
             if tree.nodes.find(SHINYMIXNODE_NAME) == -1:
-                mix_node = tree.nodes.new("ShaderNodeMixRGB")
-                mix_node.name = SHINYMIXNODE_NAME
-                mix_node.blend_type = "HUE"
+                original_color_link = bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links[0]
+                original_color_node = original_color_link.from_node
+                if original_color_node.bl_idname == "ShaderNodeMixRGB":
+                    tree.links.remove(original_color_link)
 
-                color_link = bsdf.inputs[blender_compat.principaled_bsdf_in.base_color].links[0]
-                color_data_node = color_link.from_node  # Base Color
-                tree.links.remove(color_link)
+                    texture_link = original_color_node.inputs[2].links[0]
+                    texture_node = texture_link.from_node
 
-                rgb_node = tree.nodes.new("ShaderNodeRGB")
-                rgb_node.name = SHINYRGBNODE_NAME
-                tree.links.new(rgb_node.outputs[0], mix_node.inputs[2])
+                    color1_node = tree.nodes.new("ShaderNodeGroup")
+                    color1_node.name = SHINYCOLOR1_NAME
+                    color1_node.node_tree = bpy.data.node_groups['Color1']
 
-                if shiny_hue is not None:
-                    rgb = hue2rgb(shiny_hue)
-                    rgb.append(0)
-                else:
-                    rgb = [0, 0, 0, 0]
-                rgb_node.outputs[0].default_value = rgb
-                tree.links.new(color_data_node.outputs[0], mix_node.inputs[1])
-                tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principaled_bsdf_in.base_color])
-                mix_node.inputs[0].default_value = 0
+                    color2_node = tree.nodes.new("ShaderNodeGroup")
+                    color2_node.name = SHINYCOLOR2_NAME
+                    color2_node.node_tree = bpy.data.node_groups['Color2']
+
+                    mix_node = tree.nodes.new("ShaderNodeMixRGB")
+                    mix_node.name = SHINYMIXNODE_NAME
+                    mix_node.blend_type = "MIX"
+                    mix_node.inputs[0].default_value = 0
+
+                    tree.links.new(texture_node.outputs[0], color1_node.inputs[0])  # Color -> PKX_ShinyColor1.TexColor
+                    tree.links.new(texture_node.outputs[1], color1_node.inputs[1])  # Alpha -> PKX_ShinyColor1.TexAlpha
+
+                    tree.links.new(color1_node.outputs[0], color2_node.inputs[0])  # PKX_ShinyColor1.TexColor -> PKX_ShinyColor2.Image
+                    tree.links.new(color1_node.outputs[1], color2_node.inputs[1])  # PKX_ShinyColor1.TexAlpha -> PKX_ShinyColor2.Alpha
+
+                    tree.links.new(color2_node.outputs[0], mix_node.inputs[2])  # PKX_ShinyColor2.TexColor -> PKX_ShinyMixRGB.Color2
+                    # TODO Manage Alpha
+
+                    tree.links.new(original_color_node.outputs[0], mix_node.inputs[1])  # Color -> PKX_ShinyMixRGB.Color1
+                    tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.base_color])  # PKX_ShinyMixRGB.Color -> BSDF.Base Color
+
+                    if color1 is not None and color2 is not None:
+                        update_all_shiny_colors(color1, color2)
 
 
 def show_shiny_mats():
@@ -142,7 +158,7 @@ def show_shiny_mats():
                 mix_node = tree.nodes[SHINYMIXNODE_NAME]
                 mix_node.inputs[0].default_value = 1
             else:
-                raise Exception("Shiny nodes was not setup for material: " + mat.name)
+                print(f"Shiny nodes were not setup for material: {mat.name}, ignoring.")
 
 
 def hide_shiny_mats():
@@ -154,19 +170,36 @@ def hide_shiny_mats():
                 mix_node = tree.nodes[SHINYMIXNODE_NAME]
                 mix_node.inputs[0].default_value = 0
             else:
-                raise Exception("Shiny nodes was not setup for material: " + mat.name)
+                print(f"Shiny nodes were not setup for material: {mat.name}, ignoring.")
 
 
-def change_shiny_color(rgb: List[float]):
-    rgba: List[float] = []
-    rgba.extend(rgb)
-    rgba.append(1)
+def update_shiny_color(color: int, channel: ColorChannel, shiny_color: ShinyColors):
+    node_group_name = "Color1" if shiny_color is ShinyColors.Color1 else "Color2"
 
-    mats = bpy.data.materials
-    for mat in mats:
+    for mat in bpy.data.materials:
         tree = mat.node_tree
         if tree is not None:
-            tree.nodes[SHINYRGBNODE_NAME].outputs[0].default_value = rgba
+            for node in tree.nodes:
+                if node.bl_idname == "ShaderNodeGroup" and node.node_tree.name == node_group_name:
+                    node.inputs[channel].default_value = color
+
+
+def update_all_shiny_colors(color1: ShinyColor, color2: ShinyColor):
+    for mat in bpy.data.materials:
+        tree = mat.node_tree
+        if tree is not None:
+            for node in tree.nodes:
+                if node.bl_idname == "ShaderNodeGroup":
+                    if node.node_tree.name == "Color1":
+                        node.inputs[ColorChannel.R].default_value = color1.r
+                        node.inputs[ColorChannel.G].default_value = color1.g
+                        node.inputs[ColorChannel.B].default_value = color1.b
+                        node.inputs[ColorChannel.A].default_value = color1.a
+                    elif node.node_tree.name == "Color2":
+                        node.inputs[ColorChannel.R].default_value = color2.r
+                        node.inputs[ColorChannel.G].default_value = color2.g
+                        node.inputs[ColorChannel.B].default_value = color2.b
+                        node.inputs[ColorChannel.A].default_value = color2.a
 
 
 def show_message_box(message, title, icon='INFO'):
@@ -177,7 +210,7 @@ def show_message_box(message, title, icon='INFO'):
 
 
 def switch_model(shiny_info: ShinyInfo, mode: EditMode):
-    if shiny_info.hue is not None:
+    if shiny_info.color1 is not None and shiny_info.color2 is not None:
         if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
             show_shiny_mats()
         else:
@@ -249,7 +282,7 @@ def image_is_integer_scale(original_img, new_img) -> bool:
     return width_scale_check and height_scale_check and ratio_check
 
 
-def set_textures(textures: List[Texture], shiny_hue: Optional[float], mode: EditMode):
+def set_textures(textures: List[Texture]):
     for texture in textures:
         original_img = bpy.data.images[texture.name]
         custom_img = None
@@ -263,7 +296,6 @@ def set_textures(textures: List[Texture], shiny_hue: Optional[float], mode: Edit
                              bpy.data.materials[mat.name],
                              mat.map.x,
                              mat.map.y)
-            set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
 
 
 def reset_texture_images(texture: Texture):
@@ -298,32 +330,6 @@ def set_material_map(image_obj, mat_obj, x: float, y: float):
                 if img_vector_input_node.bl_idname == "ShaderNodeMapping":
                     img_vector_input_node.inputs[1].default_value[0] = x
                     img_vector_input_node.inputs[1].default_value[1] = y
-
-
-def set_material_hue(mat_obj, texture_hue: Optional[float], shiny_hue: Optional[float], mode: EditMode):
-    tree = mat_obj.node_tree
-    if tree is not None:
-        for node in tree.nodes:
-            if node.name == SHINYRGBNODE_NAME:
-                if texture_hue == 1 or texture_hue is None:
-                    if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
-                        node.outputs[0].default_value = [1, 1, 1, 1]
-                    elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-                        if shiny_hue is not None:
-                            rgb = hue2rgb(shiny_hue)
-                            rgb.append(0)
-                        else:
-                            rgb = [1, 1, 1, 1]
-                        node.outputs[0].default_value = rgb
-                else:
-                    rgb = hue2rgb(texture_hue)
-                    rgb.append(0)
-                    node.outputs[0].default_value = rgb
-            elif node.name == SHINYMIXNODE_NAME:
-                if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY or shiny_hue is None:
-                    node.inputs[0].default_value = 0 if texture_hue == 1 or texture_hue is None else 1
-                elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-                    node.inputs[0].default_value = 1
 
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):

@@ -25,7 +25,7 @@ class MappingInputs(object):
         self.location = location
 
 
-class PrincipaledBSDFInputs(object):
+class PrincipledBSDFInputs(object):
 
     def __init__(self,
                  base_color,
@@ -44,7 +44,7 @@ class PrincipaledBSDFInputs(object):
         self.alpha = alpha
 
 
-class PrincipaledBSDFOutputs(object):
+class PrincipledBSDFOutputs(object):
 
     def __init__(self, bsdf):
         self.bsdf = bsdf
@@ -59,7 +59,7 @@ class TexImageInputs(object):
 blender_ver = bpy.app.version
 
 # Defaults, Blender 2.93 LTS
-principaled_bsdf_in: PrincipaledBSDFInputs = PrincipaledBSDFInputs(
+principled_bsdf_in: PrincipledBSDFInputs = PrincipledBSDFInputs(
     base_color=0,
     metallic=4,
     specular=5,
@@ -68,7 +68,7 @@ principaled_bsdf_in: PrincipaledBSDFInputs = PrincipaledBSDFInputs(
     emission_strength=18,
     alpha=19
 )
-principaled_bsdf_out: PrincipaledBSDFOutputs = PrincipaledBSDFOutputs(
+principled_bsdf_out: PrincipledBSDFOutputs = PrincipledBSDFOutputs(
     bsdf=0
 )
 mapping_in: MappingInputs = MappingInputs(
@@ -80,7 +80,7 @@ tex_image_in: TexImageInputs = TexImageInputs(
 
 # Overrides
 if (3, 0, 0) <= blender_ver < (3, 3, 0):
-    principaled_bsdf_in = PrincipaledBSDFInputs(
+    principled_bsdf_in = PrincipledBSDFInputs(
         base_color=0,
         metallic=6,
         specular=7,

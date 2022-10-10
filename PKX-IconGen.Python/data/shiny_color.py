@@ -15,24 +15,57 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+from enum import Enum,IntEnum
 from typing import Optional
 
-from .vector2 import Vector2
 
+class ShinyColor(object):
 
-class Material(object):
-
-    def __init__(self, name: str, map: Vector2):
-        self.name = name
-        self.map = map
+    def __init__(self, r: int, g: int, b: int, a: int):
+        self.r = r
+        self.b = b
+        self.g = g
+        self.a = a
 
     @staticmethod
-    def parse_obj(obj: Optional[any]) -> Optional['Material']:
+    def parse_obj(obj: Optional[any]) -> Optional['ShinyColor']:
         if obj is None:
-            return obj
+            return None
 
-        return Material(
-            obj.name,
-            Vector2.parse_obj(obj.map)
+        return ShinyColor(
+            obj.r,
+            obj.g,
+            obj.b,
+            obj.a
         )
+
+    @staticmethod
+    def default_color1() -> 'ShinyColor':
+        return ShinyColor(
+            0,
+            1,
+            2,
+            3
+        )
+
+    @staticmethod
+    def default_color2() -> 'ShinyColor':
+        return ShinyColor(
+            0x7F,
+            0x7F,
+            0x7F,
+            0x7F
+        )
+
+
+class ShinyColors(Enum):
+    Color1 = 0
+    Color2 = 1
+
+
+# Values are input node index
+class ColorChannel(IntEnum):
+    R = 2
+    G = 3
+    B = 4
+    A = 5

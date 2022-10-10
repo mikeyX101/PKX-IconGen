@@ -74,6 +74,7 @@ namespace PKXIconGen.Core.Data
                 OnPropertyChanged();
             }
         }
+        
         private ShinyInfo shiny;
         [Column, JsonPropertyName("shiny")]
         public ShinyInfo Shiny 

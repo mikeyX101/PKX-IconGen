@@ -53,5 +53,5 @@ if __name__ == "__main__":
         print(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
 
-    utils.import_model(prd.render.model, prd.shiny.hue)
+    utils.import_model(prd.render.model, prd.shiny.color1, prd.shiny.color2)
     register(prd)

@@ -27,11 +27,28 @@ namespace PKXIconGen.Core.Data
 {
     public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     {
+
+        private string? model;
         /// <summary>
         /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
         /// </summary>
         [JsonPropertyName("model")]
-        public string? Model { get; set; }
+        public string? Model
+        {
+            get => model;
+            set
+            {
+                // Due to limitations, we need to empty the texture list if the model is changed (also in case the model is actually different)
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract False during init
+                if (Textures is not null && Textures.Count != 0)
+                {
+                    Textures.RemoveAll(_ => true);
+                    CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+                }
+                
+                model = value;
+            }
+        }
 
         [JsonPropertyName("animation_pose")]
         public ushort AnimationPose { get; init; }

@@ -89,8 +89,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         public delegate void ImportDel(PokemonRenderData? data);
         public event ImportDel? OnImport;
-
-        [UsedImplicitly]
+        
         public ReactiveCommand<Unit, Unit> ExportCommand { get; }
         private async Task Export()
         {
@@ -122,12 +121,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         
-        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> ExportBlenderCommand { get; }
         private async Task ExportBlender()
         {
-            await Task.Delay(1);
-            throw new NotImplementedException();
+            await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "Exporting to a Blender scene is not yet supported.");
+            //throw new NotImplementedException();
         }
 
         [UsedImplicitly]

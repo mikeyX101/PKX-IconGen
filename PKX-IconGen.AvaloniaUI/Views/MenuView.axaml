@@ -31,13 +31,13 @@
           <i:Icon Value="mdi-import" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{ReflectionBinding ExportCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{Binding ExportCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{ReflectionBinding ExportBlenderCommand}">
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-blender-software" />
         </MenuItem.Icon>

@@ -23,18 +23,21 @@ using System.IO;
 using System.Reactive;
 using System.Threading;
 using JetBrains.Annotations;
+using PKXIconGen.AvaloniaUI.Models.Dialog;
+using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Data.Blender;
+using PKXIconGen.Core.Services;
 using ReactiveUI;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
     public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDisposable
     {
-        private PokemonRenderData data;
+        private readonly PokemonRenderData? data;
         private PokemonRenderData Data {
-            get => data;
-            set {
+            get => data!;
+            init {
                 data = value;
                 UpdateBindings();
             }
@@ -84,11 +87,17 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #endregion
 
         #region Shiny
-        public float? ShinyHue
-        {
-            get => Data.Shiny.Hue;
-            set {
-                Data.Shiny.Hue = value;
+        public ShinyColor? Color1 {
+            get => Data.Shiny.Color1;
+            private set {
+                Data.Shiny.Color1 = value;
+                this.RaisePropertyChanged();
+            }
+        }
+        public ShinyColor? Color2 {
+            get => Data.Shiny.Color2;
+            private set {
+                Data.Shiny.Color2 = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -142,22 +151,32 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             BlenderRunnerInfo = blenderRunnerInfo;
 
-            data = renderData;
+            Data = renderData;
             UpdateBindings();
 
             // Reactive
             IObservable<bool> canModifyOrSave = this.WhenAnyValue(
-                vm => vm.Name, vm => vm.Model, vm => vm.ShinyHue, vm => vm.ShinyModel,
-                (name, model, shinyHue, shinyModel) => 
+                vm => vm.Name, vm => vm.Model, vm => vm.Color1, vm => vm.Color2, vm => vm.ShinyModel,
+                (name, model, color1, color2, shinyModel) => 
                     !string.IsNullOrWhiteSpace(name) && 
-                    !string.IsNullOrWhiteSpace(model) && model.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath)) &&
+                    !string.IsNullOrWhiteSpace(model) && (model.EndsWith(".dat") || model.EndsWith(".pkx")) && File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath)) &&
                     (   
-                        shinyHue.HasValue
+                        color1.HasValue && color2.HasValue
                         ||
-                        (!string.IsNullOrWhiteSpace(shinyModel) && shinyModel.EndsWith(".dat") && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
+                        (!string.IsNullOrWhiteSpace(shinyModel) && (shinyModel.EndsWith(".dat") || shinyModel.EndsWith(".pkx")) && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
                     )
             );
+            
+            IObservable<bool> canSync = this.WhenAnyValue(
+                vm => vm.Color1, vm => vm.Color2, vm => vm.Model,
+                (color1, color2, model) => 
+                    color1.HasValue && color2.HasValue &&
+                    !string.IsNullOrWhiteSpace(model) && 
+                    model.EndsWith(".pkx") && 
+                    File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath))
+            );
 
+            ShinySyncCommand = ReactiveCommand.Create(ShinySync, canSync);
             ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyOrSave);
             CancelCommand = ReactiveCommand.Create(Cancel);
             SaveCommand = ReactiveCommand.Create(Save, canModifyOrSave);
@@ -169,7 +188,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             this.RaisePropertyChanged(nameof(OutputName));
             this.RaisePropertyChanged(nameof(Model));
 
-            this.RaisePropertyChanged(nameof(ShinyHue));
+            this.RaisePropertyChanged(nameof(Color1));
+            this.RaisePropertyChanged(nameof(Color2));
             this.RaisePropertyChanged(nameof(ShinyModel));
 
             this.RaisePropertyChanged(nameof(AnimationPose));
@@ -188,7 +208,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         
         #region Modify in Blender
         private CancellationTokenSource? modifyBlenderDataCancelTokenSource;
-        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> ModifyBlenderDataCommand { get; }
         private async void ModifyBlenderData()
         {
@@ -223,7 +242,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             if (ShinyModel != null)
             {
-                ShinyHue = 1;
+                Color1 = ShinyColor.GetDefaultShinyColor1();
+                Color2 = ShinyColor.GetDefaultShinyColor2();
                 ShinyModel = null;
             }
         }
@@ -231,23 +251,48 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public void UseShinyModel()
         {
-            if (ShinyHue != null)
+            if (Color1.HasValue && Color2.HasValue)
             {
                 ShinyModel = "";
-                ShinyHue = null;
+                Color1 = null;
+                Color2 = null;
             }
         }
         #endregion
         
         #region Other Buttons
+        public ReactiveCommand<Unit, Unit> ShinySyncCommand { get; }
+        private async void ShinySync()
+        {
+            // Model should be valid here
+            try
+            {
+                await using ShinyExtractor shiny = new(Core.Utils.GetTrueModelPath(Model, BlenderRunnerInfo.AssetsPath)!);
+
+                ShinyColor[]? colors = shiny.GetColors();
+                if (colors is not null)
+                {
+                    await DialogHelper.ShowDialog(DialogType.Info, DialogButtons.Ok, $"Colors found!\nColor1: {colors[0].DisplayString}\nColor2: {colors[1].DisplayString}");
+
+                    Color1 = colors[0];
+                    Color2 = colors[1];
+                }
+                else
+                {
+                    await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "This game file doesn't support shiny color.");
+                }
+            }
+            catch (Exception)
+            {
+                await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "No colors found in this file.");
+            }
+        }
+        
         [UsedImplicitly]
         public void ShinyToggle() => ShowShiny = !ShowShiny;
-        [UsedImplicitly]
         public ReactiveCommand<Unit, object> CancelCommand { get; }
         private static object Cancel() => false;
-        [UsedImplicitly]
         public ReactiveCommand<Unit, object> SaveCommand { get; }
-
         private static object Save() => true;
         #endregion
 

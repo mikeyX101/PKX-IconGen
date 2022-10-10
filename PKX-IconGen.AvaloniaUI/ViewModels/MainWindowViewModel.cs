@@ -395,8 +395,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             EnableDeleteButton = SelectedPokemonRenderData.Count > 0;
             NbOfRenders = SelectedPokemonRenderData.Count;
         }
-
-        [UsedImplicitly]
+        
         public ReactiveCommand<Unit,Unit> NewRenderDataCommand { get; }
         private async Task NewRenderData()
         {
@@ -408,8 +407,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 AddRenderData(newData);
             }
         }
-
-        [UsedImplicitly]
+        
         public ReactiveCommand<PokemonRenderData,Unit> EditRenderDataCommand { get; }
         private async Task EditRenderData(PokemonRenderData prd)
         {
@@ -435,7 +433,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 }
             }
         }
-
+        
         [UsedImplicitly]
         public void SelectAllRenderData() => PokemonRenderDataSelection.SelectAll();
         [UsedImplicitly]
@@ -445,7 +443,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Render
         private CancellationTokenSource? renderCancelTokenSource;
-        [UsedImplicitly]
         public ReactiveCommand<Unit, Unit> RenderCommand { get; }
         private async void Render()
         {
@@ -483,7 +480,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             EndRender();
         }
-
+        
         [UsedImplicitly]
         public void EndRender()
         {

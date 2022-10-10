@@ -26,6 +26,7 @@ __all__ = [
     "pokemon_render_data",
     "render_data",
     "render_job",
+    "shiny_color",
     "shiny_info",
     "texture",
     "vector2",

@@ -30,6 +30,7 @@ from data.material import Material
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
 from data.camera import Camera
+from data.shiny_color import ColorChannel, ShinyColors, ShinyColor
 from data.texture import Texture
 from data.vector2 import Vector2
 from data.vector3 import Vector3
@@ -40,7 +41,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 8),
+    "version": (0, 2, 9),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -94,17 +95,6 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
         else:
             context.scene.custom_texture_path = context.scene.custom_texture_path.replace(utils.assets_path, "{{AssetsPath}}")
         return {'FINISHED'}
-
-
-class PKXSyncOperator(bpy.types.Operator):
-    """Synchronize scene data with the addon, useful if you're doing edits outside the addon.\nUSE AT YOUR OWN RISK, NOT EVERYTHING IS SUPPORTED."""
-    bl_idname = "wm.pkx_sync"
-    bl_label = "Synchronize"
-
-    def execute(self, context):
-        sync_scene_to_props()
-        return {'FINISHED'}
-
 
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
@@ -180,8 +170,7 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
             texture_copies.append(copy.deepcopy(texture))
         render_textures = make_texture_dict(texture_copies)
 
-        shiny_hue = utils.rgb2hue(context.scene.shiny_color) if prd.shiny.hue is not None else None
-        utils.set_textures(texture_copies, shiny_hue, mode)
+        utils.set_textures(texture_copies)
         context.scene.current_texture_image = None
 
         return {'FINISHED'}
@@ -420,10 +409,23 @@ def update_light_distance(self, context):
     light.location[2] = value
 
 
-def update_shiny_color(self, context):
-    value = self.shiny_color
+def update_color1_r(self, context):
+    utils.update_shiny_color(self.color1_r, ColorChannel.R, ShinyColors.Color1)
+def update_color1_g(self, context):
+    utils.update_shiny_color(self.color1_g, ColorChannel.G, ShinyColors.Color1)
+def update_color1_b(self, context):
+    utils.update_shiny_color(self.color1_b, ColorChannel.B, ShinyColors.Color1)
+def update_color1_a(self, context):
+    utils.update_shiny_color(self.color1_a, ColorChannel.A, ShinyColors.Color1)
 
-    utils.change_shiny_color(value)
+def update_color2_r(self, context):
+    utils.update_shiny_color(self.color2_r, ColorChannel.R, ShinyColors.Color2)
+def update_color2_g(self, context):
+    utils.update_shiny_color(self.color2_g, ColorChannel.G, ShinyColors.Color2)
+def update_color2_b(self, context):
+    utils.update_shiny_color(self.color2_b, ColorChannel.B, ShinyColors.Color2)
+def update_color2_a(self, context):
+    utils.update_shiny_color(self.color2_a, ColorChannel.A, ShinyColors.Color2)
 
 
 def update_shading(self, context):
@@ -490,15 +492,12 @@ def update_texture_material(self, context):
         texture: Texture = get_texture_obj(self.current_texture_image.name)
         mat: Optional[Material] = texture.get_material_by_name(value.name)
         if mat is None:
-            mat = Material(value.name, Vector2(0, 0), None)
+            mat = Material(value.name, Vector2(0, 0))
             texture.mats.append(mat)
 
         self.texture_mapping = mat.map.to_mathutils_vector()
-        if mat.hue is not None:
-            self.texture_hue = utils.hue2rgb(mat.hue)
     else:
         self.texture_mapping = Vector2(0, 0).to_mathutils_vector()
-        self.texture_use_hue = False
 
 
 def update_texture_mapping(self, context):
@@ -516,42 +515,6 @@ def update_texture_mapping(self, context):
         mat.map = Vector2(value[0], value[1])
 
         utils.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
-
-
-def update_texture_use_hue(self, context):
-    value = self.texture_use_hue
-
-    original_img = self.current_texture_image
-    selected_mat = self.texture_material
-    if original_img is not None and selected_mat is not None:
-        texture: Texture = get_texture_obj(original_img.name)
-        mat: Optional[Material] = texture.get_material_by_name(selected_mat.name)
-        if value and mat.hue is None:
-            mat.hue = 1
-            self.texture_hue = [1, 0, 0]
-        elif not value:
-            mat.hue = None
-
-            shiny_hue = utils.rgb2hue(self.shiny_color) if prd.shiny.hue is not None else None
-            utils.set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
-
-
-def update_texture_hue(self, context):
-    value = self.texture_hue
-
-    original_img = self.current_texture_image
-    selected_mat = self.texture_material
-    if original_img is not None and selected_mat is not None:
-        texture: Texture = get_texture_obj(original_img.name)
-
-        mat: Optional[Material] = texture.get_material_by_name(selected_mat.name)
-        mat.hue = utils.rgb2hue(value) if value is not None else None
-
-        shiny_hue = utils.rgb2hue(self.shiny_color) if prd.shiny.hue is not None else None
-        utils.set_material_hue(bpy.data.materials[mat.name], mat.hue, shiny_hue, mode)
-
-        if not self.texture_use_hue and value is not None:
-            self.texture_use_hue = True
 
 
 def get_texture_obj(name: str) -> Texture:
@@ -573,7 +536,7 @@ def get_initial_texture_materials(name: str) -> list[Material]:
                 if node.bl_idname == "ShaderNodeMapping":
                     x = node.inputs[1].default_value[0]
                     y = node.inputs[1].default_value[1]
-                    mats_data.append(Material(mat.name, Vector2(x, y), None))
+                    mats_data.append(Material(mat.name, Vector2(x, y)))
 
     return mats_data
 
@@ -591,32 +554,6 @@ def reset_texture_props(scene):
 
 
 # State sync functions
-# Out of date, see if scene sync is needed/worth to maintain, object shading cannot be supported
-def sync_scene_to_props():
-    scene = bpy.data.scenes["Scene"]
-    armature = get_armature()
-    camera = get_camera()
-    camera_focus = get_camera_focus()
-    camera_light = get_camera_light()
-
-    scene.pos = camera.location
-    scene.focus = camera_focus.location
-    scene.is_ortho = camera.data.type == "ORTHO"
-    scene.fov = degrees(camera.data.angle)
-    scene.ortho_scale = camera.data.ortho_scale
-
-    scene.light_type = camera_light.data.type
-    scene.light_strength = camera_light.data.energy
-    scene.light_color = camera_light.data.color
-    scene.light_distance = camera_light.location[2]
-
-    action = armature.animation_data.action
-    scene.animation_pose = int(action.name[len(action.name) - 1])
-    scene.animation_frame = scene.frame_current
-
-    # TODO Shiny color?
-
-
 def sync_props_to_scene():
     scene = bpy.data.scenes["Scene"]
     armature = get_armature()
@@ -643,11 +580,13 @@ def sync_props_to_scene():
     utils.show_armature(armature)
     utils.remove_objects(removed_objects)
 
-    if prd.shiny.hue is not None:
-        utils.change_shiny_color(scene.shiny_color)
+    if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
+        utils.update_all_shiny_colors(
+            ShinyColor(scene.color1_r, scene.color1_g, scene.color1_b, scene.color1_a),
+            ShinyColor(scene.color2_r, scene.color2_g, scene.color2_b, scene.color2_a)
+        )
 
-    shiny_hue = utils.rgb2hue(scene.shiny_color) if prd.shiny.hue is not None else None
-    utils.set_textures(list(render_textures.values()), shiny_hue, mode)
+    utils.set_textures(list(render_textures.values()))
 
     utils.update_shading(ObjectShading[scene.shading], None)
 
@@ -681,8 +620,16 @@ def sync_prd_to_props():
 
     removed_objects = prd.get_mode_removed_objects(mode)
 
-    if prd.shiny.hue is not None:
-        scene.shiny_color = utils.hue2rgb(prd.shiny.hue)
+    if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
+        scene.color1_r = prd.shiny.color1.r
+        scene.color1_g = prd.shiny.color1.g
+        scene.color1_b = prd.shiny.color1.b
+        scene.color1_a = prd.shiny.color1.a
+
+        scene.color2_r = prd.shiny.color2.r
+        scene.color2_g = prd.shiny.color2.g
+        scene.color2_b = prd.shiny.color2.b
+        scene.color2_a = prd.shiny.color2.a
 
     render_textures = make_texture_dict(prd.get_mode_textures(mode))
 
@@ -760,8 +707,9 @@ def sync_props_to_prd():
         prd.shiny.render.textures = textures
         prd.shiny.render.shading = shading
 
-    if prd.shiny.hue is not None:
-        prd.shiny.hue = utils.rgb2hue(scene.shiny_color)
+    if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
+        prd.shiny.color1 = ShinyColor(scene.color1_r, scene.color1_g, scene.color1_b, scene.color1_a)
+        prd.shiny.color2 = ShinyColor(scene.color2_r, scene.color2_g, scene.color2_b, scene.color2_a)
 
 
 # Props
@@ -955,37 +903,82 @@ TEXTURESPROPS = [
          min=-50,
          max=50,
          update=update_texture_mapping
-     )),
-    ('texture_use_hue',
-     bpy.props.BoolProperty(
-         name="Use texture hue",
-         description="Use custom hue for this texture",
-         default=False,
-         update=update_texture_use_hue
-     )),
-    ('texture_hue',
-     bpy.props.FloatVectorProperty(
-         name="Texture hue",
-         description="Filter to put on top of this texture for the shiny effect, goes over the general color",
-         subtype="COLOR",
-         default=(1, 1, 1),
-         min=0,
-         max=1,
-         update=update_texture_hue
-     )),
+     ))
 ]
 
 SHINYPROPS = [
-    ('shiny_color',
-     bpy.props.FloatVectorProperty(
-         name="Color",
-         description="Filter to put on top of textures for the shiny effect",
-         subtype="COLOR",
-         default=(1, 1, 1),
+    ('color1_r',
+     bpy.props.IntProperty(
+         name="Color1 R",
+         description="Red Color1",
          min=0,
-         max=1,
-         update=update_shiny_color
+         max=3,
+         default=0,
+         update=update_color1_r
      )),
+    ('color1_g',
+     bpy.props.IntProperty(
+         name="Color1 G",
+         description="Green Color1",
+         min=0,
+         max=3,
+         default=1,
+         update=update_color1_g
+     )),
+    ('color1_b',
+     bpy.props.IntProperty(
+         name="Color1 B",
+         description="Blue Color1",
+         min=0,
+         max=3,
+         default=2,
+         update=update_color1_b
+     )),
+    ('color1_a',
+     bpy.props.IntProperty(
+         name="Color1 A",
+         description="Alpha Color1, changing this is not recommanded",
+         min=0,
+         max=3,
+         default=3,
+         update=update_color1_a
+     )),
+    ('color2_r',
+     bpy.props.IntProperty(
+         name="Color2 R",
+         description="Red Color2",
+         min=0,
+         max=255,
+         default=127,
+         update=update_color2_r
+     )),
+    ('color2_g',
+     bpy.props.IntProperty(
+         name="Color2 G",
+         description="Green Color2",
+         min=0,
+         max=255,
+         default=127,
+         update=update_color2_g
+     )),
+    ('color2_b',
+     bpy.props.IntProperty(
+         name="Color2 B",
+         description="Blue Color2",
+         min=0,
+         max=255,
+         default=127,
+         update=update_color2_b
+     )),
+    ('color2_a',
+     bpy.props.IntProperty(
+         name="Color2 A",
+         description="Alpha Color2, changing this is not recommanded",
+         min=0,
+         max=255,
+         default=127,
+         update=update_color2_a
+     ))
 ]
 
 ADVANCEDPROPS = [
@@ -1132,13 +1125,9 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                         row.label(text="Custom texture cannot be reused due to limitations. Make a copy of the texture and use the copy.", icon="ERROR")
                     row = image_col.row(align=True)
                     row.operator(PKXReplaceByAssetsPathOperator.bl_idname)
-                elif prop_name == "texture_mapping" or prop_name == "texture_use_hue":
+                elif prop_name == "texture_mapping":
                     row = image_col.row(align=True)
                     row.enabled = scene.texture_material is not None
-                    row.prop(scene, prop_name)
-                elif prop_name == "texture_hue":
-                    row = image_col.row(align=True)
-                    row.enabled = scene.texture_use_hue
                     row.prop(scene, prop_name)
                 else:
                     row = image_col.row(align=True)
@@ -1153,12 +1142,30 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return prd.shiny.hue is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
+        return prd.shiny.color1 is not None and prd.shiny.color2 is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
 
     def draw(self, context):
-        col = init_simple_subpanel(self, context, SHINYPROPS)
+        col = self.layout.column()
         col.operator(PKXCopyRemovedObjectsOperator.bl_idname)
         col.operator(PKXCopyTexturesOperator.bl_idname)
+        col.separator()
+        row = col.row(align=True)
+        row.prop(context.scene, "color1_r")
+        row = col.row(align=True)
+        row.prop(context.scene, "color1_g")
+        row = col.row(align=True)
+        row.prop(context.scene, "color1_b")
+        row = col.row(align=True)
+        row.prop(context.scene, "color1_a")
+        col.separator()
+        row = col.row(align=True)
+        row.prop(context.scene, "color2_r")
+        row = col.row(align=True)
+        row.prop(context.scene, "color2_g")
+        row = col.row(align=True)
+        row.prop(context.scene, "color2_b")
+        row = col.row(align=True)
+        row.prop(context.scene, "color2_a")
 
 
 class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
@@ -1175,7 +1182,6 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         row = col.row()
         row.label(text="Shading:")
         row.prop(context.scene, "shading", expand=True)
-        col.operator(PKXSyncOperator.bl_idname)
 
 
 def init_simple_subpanel(self, context, props):
@@ -1201,7 +1207,6 @@ CLASSES = [
 
     ShowRegionUiOperator,
     PKXSaveOperator,
-    PKXSyncOperator,
     PKXDeleteOperator,
     PKXResetDeletedOperator,
     PKXReplaceByAssetsPathOperator,
@@ -1231,7 +1236,7 @@ def register(data: PokemonRenderData):
     utils.remove_objects(removed_objects)
 
     textures: List[Texture] = list(render_textures.values())
-    utils.set_textures(textures, prd.shiny.hue, mode)
+    utils.set_textures(textures)
 
     utils.update_shading(ObjectShading[scene.shading], None)
 

@@ -151,7 +151,7 @@ Please note that this can drastically increase the rendering and processing time
         <!--Pokemon Buttons-->
         <Grid ShowGridLines="False" ColumnDefinitions="0.75*,1.15*,0.75*,0.90*" RowDefinitions="*" Grid.Column="1" Grid.Row="8">
           <Panel HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0">
-            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Add New" Command="{ReflectionBinding NewRenderDataCommand}" />
+            <Button IsEnabled="{Binding !CurrentlyRendering}" Content="Add New" Command="{Binding NewRenderDataCommand}" />
           </Panel>
           <Panel HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0">
             <Button Content="Delete Selected" Command="{ReflectionBinding DeleteSelectedRenderData}">
@@ -226,7 +226,7 @@ Enter "export"
           </Grid>
 
           <ProgressBar Minimum="0" Maximum="{Binding NbOfRenders}" Value="{Binding NbOfPokemonRendered}" Height="20" Margin="5" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" />
-          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{ReflectionBinding RenderCommand}" Grid.Column="2" Grid.Row="0">
+          <Button IsVisible="{Binding !CurrentlyRendering}" Width="75" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding RenderCommand}" Grid.Column="2" Grid.Row="0">
             <TextBlock TextAlignment="Center">Render</TextBlock>
           </Button>
           <Button IsVisible="{Binding CurrentlyRendering}" Width="75" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{ReflectionBinding EndRender}" Grid.Column="2" Grid.Row="0">

@@ -71,7 +71,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
                 filters.Clear();
                 List<string> extensions = Type switch
                 {
-                    FileSelectType.ModelDat => new List<string> { ".dat" },
+                    FileSelectType.GCNModel => new List<string> { ".dat", ".pkx" },
                     FileSelectType.Directory or FileSelectType.Executable or _ => new List<string> { "*" }
                 };
                 if (OperatingSystem.IsWindows() && Type == FileSelectType.Executable)
@@ -81,7 +81,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
                 
                 string name = Type switch
                 {
-                    FileSelectType.ModelDat => "GCN/WII Pokemon Model",
+                    FileSelectType.GCNModel => "GCN Pokemon Model",
                     FileSelectType.Executable => "Executable",
                     FileSelectType.Directory or _ => ""
                 };
@@ -114,7 +114,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
             return Type switch
             {
                 FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),
-                FileSelectType.ModelDat or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters, initialDirectory),
+                FileSelectType.GCNModel or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters, initialDirectory),
                 _ => throw new InvalidOperationException("Unknown FileSelectType, somehow?")
             };
         }

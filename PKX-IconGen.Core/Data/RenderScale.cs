@@ -18,17 +18,27 @@
 #endregion
 
 
+using JetBrains.Annotations;
+
 namespace PKXIconGen.Core.Data
 {
     public enum RenderScale : byte
     {
-        X1 = 1,
-        X2 = 2,
-        X3 = 3,
-        X4 = 4,
-        X5 = 5,
-        X6 = 6,
-        X7 = 7,
-        X8 = 8,
+        [UsedImplicitly] X1 = 1,
+        [UsedImplicitly] X2 = 2,
+        [UsedImplicitly] X3 = 3,
+        [UsedImplicitly] X4 = 4,
+        [UsedImplicitly] X5 = 5,
+        [UsedImplicitly] X6 = 6,
+        [UsedImplicitly] X7 = 7,
+        [UsedImplicitly] X8 = 8,
+        [UsedImplicitly] X9 = 9,
+        [UsedImplicitly] X10 = 10,
+        [UsedImplicitly] X11 = 11,
+        [UsedImplicitly] X12 = 12,
+        [UsedImplicitly] X13 = 13,
+        [UsedImplicitly] X14 = 14,
+        [UsedImplicitly] X15 = 15,
+        [UsedImplicitly] X16 = 16,
     }
 }

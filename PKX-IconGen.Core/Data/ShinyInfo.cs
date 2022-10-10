@@ -24,28 +24,44 @@ namespace PKXIconGen.Core.Data
 {
     public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>, ICloneable
     {
-        [JsonPropertyName("hue")]
-        public float? Hue { get; set; }
+        [JsonPropertyName("color1")]
+        public ShinyColor? Color1 { get; set; }
+        
+        [JsonPropertyName("color2")]
+        public ShinyColor? Color2 { get; set; }
 
         [JsonPropertyName("render")]
         public RenderData Render { get; init; }
-
+        
         public ShinyInfo()
         {
-            Hue = 1;
+            Color1 = ShinyColor.GetDefaultShinyColor1();
+            Color2 = ShinyColor.GetDefaultShinyColor2();
             Render = new RenderData();
         }
 
-        public ShinyInfo(float? hue, RenderData renderData)
+        [JsonConstructor]
+        public ShinyInfo(ShinyColor? color1, ShinyColor? color2, RenderData render)
         {
-            Hue = hue.HasValue ? Math.Clamp(hue.Value, 0, 1) : hue;
-            Render = renderData;
+            if ((!color1.HasValue || !color2.HasValue) && render.Model is null)
+            {
+                Color1 = ShinyColor.GetDefaultShinyColor1();
+                Color2 = ShinyColor.GetDefaultShinyColor2();
+            }
+            else
+            {
+                Color1 = color1;
+                Color2 = color2;
+            }
+            
+            Render = render;
         }
 
         public bool Equals(ShinyInfo? other)
         {
             return other is not null &&
-                Hue.Equals(other.Hue) &&
+                (Color1 is null && other.Color1 is null || Color1 is not null && Color1.Equals(other.Color1)) &&
+                (Color2 is null && other.Color2 is null || Color2 is not null && Color2.Equals(other.Color2)) &&
                 Render.Equals(other.Render);
         }
         public override bool Equals(object? obj)
@@ -63,11 +79,11 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public override int GetHashCode() => (Hue, Render).GetHashCode();
+        public override int GetHashCode() => (Color1, Color2, Render).GetHashCode();
 
         public object Clone()
         {
-            return new ShinyInfo(Hue, (RenderData)Render.Clone());
+            return new ShinyInfo(Color1, Color2, (RenderData)Render.Clone());
         }
     }
 }

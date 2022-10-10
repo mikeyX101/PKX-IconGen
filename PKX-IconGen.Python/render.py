@@ -69,7 +69,7 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
     utils.remove_objects(prd.get_mode_removed_objects(mode))
 
-    utils.set_textures(prd.get_mode_textures(mode), prd.shiny.hue, mode)
+    utils.set_textures(prd.get_mode_textures(mode))
 
     utils.update_shading(prd.get_mode_shading(mode), None)
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         job: RenderJob = RenderJob.from_json(json)
 
     last_rendered_mode: Optional[EditMode] = None
-    utils.import_model(job.data.render.model, job.data.shiny.hue)
+    utils.import_model(job.data.render.model, job.data.shiny.color1, job.data.shiny.color2)
 
     blender_render = bpy.data.scenes["Scene"].render
 

@@ -31,25 +31,18 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("map")]
         public readonly JsonSerializableVector2 Map { get; init; }
         
-        [JsonPropertyName("hue")]
-        public readonly float? Hue { get; init; }
-        
         [JsonConstructor]
-        public Material(string name, JsonSerializableVector2 map, float? hue)
+        public Material(string name, JsonSerializableVector2 map)
         {
             Name = name;
             Map = map;
-            Hue = hue;
         }
     
         public bool Equals(Material other)
         {
             return
                 Name == other.Name &&
-                Map == other.Map &&
-                // TODO Nullable CompareOfFloatsByEqualityOperator
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                Hue == other.Hue;
+                Map == other.Map;
         }
         public override bool Equals(object? obj)
         {
@@ -66,7 +59,7 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public readonly override int GetHashCode() => (Name, Map, Hue).GetHashCode();
+        public readonly override int GetHashCode() => (Name, Map).GetHashCode();
     }
 }
 
