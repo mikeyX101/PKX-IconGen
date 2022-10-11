@@ -70,13 +70,6 @@ namespace PKXIconGen.Core.Services
             
         }
 
-        private static Exception IfNullTable(string propertyName)
-        {
-            Exception ex = new InvalidOperationException($"{propertyName} was somehow null?");
-            CoreManager.Logger.Fatal(ex, "{@TableName} was somehow null?", propertyName);
-            return ex;
-        }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -135,94 +128,72 @@ namespace PKXIconGen.Core.Services
             Disposed = true;
             base.Dispose();
         }
-
-        [UsedImplicitly]
-        public DbSet<Settings>? SettingsTable { get; internal set; }
-        private IQueryable<Settings>? SettingsLinq => SettingsTable?.ToLinqToDB();
         
         [UsedImplicitly]
-        public DbSet<PokemonRenderData>? PokemonRenderDataTable { get; internal set; }
-        private IQueryable<PokemonRenderData>? PokemonRenderDataLinq => PokemonRenderDataTable?.ToLinqToDB();
+        private DbSet<Settings>? SettingsTable { get; set; }
+        [UsedImplicitly]
+        private DbSet<PokemonRenderData>? PokemonRenderDataTable { get; set; }
 
         #region Settings
         public async Task<Settings> GetSettingsAsync()
         {
-            if (SettingsLinq != null)
-            {
-                return await SettingsLinq.FirstOrDefaultAsyncLinqToDB() ?? new Settings();
-            }
+            await using IDataContext ctx = this.CreateLinqToDbContext();
             
-            throw IfNullTable(nameof(SettingsLinq));
+            return await ctx.GetTable<Settings>().FirstOrDefaultAsyncLinqToDB() ?? new Settings();
         }
 
         public int SaveSettingsProperty<TProperty>(Expression<Func<Settings, TProperty>> propertySelector, TProperty value)
         {
-            if (SettingsLinq != null)
-            {
-                return SettingsLinq
-                    .Where(s => s.InternalID == SettingsId)
-                    .Set(propertySelector, value)
-                    .Update();
-            }
-            
-            throw IfNullTable(nameof(SettingsLinq));
+            using IDataContext ctx = this.CreateLinqToDbContext();
+
+            int changed = ctx.GetTable<Settings>()
+                .Where(s => s.InternalID == SettingsId)
+                .Set(propertySelector, value)
+                .Update();
+
+            Entry(ctx.GetTable<Settings>().First(s => s.InternalID == SettingsId)).Reload();
+            return changed;
         }
         #endregion
 
         #region Pokemon Render Data
         public async Task<int> AddPokemonRenderDataAsync(PokemonRenderData prd)
         {
-            if (PokemonRenderDataLinq != null)
+            await using IDataContext ctx = this.CreateLinqToDbContext();
+
+            int id = await ctx.InsertWithInt32IdentityAsync(prd);
+            if (id > 0)
             {
-                await using IDataContext ctx = this.CreateLinqToDbContext();
-
-                int id = await ctx.InsertWithInt32IdentityAsync(prd);
-                if (id > 0)
-                {
-                    prd.Id = (uint)id;
-                    return 1;
-                }
-
-                return 0;
+                prd.Id = (uint)id;
+                return 1;
             }
-            
-            throw IfNullTable(nameof(PokemonRenderDataLinq));
+
+            return 0;
         }
 
         public async Task<int> UpdatePokemonRenderDataAsync(PokemonRenderData prd)
         {
-            if (PokemonRenderDataTable != null)
-            {
-                await using IDataContext ctx = this.CreateLinqToDbContext();
-                return await ctx.UpdateAsync(prd);
-            }
+            await using IDataContext ctx = this.CreateLinqToDbContext();
             
-            throw IfNullTable(nameof(PokemonRenderDataTable));
+            return await ctx.UpdateAsync(prd);
         }
 
         public async Task<List<PokemonRenderData>> GetPokemonRenderDataAsync(bool orderedByName = true)
         {
-            if (PokemonRenderDataLinq != null)
-            {
-                List<PokemonRenderData> data = await PokemonRenderDataLinq.ToListAsyncLinqToDB();
-                return orderedByName ? data.OrderBy(prd => prd.Name).ToList() : data;
-            } 
+            await using IDataContext ctx = this.CreateLinqToDbContext();
             
-            throw IfNullTable(nameof(PokemonRenderDataLinq));
+            List<PokemonRenderData> data = await ctx.GetTable<PokemonRenderData>().ToListAsyncLinqToDB();
+            return orderedByName ? data.OrderBy(prd => prd.Name).ToList() : data;
         }
         
         public async Task<int> DeletePokemonRenderDataAsync(IEnumerable<PokemonRenderData> prds)
         {
-            if (PokemonRenderDataLinq != null)
-            {
-                uint[] prdIds = prds.Select(prd => prd.Id).ToArray();
-
-                return await PokemonRenderDataLinq
-                    .Where(prd => prdIds.Contains(prd.Id))
-                    .DeleteAsync();
-            }
+            await using IDataContext ctx = this.CreateLinqToDbContext();
             
-            throw IfNullTable(nameof(PokemonRenderDataLinq));
+            uint[] prdIds = prds.Select(prd => prd.Id).ToArray();
+            return await ctx.GetTable<PokemonRenderData>()
+                .Where(prd => prdIds.Contains(prd.Id))
+                .DeleteAsync();
         }
         #endregion
     }
