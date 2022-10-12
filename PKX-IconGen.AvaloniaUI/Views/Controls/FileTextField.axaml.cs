@@ -110,7 +110,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         
         private async Task<string?> OpenDialog()
         {
-            string initialDirectory = string.IsNullOrWhiteSpace(Path) || Regex.IsMatch(Path, "^{{AssetsPath}}/?$") ? AssetsPath + '/' : Path;
+            string initialDirectory = string.IsNullOrWhiteSpace(Path) || Regex.IsMatch(Path, "^{{AssetsPath}}/?") ? AssetsPath + '/' : Path;
             return Type switch
             {
                 FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),

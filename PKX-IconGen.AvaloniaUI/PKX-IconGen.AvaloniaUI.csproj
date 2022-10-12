@@ -13,7 +13,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.2.5</AssemblyVersion>
+    <AssemblyVersion>0.2.6</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.2.0</Version>
     <StartupObject></StartupObject>
@@ -26,7 +26,7 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.2.5</PackageVersion>
+    <PackageVersion>0.2.6</PackageVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -44,13 +44,13 @@
     <EmbeddedResource Remove="Data\**" />
     <None Remove="Data\**" />
     <None Remove=".gitignore" />
-    <Compile Update="Views\Controls\ColorDisplay.Properties.axaml.cs">
+    <Compile Update="Views\Controls\ColorDisplay.axaml.Properties.cs">
       <DependentUpon>ColorDisplay.axaml.cs</DependentUpon>
     </Compile>
     <Compile Update="Views\Controls\FileTextField.axaml.cs">
       <DependentUpon>FileTextField.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\Controls\FileTextField.Properties.axaml.cs">
+    <Compile Update="Views\Controls\FileTextField.axaml.Properties.cs">
       <DependentUpon>FileTextField.axaml.cs</DependentUpon>
     </Compile>
     <Compile Update="Views\TextureDownloadWindow.axaml.cs">
