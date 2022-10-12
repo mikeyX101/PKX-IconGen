@@ -252,9 +252,9 @@ class PKXCameraFocusOperator(bpy.types.Operator):
 
 
 class PKXSaveOperator(bpy.types.Operator):
-    """Save and exit back to PKX-IconGen"""
+    """Save to Json"""
     bl_idname = "wm.pkx_save"
-    bl_label = "Save and quit"
+    bl_label = "Save PKX Json"
 
     def execute(self, context):
         sync_props_to_prd()
@@ -267,11 +267,25 @@ class PKXSaveOperator(bpy.types.Operator):
             with open('../Temp/' + name + '.json', 'w') as json_file:
                 json_file.write(json)
                 json_file.close()
-            bpy.ops.wm.quit_blender()
+                bpy.ops.wm.save_mainfile()
         except:
             print("Something happened while saving JSON.")
             print("Current PRD: " + prd.to_json())
             return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+class PKXSaveQuitOperator(bpy.types.Operator):
+    """Save and exit back to PKX-IconGen"""
+    bl_idname = "wm.pkx_save_quit"
+    bl_label = "Save and quit"
+
+    def execute(self, context):
+        try:
+            bpy.ops.wm.pkx_save()
+        except:
+            return {'CANCELLED'}
+        bpy.ops.wm.quit_blender()
         return {'FINISHED'}
 
 
@@ -1030,7 +1044,7 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
             row.prop(context.scene, prop_name, expand=expand)
         col.operator(PKXDeleteOperator.bl_idname)
         col.operator(PKXResetDeletedOperator.bl_idname)
-        col.operator(PKXSaveOperator.bl_idname)
+        col.operator(PKXSaveQuitOperator.bl_idname)
 
 
 class PKXAnimationPanel(PKXPanel, bpy.types.Panel):
@@ -1201,6 +1215,7 @@ CLASSES = [
 
     ShowRegionUiOperator,
     PKXSaveOperator,
+    PKXSaveQuitOperator,
     PKXDeleteOperator,
     PKXResetDeletedOperator,
     PKXReplaceByAssetsPathOperator,
@@ -1240,9 +1255,19 @@ def register(data: PokemonRenderData):
 
     # key bind
     wm = bpy.context.window_manager
+
     km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')
     kmi = km.keymap_items.new(PKXDeleteOperator.bl_idname, 'DEL', 'PRESS')
     addon_keymaps.append((km, kmi))
+
+    km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY')
+    kmi = km.keymap_items.new(PKXSaveOperator.bl_idname, 'S', 'PRESS', ctrl=1)
+    addon_keymaps.append((km, kmi))
+
+    # Deactivate object context menu
+    for b in wm.keyconfigs.user.keymaps["Object Mode"].keymap_items:
+        if b is not None and b.name == "Object Context Menu":
+            b.active = False
 
 
 def unregister():
