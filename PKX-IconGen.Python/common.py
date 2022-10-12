@@ -33,12 +33,31 @@ from data.shiny_info import ShinyInfo
 from data.texture import Texture
 from importer import import_hsd
 
+
+class PkxIconGenCache(object):
+    def __init__(self):
+        self.shiny_color1: list = []
+        self.shiny_color2: list = []
+        self.shiny_mix: list = []
+        # Mapping by Blender materials
+        self.mapping: dict[str, list] = {}
+        # TexImage by Blender materials
+        self.mat_tex_image: dict[str, list] = {}
+        # TexImage by Blender images
+        self.img_tex_image: dict[str, list] = {}
+
+    def init_mat_cache(self, mat_name: str):
+        self.mapping[mat_name] = []
+        self.mat_tex_image[mat_name] = []
+
+
 SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
 SHINYCOLOR2_NAME: Final[str] = "PKX_ShinyColor2"
 SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"
 
 cmd_args = None
 assets_path: Optional[str] = None
+pkx_cache = PkxIconGenCache()
 
 
 def attach_debugger(debug_egg: str):
@@ -75,7 +94,7 @@ def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
 
-def import_model(model: str, color1: ShinyColor, color2: ShinyColor):
+def import_model(model: str, color1: Optional[ShinyColor], color2: Optional[ShinyColor]):
     print(f"Assets Path: {assets_path}")
     if assets_path is not None:
         true_path = get_absolute_asset_path(model)
@@ -111,95 +130,93 @@ def import_model(model: str, color1: ShinyColor, color2: ShinyColor):
                 tree.links.remove(alpha_link)
                 tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
-            if tree.nodes.find(SHINYMIXNODE_NAME) == -1:
-                original_color_link = bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links[0]
-                original_color_node = original_color_link.from_node
-                if original_color_node.bl_idname == "ShaderNodeMixRGB":
-                    tree.links.remove(original_color_link)
+            # Setup shiny color
+            if color1 is not None and color2 is not None and tree.nodes.find(SHINYMIXNODE_NAME) == -1:
+                setup_shiny_mats(tree, bsdf)
 
-                    texture_link = original_color_node.inputs[2].links[0]
-                    texture_node = texture_link.from_node
+            # Cache nodes
+            pkx_cache.init_mat_cache(mat.name)
+            for node in tree.nodes:
+                if node.bl_idname == "ShaderNodeMapping":
+                    pkx_cache.mapping[mat.name].append(node)
+                elif node.bl_idname == "ShaderNodeTexImage":
+                    pkx_cache.mat_tex_image[mat.name].append(node)
+                elif node.name == SHINYCOLOR1_NAME:
+                    pkx_cache.shiny_color1.append(node)
+                elif node.name == SHINYCOLOR2_NAME:
+                    pkx_cache.shiny_color2.append(node)
+                elif node.name == SHINYMIXNODE_NAME:
+                    pkx_cache.shiny_mix.append(node)
 
-                    color1_node = tree.nodes.new("ShaderNodeGroup")
-                    color1_node.name = SHINYCOLOR1_NAME
-                    color1_node.node_tree = bpy.data.node_groups['Color1']
+    if color1 is not None and color2 is not None:
+        update_all_shiny_colors(color1, color2)
 
-                    color2_node = tree.nodes.new("ShaderNodeGroup")
-                    color2_node.name = SHINYCOLOR2_NAME
-                    color2_node.node_tree = bpy.data.node_groups['Color2']
 
-                    mix_node = tree.nodes.new("ShaderNodeMixRGB")
-                    mix_node.name = SHINYMIXNODE_NAME
-                    mix_node.blend_type = "MIX"
-                    mix_node.inputs[0].default_value = 0
+def setup_shiny_mats(tree, bsdf):
+    original_color_link = bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links[0]
+    original_color_node = original_color_link.from_node
+    if original_color_node.bl_idname == "ShaderNodeMixRGB":
+        tree.links.remove(original_color_link)
 
-                    tree.links.new(texture_node.outputs[0], color1_node.inputs[0])  # Color -> PKX_ShinyColor1.TexColor
-                    tree.links.new(texture_node.outputs[1], color1_node.inputs[1])  # Alpha -> PKX_ShinyColor1.TexAlpha
+        texture_link = original_color_node.inputs[2].links[0]
+        texture_node = texture_link.from_node
 
-                    tree.links.new(color1_node.outputs[0], color2_node.inputs[0])  # PKX_ShinyColor1.TexColor -> PKX_ShinyColor2.Image
-                    tree.links.new(color1_node.outputs[1], color2_node.inputs[1])  # PKX_ShinyColor1.TexAlpha -> PKX_ShinyColor2.Alpha
+        color1_node = tree.nodes.new("ShaderNodeGroup")
+        color1_node.name = SHINYCOLOR1_NAME
+        color1_node.node_tree = bpy.data.node_groups['Color1']
 
-                    tree.links.new(color2_node.outputs[0], mix_node.inputs[2])  # PKX_ShinyColor2.TexColor -> PKX_ShinyMixRGB.Color2
-                    # TODO Manage Alpha
+        color2_node = tree.nodes.new("ShaderNodeGroup")
+        color2_node.name = SHINYCOLOR2_NAME
+        color2_node.node_tree = bpy.data.node_groups['Color2']
 
-                    tree.links.new(original_color_node.outputs[0], mix_node.inputs[1])  # Color -> PKX_ShinyMixRGB.Color1
-                    tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.base_color])  # PKX_ShinyMixRGB.Color -> BSDF.Base Color
+        mix_node = tree.nodes.new("ShaderNodeMixRGB")
+        mix_node.name = SHINYMIXNODE_NAME
+        mix_node.blend_type = "MIX"
+        mix_node.inputs[0].default_value = 0
 
-                    if color1 is not None and color2 is not None:
-                        update_all_shiny_colors(color1, color2)
+        tree.links.new(texture_node.outputs[0], color1_node.inputs[0])  # Color -> PKX_ShinyColor1.TexColor
+        tree.links.new(texture_node.outputs[1], color1_node.inputs[1])  # Alpha -> PKX_ShinyColor1.TexAlpha
+
+        tree.links.new(color1_node.outputs[0], color2_node.inputs[0])  # PKX_ShinyColor1.TexColor -> PKX_ShinyColor2.Image
+        tree.links.new(color1_node.outputs[1], color2_node.inputs[1])  # PKX_ShinyColor1.TexAlpha -> PKX_ShinyColor2.Alpha
+
+        tree.links.new(color2_node.outputs[0], mix_node.inputs[2])  # PKX_ShinyColor2.TexColor -> PKX_ShinyMixRGB.Color2
+        # TODO Manage Alpha
+
+        tree.links.new(original_color_node.outputs[0], mix_node.inputs[1])  # Color -> PKX_ShinyMixRGB.Color1
+        tree.links.new(mix_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.base_color])  # PKX_ShinyMixRGB.Color -> BSDF.Base Color
 
 
 def show_shiny_mats():
-    mats = bpy.data.materials
-    for mat in mats:
-        tree = mat.node_tree
-        if tree is not None:
-            if tree.nodes.find(SHINYMIXNODE_NAME) != -1:
-                mix_node = tree.nodes[SHINYMIXNODE_NAME]
-                mix_node.inputs[0].default_value = 1
-            else:
-                print(f"Shiny nodes were not setup for material: {mat.name}, ignoring.")
+    for node in pkx_cache.shiny_mix:
+        node.inputs[0].default_value = 1
 
 
 def hide_shiny_mats():
-    mats = bpy.data.materials
-    for mat in mats:
-        tree = mat.node_tree
-        if tree is not None:
-            if tree.nodes.find(SHINYMIXNODE_NAME) != -1:
-                mix_node = tree.nodes[SHINYMIXNODE_NAME]
-                mix_node.inputs[0].default_value = 0
-            else:
-                print(f"Shiny nodes were not setup for material: {mat.name}, ignoring.")
+    for node in pkx_cache.shiny_mix:
+        node.inputs[0].default_value = 0
 
 
 def update_shiny_color(color: int, channel: ColorChannel, shiny_color: ShinyColors):
-    node_group_name = "Color1" if shiny_color is ShinyColors.Color1 else "Color2"
-
-    for mat in bpy.data.materials:
-        tree = mat.node_tree
-        if tree is not None:
-            for node in tree.nodes:
-                if node.bl_idname == "ShaderNodeGroup" and node.node_tree.name == node_group_name:
-                    node.inputs[channel].default_value = color
+    if shiny_color == ShinyColors.Color1:
+        for node in pkx_cache.shiny_color1:
+            node.inputs[channel].default_value = color
+    elif shiny_color == ShinyColors.Color2:
+        for node in pkx_cache.shiny_color2:
+            node.inputs[channel].default_value = color
 
 
 def update_all_shiny_colors(color1: ShinyColor, color2: ShinyColor):
-    for mat in bpy.data.materials:
-        tree = mat.node_tree
-        if tree is not None:
-            for node in tree.nodes:
-                if node.bl_idname == "ShaderNodeGroup":
-                    if node.node_tree.name == "Color1":
-                        node.inputs[ColorChannel.R].default_value = color1.r
-                        node.inputs[ColorChannel.G].default_value = color1.g
-                        node.inputs[ColorChannel.B].default_value = color1.b
-                        node.inputs[ColorChannel.A].default_value = color1.a
-                    elif node.node_tree.name == "Color2":
-                        node.inputs[ColorChannel.R].default_value = color2.r
-                        node.inputs[ColorChannel.G].default_value = color2.g
-                        node.inputs[ColorChannel.B].default_value = color2.b
-                        node.inputs[ColorChannel.A].default_value = color2.a
+    for node in pkx_cache.shiny_color1:
+        node.inputs[ColorChannel.R].default_value = color1.r
+        node.inputs[ColorChannel.G].default_value = color1.g
+        node.inputs[ColorChannel.B].default_value = color1.b
+        node.inputs[ColorChannel.A].default_value = color1.a
+    for node in pkx_cache.shiny_color2:
+        node.inputs[ColorChannel.R].default_value = color2.r
+        node.inputs[ColorChannel.G].default_value = color2.g
+        node.inputs[ColorChannel.B].default_value = color2.b
+        node.inputs[ColorChannel.A].default_value = color2.a
 
 
 def show_message_box(message, title, icon='INFO'):
@@ -221,7 +238,7 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
         if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
             if objs.find("Armature1") == -1:
                 # show_message_box("Loading shiny model. Please wait...", "Loading...")
-                import_model(shiny_info.render.model, None)
+                import_model(shiny_info.render.model, None, None)
 
             hide_armature(objs["Armature0"])
             show_armature(objs["Armature1"])
@@ -235,14 +252,17 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
 
 
 def get_image_nodes(image_obj):
-    nodes: list = list()
-    if image_obj is not None:
-        for mat in bpy.data.materials:
-            if mat.node_tree is not None:
-                for node in mat.node_tree.nodes:
-                    if is_node_teximage_with_image(node, image_obj):
-                        nodes.append(node)
-    return nodes
+    if image_obj.name not in pkx_cache.img_tex_image:
+        nodes: list = list()
+        if image_obj is not None:
+            for mat in bpy.data.materials:
+                if mat.node_tree is not None:
+                    for node in mat.node_tree.nodes:
+                        if is_node_teximage_with_image(node, image_obj):
+                            nodes.append(node)
+        pkx_cache.img_tex_image[image_obj.name] = nodes
+
+    return pkx_cache.img_tex_image[image_obj.name]
 
 
 def get_image_materials(image_obj):
@@ -322,14 +342,12 @@ def is_custom_texture_used(texture_path: str, textures: List[Texture]):
 
 
 def set_material_map(image_obj, mat_obj, x: float, y: float):
-    tree = mat_obj.node_tree
-    if tree is not None:
-        for node in tree.nodes:
-            if is_node_teximage_with_image(node, image_obj):
-                img_vector_input_node = node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
-                if img_vector_input_node.bl_idname == "ShaderNodeMapping":
-                    img_vector_input_node.inputs[1].default_value[0] = x
-                    img_vector_input_node.inputs[1].default_value[1] = y
+    for node in pkx_cache.mat_tex_image[mat_obj.name]:
+        if is_node_teximage_with_image(node, image_obj):
+            img_vector_input_node = node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
+            if img_vector_input_node.bl_idname == "ShaderNodeMapping":
+                img_vector_input_node.inputs[1].default_value[0] = x
+                img_vector_input_node.inputs[1].default_value[1] = y
 
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):

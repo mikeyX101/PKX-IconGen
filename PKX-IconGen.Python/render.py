@@ -29,20 +29,20 @@ from data.light import Light
 from data.pokemon_render_data import PokemonRenderData
 from data.edit_mode import EditMode
 from data.render_job import RenderJob
-import utils
+import common
 
 
 def reset_mode_textures(prd: PokemonRenderData, mode: EditMode):
     for texture in prd.get_mode_textures(mode):
-        utils.reset_texture_images(texture)
+        common.reset_texture_images(texture)
 
 
 def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
-    utils.switch_model(prd.shiny, mode)
+    common.switch_model(prd.shiny, mode)
 
     objs = bpy.data.objects
     scene = bpy.data.scenes["Scene"]
-    armature = utils.get_armature(prd, mode)
+    armature = common.get_armature(prd, mode)
     camera = objs["PKXIconGen_Camera"]
     focus = objs["PKXIconGen_FocusPoint"]
     light = objs["PKXIconGen_TopLight"]
@@ -63,15 +63,15 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     light.data.color = prd_light.color.to_list()
     light.location[2] = prd_light.distance
 
-    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
+    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
     armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(animation_pose)]
     scene.frame_set(animation_frame)
 
-    utils.remove_objects(prd.get_mode_removed_objects(mode))
+    common.remove_objects(prd.get_mode_removed_objects(mode))
 
-    utils.set_textures(prd.get_mode_textures(mode))
+    common.set_textures(prd.get_mode_textures(mode))
 
-    utils.update_shading(prd.get_mode_shading(mode), None)
+    common.update_shading(prd.get_mode_shading(mode), None)
 
 
 if __name__ == "__main__":
@@ -79,15 +79,15 @@ if __name__ == "__main__":
     debug_egg: Optional[str] = None
     job: RenderJob
 
-    utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
-    for arg, value in utils.cmd_args:
+    common.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
+    for arg, value in common.cmd_args:
         if arg == "--pkx-debug":
             debug_json = value
         elif arg == "--debug-egg":
             debug_egg = value
 
     if debug_json is not None:
-        utils.attach_debugger(debug_egg)
+        common.attach_debugger(debug_egg)
 
         file = open(debug_json, "r")
         json = file.readline()
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         job: RenderJob = RenderJob.from_json(json)
 
     last_rendered_mode: Optional[EditMode] = None
-    utils.import_model(job.data.render.model, job.data.shiny.color1, job.data.shiny.color2)
+    common.import_model(job.data.render.model, job.data.shiny.color1, job.data.shiny.color2)
 
     blender_render = bpy.data.scenes["Scene"].render
 

@@ -19,7 +19,6 @@
 from typing import Optional
 
 from .material import Material
-from .vector2 import Vector2
 
 
 class Texture(object):

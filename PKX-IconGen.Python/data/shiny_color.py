@@ -63,7 +63,7 @@ class ShinyColors(Enum):
     Color2 = 1
 
 
-# Values are input node index
+# Values are node input index
 class ColorChannel(IntEnum):
     R = 2
     G = 3

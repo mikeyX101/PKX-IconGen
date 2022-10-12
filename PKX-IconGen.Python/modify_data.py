@@ -23,7 +23,7 @@ from typing import Optional
 sys.path.append(os.getcwd())
 
 from data.pokemon_render_data import PokemonRenderData
-import utils
+import common
 from addon import register
 
 if __name__ == "__main__":
@@ -31,15 +31,15 @@ if __name__ == "__main__":
     debug_egg: Optional[str] = None
     prd: PokemonRenderData
 
-    utils.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
-    for arg, value in utils.cmd_args:
+    common.parse_cmd_args(sys.argv[sys.argv.index("--") + 1:])
+    for arg, value in common.cmd_args:
         if arg == "--pkx-debug":
             debug_json = value
         elif arg == "--debug-egg":
             debug_egg = value
 
     if debug_json is not None:
-        utils.attach_debugger(debug_egg)
+        common.attach_debugger(debug_egg)
 
         file = open(debug_json, "r")
         json = file.readline()
@@ -53,5 +53,5 @@ if __name__ == "__main__":
         print(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
 
-    utils.import_model(prd.render.model, prd.shiny.color1, prd.shiny.color2)
+    common.import_model(prd.render.model, prd.shiny.color1, prd.shiny.color2)
     register(prd)

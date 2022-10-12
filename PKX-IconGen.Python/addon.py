@@ -23,7 +23,7 @@ import os
 
 import bpy_extras.view3d_utils
 
-import utils
+import common
 from data.color import Color
 from data.light import Light, LightType
 from data.material import Material
@@ -41,7 +41,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 9),
+    "version": (0, 2, 10),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -91,9 +91,9 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
 
     def execute(self, context):
         if len(context.scene.custom_texture_path) == 0:
-            context.scene.custom_texture_path = utils.assets_path + "/icon-gen/"
+            context.scene.custom_texture_path = common.assets_path + "/icon-gen/"
         else:
-            context.scene.custom_texture_path = context.scene.custom_texture_path.replace(utils.assets_path, "{{AssetsPath}}")
+            context.scene.custom_texture_path = context.scene.custom_texture_path.replace(common.assets_path, "{{AssetsPath}}")
         return {'FINISHED'}
 
 class PKXDeleteOperator(bpy.types.Operator):
@@ -128,7 +128,7 @@ class PKXResetDeletedOperator(bpy.types.Operator):
     def execute(self, context):
         global removed_objects
         removed_objects = []
-        utils.show_armature(get_armature())
+        common.show_armature(get_armature())
 
         return {'FINISHED'}
 
@@ -145,8 +145,8 @@ class PKXCopyRemovedObjectsOperator(bpy.types.Operator):
     def execute(self, context):
         global removed_objects
         removed_objects = list(prd.render.removed_objects)
-        utils.show_armature(get_armature())
-        utils.remove_objects(removed_objects)
+        common.show_armature(get_armature())
+        common.remove_objects(removed_objects)
 
         return {'FINISHED'}
 
@@ -163,14 +163,14 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
     def execute(self, context):
         global render_textures
         for texture in list(render_textures.values()):
-            utils.reset_texture_images(texture)
+            common.reset_texture_images(texture)
 
         texture_copies: List[Texture] = list()
         for texture in prd.render.textures:
             texture_copies.append(copy.deepcopy(texture))
         render_textures = make_texture_dict(texture_copies)
 
-        utils.set_textures(texture_copies)
+        common.set_textures(texture_copies)
         context.scene.current_texture_image = None
 
         return {'FINISHED'}
@@ -303,7 +303,7 @@ def get_camera_light():
 def get_armature():
     global armature
 
-    armature = utils.get_armature(prd, mode)
+    armature = common.get_armature(prd, mode)
 
     return armature
 
@@ -321,11 +321,11 @@ def update_mode(self, context):
     mode = EditMode[value]
 
     for texture in list(render_textures.values()):
-        utils.reset_texture_images(texture)
+        common.reset_texture_images(texture)
 
     reset_texture_props(self)
 
-    utils.switch_model(prd.shiny, mode)
+    common.switch_model(prd.shiny, mode)
     sync_prd_to_props()
     sync_props_to_scene()
 
@@ -334,7 +334,7 @@ def update_animation_pose(self, context):
     value = self.animation_pose
     armature = get_armature()
 
-    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
+    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
     action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(value)]
 
     armature.animation_data.action = action
@@ -410,28 +410,28 @@ def update_light_distance(self, context):
 
 
 def update_color1_r(self, context):
-    utils.update_shiny_color(self.color1_r, ColorChannel.R, ShinyColors.Color1)
+    common.update_shiny_color(self.color1_r, ColorChannel.R, ShinyColors.Color1)
 def update_color1_g(self, context):
-    utils.update_shiny_color(self.color1_g, ColorChannel.G, ShinyColors.Color1)
+    common.update_shiny_color(self.color1_g, ColorChannel.G, ShinyColors.Color1)
 def update_color1_b(self, context):
-    utils.update_shiny_color(self.color1_b, ColorChannel.B, ShinyColors.Color1)
+    common.update_shiny_color(self.color1_b, ColorChannel.B, ShinyColors.Color1)
 def update_color1_a(self, context):
-    utils.update_shiny_color(self.color1_a, ColorChannel.A, ShinyColors.Color1)
+    common.update_shiny_color(self.color1_a, ColorChannel.A, ShinyColors.Color1)
 
 def update_color2_r(self, context):
-    utils.update_shiny_color(self.color2_r, ColorChannel.R, ShinyColors.Color2)
+    common.update_shiny_color(self.color2_r, ColorChannel.R, ShinyColors.Color2)
 def update_color2_g(self, context):
-    utils.update_shiny_color(self.color2_g, ColorChannel.G, ShinyColors.Color2)
+    common.update_shiny_color(self.color2_g, ColorChannel.G, ShinyColors.Color2)
 def update_color2_b(self, context):
-    utils.update_shiny_color(self.color2_b, ColorChannel.B, ShinyColors.Color2)
+    common.update_shiny_color(self.color2_b, ColorChannel.B, ShinyColors.Color2)
 def update_color2_a(self, context):
-    utils.update_shiny_color(self.color2_a, ColorChannel.A, ShinyColors.Color2)
+    common.update_shiny_color(self.color2_a, ColorChannel.A, ShinyColors.Color2)
 
 
 def update_shading(self, context):
     value = self.shading
 
-    utils.update_shading(ObjectShading[value], context)
+    common.update_shading(ObjectShading[value], context)
 
 
 # Textures Updates
@@ -464,16 +464,16 @@ def update_custom_texture_path(self, context):
     original_img = self.current_texture_image
 
     if value is not None and value != "":
-        texture_path: str = utils.get_absolute_asset_path(value)
+        texture_path: str = common.get_absolute_asset_path(value)
         custom_texture_path_invalid = not os.path.isfile(texture_path)
         if not custom_texture_path_invalid:
             other_textures = list(render_textures.values())
             other_textures.remove(texture)
-            custom_texture_reused = utils.is_custom_texture_used(texture_path, other_textures)
+            custom_texture_reused = common.is_custom_texture_used(texture_path, other_textures)
             if not custom_texture_reused:
                 custom_texture_reused = False
-                utils.reset_texture_images(texture)
-                custom_texture_scale_invalid = not utils.set_custom_image(original_img, texture_path)
+                common.reset_texture_images(texture)
+                custom_texture_scale_invalid = not common.set_custom_image(original_img, texture_path)
                 if not custom_texture_scale_invalid:
                     texture.path = value
     else:
@@ -481,7 +481,7 @@ def update_custom_texture_path(self, context):
         custom_texture_scale_invalid = False
         custom_texture_reused = False
 
-        utils.reset_texture_images(texture)
+        common.reset_texture_images(texture)
         texture.path = None
 
 
@@ -510,11 +510,11 @@ def update_texture_mapping(self, context):
         mat: Optional[Material] = texture.get_material_by_name(self.texture_material.name)
         custom_img = None
         if texture.path is not None:
-            custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
+            custom_img = bpy.data.images.load(filepath=common.get_absolute_asset_path(texture.path), check_existing=True)
 
         mat.map = Vector2(value[0], value[1])
 
-        utils.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
+        common.set_material_map(custom_img or original_img, self.texture_material, value[0], value[1])
 
 
 def get_texture_obj(name: str) -> Texture:
@@ -528,15 +528,13 @@ def get_initial_texture_materials(name: str) -> list[Material]:
     mats_data: list[Material] = list[Material]()
 
     image_obj = bpy.data.images[name]
-    mats = utils.get_image_materials(image_obj)
+    mats = common.get_image_materials(image_obj)
 
     for mat in mats:
-        if mat.node_tree is not None:
-            for node in mat.node_tree.nodes:
-                if node.bl_idname == "ShaderNodeMapping":
-                    x = node.inputs[1].default_value[0]
-                    y = node.inputs[1].default_value[1]
-                    mats_data.append(Material(mat.name, Vector2(x, y)))
+        for node in common.pkx_cache.mapping[mat.name]:
+            x = node.inputs[1].default_value[0]
+            y = node.inputs[1].default_value[1]
+            mats_data.append(Material(mat.name, Vector2(x, y)))
 
     return mats_data
 
@@ -572,23 +570,23 @@ def sync_props_to_scene():
     camera.data.angle = radians(scene.fov)
     camera.data.ortho_scale = scene.ortho_scale
 
-    clean_model_path = utils.get_relative_asset_path(prd.get_mode_model(mode))
+    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
     armature.animation_data.action = bpy.data.actions[
         os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
-    utils.show_armature(armature)
-    utils.remove_objects(removed_objects)
+    common.show_armature(armature)
+    common.remove_objects(removed_objects)
 
     if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
-        utils.update_all_shiny_colors(
+        common.update_all_shiny_colors(
             ShinyColor(scene.color1_r, scene.color1_g, scene.color1_b, scene.color1_a),
             ShinyColor(scene.color2_r, scene.color2_g, scene.color2_b, scene.color2_a)
         )
 
-    utils.set_textures(list(render_textures.values()))
+    common.set_textures(list(render_textures.values()))
 
-    utils.update_shading(ObjectShading[scene.shading], None)
+    common.update_shading(ObjectShading[scene.shading], None)
 
 
 def sync_prd_to_props():
@@ -846,7 +844,7 @@ LIGHTPROPS = [
 
 
 def poll_current_texture_image(scene, img):
-    model: str = utils.get_relative_asset_path(prd.get_mode_model(mode))
+    model: str = common.get_relative_asset_path(prd.get_mode_model(mode))
     model_file: str = os.path.basename(model)
 
     return img.type != "RENDER_RESULT" and img.name.startswith(model_file) and img.filepath == ""
@@ -857,12 +855,12 @@ def poll_texture_materials(scene, mat_obj):
     texture: Texture = get_texture_obj(original_img.name)
     custom_img = None
     if texture.path is not None:
-        custom_img = bpy.data.images.load(filepath=utils.get_absolute_asset_path(texture.path), check_existing=True)
+        custom_img = bpy.data.images.load(filepath=common.get_absolute_asset_path(texture.path), check_existing=True)
 
     if original_img is not None and mat_obj.node_tree is not None:
         for node in mat_obj.node_tree.nodes:
-            if utils.is_node_teximage_with_image(node, original_img) or \
-                    (custom_img is not None and utils.is_node_teximage_with_image(node, custom_img)):
+            if common.is_node_teximage_with_image(node, original_img) or \
+                    (custom_img is not None and common.is_node_teximage_with_image(node, custom_img)):
                 return True
 
     return False
@@ -909,7 +907,7 @@ TEXTURESPROPS = [
 SHINYPROPS = [
     ('color1_r',
      bpy.props.IntProperty(
-         name="Color1 R",
+         name="R",
          description="Red Color1",
          min=0,
          max=3,
@@ -918,7 +916,7 @@ SHINYPROPS = [
      )),
     ('color1_g',
      bpy.props.IntProperty(
-         name="Color1 G",
+         name="G",
          description="Green Color1",
          min=0,
          max=3,
@@ -927,7 +925,7 @@ SHINYPROPS = [
      )),
     ('color1_b',
      bpy.props.IntProperty(
-         name="Color1 B",
+         name="B",
          description="Blue Color1",
          min=0,
          max=3,
@@ -936,7 +934,7 @@ SHINYPROPS = [
      )),
     ('color1_a',
      bpy.props.IntProperty(
-         name="Color1 A",
+         name="A",
          description="Alpha Color1, changing this is not recommanded",
          min=0,
          max=3,
@@ -945,7 +943,7 @@ SHINYPROPS = [
      )),
     ('color2_r',
      bpy.props.IntProperty(
-         name="Color2 R",
+         name="R",
          description="Red Color2",
          min=0,
          max=255,
@@ -954,7 +952,7 @@ SHINYPROPS = [
      )),
     ('color2_g',
      bpy.props.IntProperty(
-         name="Color2 G",
+         name="G",
          description="Green Color2",
          min=0,
          max=255,
@@ -963,7 +961,7 @@ SHINYPROPS = [
      )),
     ('color2_b',
      bpy.props.IntProperty(
-         name="Color2 B",
+         name="B",
          description="Blue Color2",
          min=0,
          max=255,
@@ -972,7 +970,7 @@ SHINYPROPS = [
      )),
     ('color2_a',
      bpy.props.IntProperty(
-         name="Color2 A",
+         name="A",
          description="Alpha Color2, changing this is not recommanded",
          min=0,
          max=255,
@@ -1150,21 +1148,17 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
         col.operator(PKXCopyTexturesOperator.bl_idname)
         col.separator()
         row = col.row(align=True)
+        row.label(text="Color1: ")
         row.prop(context.scene, "color1_r")
-        row = col.row(align=True)
         row.prop(context.scene, "color1_g")
-        row = col.row(align=True)
         row.prop(context.scene, "color1_b")
-        row = col.row(align=True)
         row.prop(context.scene, "color1_a")
         col.separator()
         row = col.row(align=True)
+        row.label(text="Color2: ")
         row.prop(context.scene, "color2_r")
-        row = col.row(align=True)
         row.prop(context.scene, "color2_g")
-        row = col.row(align=True)
         row.prop(context.scene, "color2_b")
-        row = col.row(align=True)
         row.prop(context.scene, "color2_a")
 
 
@@ -1233,12 +1227,12 @@ def register(data: PokemonRenderData):
     scene.secondary_enabled = data.render.secondary_camera is not None
 
     sync_prd_to_props()
-    utils.remove_objects(removed_objects)
+    common.remove_objects(removed_objects)
 
     textures: List[Texture] = list(render_textures.values())
-    utils.set_textures(textures)
+    common.set_textures(textures)
 
-    utils.update_shading(ObjectShading[scene.shading], None)
+    common.update_shading(ObjectShading[scene.shading], None)
 
     # unselect on start
     for obj in bpy.context.selected_objects:
