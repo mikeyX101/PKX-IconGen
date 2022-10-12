@@ -121,6 +121,19 @@ namespace PKXIconGen.Core
                 }
             });
         }
+        
+        public static Task CleanBlend1Files()
+        {
+            return Task.Run(() =>
+            {
+                IEnumerable<string> files = Directory.EnumerateFiles(Paths.TempBlendFolder, "*.blend1", SearchOption.TopDirectoryOnly);
+                
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            });
+        }
 
         public static string? GetTrueModelPath(string? model, string? assetsPath)
         {

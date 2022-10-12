@@ -54,7 +54,10 @@ namespace PKXIconGen.Core
         internal static string GetTemplateCopy(string templateName) 
         {
             string copy = Path.Combine(TempBlendFolder, $"{templateName}.blend");
-            File.Copy(Template, copy, true);
+            if (!File.Exists(copy))
+            {
+                File.Copy(Template, copy, false);
+            }
             return copy;
         }
     }

@@ -12,6 +12,6 @@
 #   $5 = Optional, equivalent to {{AssetsPath}} from PKX-IconGen
 
 cd ..
-cp ./template.blend ./debugging/debug.blend # To avoid overriding template.blend
+cp -n ./template.blend ./debugging/debug.blend # To avoid overriding template.blend, do not override if debug.blend is already present, useful for cache tests
 $1 --debug-python --enable-autoexec --python-exit-code 200 ./debugging/debug.blend --python "$2" -- --pkx-debug "$3" --debug-egg "$4" --assets-path "$5"
 wait

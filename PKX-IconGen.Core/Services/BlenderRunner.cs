@@ -45,17 +45,17 @@ namespace PKXIconGen.Core.Services
         internal static class BlenderRunners
         {
             internal static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, RenderJob job) => 
-                new BlenderRunner(blenderRunnerInfo, "render", new string[]
+                new BlenderRunner(blenderRunnerInfo, job.Data.TemplateName, new string[]
                 {
                     "--background",
                     "--python", Paths.Render
                 }, JsonIO.ToJsonString(job));
 
             internal static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
-                new BlenderRunner(blenderRunnerInfo, prd.Output, new string[]
+                new BlenderRunner(blenderRunnerInfo, prd.TemplateName, new string[]
                 {
                     $"--python", Paths.ModifyData
-                }, JsonIO.ToJsonString(prd));
+                }, JsonIO.ToJsonString(prd), prd.Output);
         }
 
         private const string LogTemplate = "[CLIWrap] -> [{ExecutableName}] {Output}";
@@ -67,17 +67,19 @@ namespace PKXIconGen.Core.Services
         private string[] Arguments { get; init; }
         private string OptionalArguments { get; init; }
         private byte[] Input { get; init; }
+        private string? ExpectedJsonName { get; init; }
         private string ExecutableName { get; init; }
 
-        private BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string? templateName, string[] arguments, string input)
+        private BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string templateName, string[] arguments, string input, string? expectedJsonName = null)
         {
-            TemplateName = templateName ?? "template";
+            TemplateName = templateName;
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.Path;
             AssetsPath = blenderRunnerInfo.AssetsPath;
             Arguments = arguments;
             OptionalArguments = blenderRunnerInfo.OptionalArguments;
             Input = Encoding.UTF8.GetBytes(input);
+            ExpectedJsonName = expectedJsonName;
             ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
 
             if (LogBlender)
@@ -193,19 +195,23 @@ namespace PKXIconGen.Core.Services
                             break;
 
                         case ExitedCommandEvent exited:
-                            string jsonPath = Path.Combine(Paths.TempFolder, TemplateName + ".json");
-                            if (File.Exists(jsonPath))
+                            if (ExpectedJsonName is not null)
                             {
-                                try
+                                string jsonPath = Path.Combine(Paths.TempFolder, ExpectedJsonName + ".json");
+                                if (File.Exists(jsonPath))
                                 {
-                                    prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
-                                }
-                                finally
-                                {
-                                    File.Delete(jsonPath);
+                                    OnOutput?.Invoke("Reading output Json...".AsMemory());
+                                    try
+                                    {
+                                        prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
+                                    }
+                                    finally
+                                    {
+                                        File.Delete(jsonPath);
+                                    }
                                 }
                             }
-
+                            
                             OnOutput?.Invoke($"Process exited; Code: {exited.ExitCode}".AsMemory());
                             OnOutput?.Invoke("Operation has finished.".AsMemory());
                             break;
@@ -244,6 +250,7 @@ namespace PKXIconGen.Core.Services
             }
             finally
             {
+                await Utils.CleanBlend1Files();
                 OnFinish?.Invoke(prd);
             }
         }

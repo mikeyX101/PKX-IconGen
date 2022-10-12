@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -84,6 +85,16 @@ namespace PKXIconGen.Core.Data
             {
                 shiny = value;
                 OnPropertyChanged();
+            }
+        }
+
+        [JsonIgnore]
+        public string TemplateName
+        {
+            get
+            {
+                string shinyModel = shiny.Render.Model is not null ? $"_{Path.GetFileNameWithoutExtension(shiny.Render.Model)}" : "";
+                return $"{Id}_{Output}_{Path.GetFileNameWithoutExtension(render.Model!)}{shinyModel}";
             }
         }
 

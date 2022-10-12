@@ -84,6 +84,7 @@ def parse_cmd_args(script_args):
         for arg, value in cmd_args:
             if arg == "--assets-path" and value != "":
                 assets_path = value
+                print(f"Assets Path: {assets_path}")
 
 
 def get_absolute_asset_path(model: str) -> str:
@@ -94,15 +95,36 @@ def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
 
-def import_model(model: str, color1: Optional[ShinyColor], color2: Optional[ShinyColor]):
-    print(f"Assets Path: {assets_path}")
-    if assets_path is not None:
-        true_path = get_absolute_asset_path(model)
-    else:
-        true_path = model
+def import_models(prd: PokemonRenderData):
+    objs = bpy.data.objects
+    any_imported: bool = False
 
-    print(f"Importing: {true_path}")
-    import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
+    shiny_info: ShinyInfo = prd.shiny
+
+    if objs.find("Armature0") == -1:
+        if assets_path is not None:
+            true_path = get_absolute_asset_path(prd.render.model)
+        else:
+            true_path = prd.render.model
+
+        print(f"Importing: {true_path}")
+        import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
+        any_imported = True
+
+    if objs.find("Armature1") == -1 and shiny_info.render.model is not None:
+        if assets_path is not None:
+            shiny_true_path = get_absolute_asset_path(shiny_info.render.model)
+        else:
+            shiny_true_path = shiny_info.render.model
+
+        print(f"Importing: {shiny_true_path}")
+        import_hsd.load(None, bpy.context, shiny_true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
+        switch_model(shiny_info, EditMode.NORMAL)  # Hide shiny model on load
+        any_imported = True
+
+    if any_imported:
+        bpy.ops.wm.save_mainfile()
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(bpy.data.filepath), "edit.blend"))
 
     mats = bpy.data.materials
     for mat in mats:
@@ -131,7 +153,7 @@ def import_model(model: str, color1: Optional[ShinyColor], color2: Optional[Shin
                 tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
             # Setup shiny color
-            if color1 is not None and color2 is not None and tree.nodes.find(SHINYMIXNODE_NAME) == -1:
+            if shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(SHINYMIXNODE_NAME) == -1:
                 setup_shiny_mats(tree, bsdf)
 
             # Cache nodes
@@ -148,8 +170,8 @@ def import_model(model: str, color1: Optional[ShinyColor], color2: Optional[Shin
                 elif node.name == SHINYMIXNODE_NAME:
                     pkx_cache.shiny_mix.append(node)
 
-    if color1 is not None and color2 is not None:
-        update_all_shiny_colors(color1, color2)
+    if shiny_info.color1 is not None and shiny_info.color2 is not None:
+        update_all_shiny_colors(shiny_info.color1, shiny_info.color2)
 
 
 def setup_shiny_mats(tree, bsdf):
@@ -236,16 +258,10 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
         objs = bpy.data.objects
 
         if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-            if objs.find("Armature1") == -1:
-                # show_message_box("Loading shiny model. Please wait...", "Loading...")
-                import_model(shiny_info.render.model, None, None)
-
             hide_armature(objs["Armature0"])
             show_armature(objs["Armature1"])
         else:
-            if objs.find("Armature1") != -1:
-                hide_armature(objs["Armature1"])
-
+            hide_armature(objs["Armature1"])
             show_armature(objs["Armature0"])
     else:
         raise Exception("PRD had no filter or alt model.")

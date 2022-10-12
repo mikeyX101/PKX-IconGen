@@ -38,12 +38,18 @@ namespace PKXIconGen.Core.Data
             get => model;
             set
             {
-                // Due to limitations, we need to empty the texture list if the model is changed (also in case the model is actually different)
+                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract False during init
                 if (Textures is not null && Textures.Count != 0)
                 {
-                    Textures.RemoveAll(_ => true);
+                    Textures.Clear();
                     CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+                }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract False during init
+                if (RemovedObjects is not null && RemovedObjects.Count != 0)
+                {
+                    RemovedObjects.Clear();
+                    CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
                 }
                 
                 model = value;

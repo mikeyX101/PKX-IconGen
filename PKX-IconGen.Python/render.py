@@ -102,7 +102,7 @@ if __name__ == "__main__":
         job: RenderJob = RenderJob.from_json(json)
 
     last_rendered_mode: Optional[EditMode] = None
-    common.import_model(job.data.render.model, job.data.shiny.color1, job.data.shiny.color2)
+    common.import_models(job.data)
 
     blender_render = bpy.data.scenes["Scene"].render
 
