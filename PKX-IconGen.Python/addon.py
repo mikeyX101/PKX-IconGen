@@ -96,6 +96,7 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
             context.scene.custom_texture_path = context.scene.custom_texture_path.replace(common.assets_path, "{{AssetsPath}}")
         return {'FINISHED'}
 
+
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
     bl_idname = "wm.pkx_delete"
@@ -1265,7 +1266,7 @@ def register(data: PokemonRenderData):
     addon_keymaps.append((km, kmi))
 
     # Deactivate object context menu
-    for b in wm.keyconfigs.user.keymaps["Object Mode"].keymap_items:
+    for b in wm.keyconfigs.active.keymaps["Object Mode"].keymap_items:
         if b is not None and b.name == "Object Context Menu":
             b.active = False
 
