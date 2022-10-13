@@ -213,25 +213,25 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
 
           <TextBlock Text="*Secondary:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="4" />
           <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="4" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="4" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="4" />
           <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="4" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="4" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="4" />
           <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="4" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="4" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="4" />
           <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="5" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="5" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="5" />
           <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="5" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="5" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="5" />
           <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="5" />
-          <TextBox Text="{ReflectionBinding SecondaryCamera.Value.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
+          <TextBox Text="{ReflectionBinding SecondaryCamera.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
 
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="4" />
-          <pkxuc:ColorDisplay Color="{ReflectionBinding SecondaryLight.Value.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
+          <pkxuc:ColorDisplay Color="{ReflectionBinding SecondaryLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
-          <TextBox Text="{ReflectionBinding SecondaryLight.Value.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
+          <TextBox Text="{ReflectionBinding SecondaryLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="5" />
-          <i:Icon Value="{ReflectionBinding SecondaryLight.Value.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="5" />
-          <TextBox Text="{ReflectionBinding SecondaryLight.Value.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="5" IsReadOnly="True" />
+          <i:Icon Value="{ReflectionBinding SecondaryLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="5" />
+          <TextBox Text="{ReflectionBinding SecondaryLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="5" IsReadOnly="True" />
 
           <TextBlock Text="Extras: " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="6" />
           <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="*" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="12">

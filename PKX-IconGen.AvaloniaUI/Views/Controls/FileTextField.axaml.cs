@@ -93,6 +93,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         private void InsertAssetsPath(object? sender, RoutedEventArgs e) 
         {
             const string toInsert = "{{AssetsPath}}";
+            if (fileTextBox.Text?.Contains("{{AssetsPath}}") ?? false) return;
             
             fileTextBox.Text = fileTextBox.Text is null ? toInsert : fileTextBox.Text.Insert(fileTextBox.CaretIndex, toInsert);
             fileTextBox.Focus();
@@ -101,10 +102,15 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         
         private async void BrowseFiles(object? sender, RoutedEventArgs e)
         {
-            string? path = await OpenDialog();
-            if (path != null)
+            string? newPath = await OpenDialog();
+            if (newPath != null)
             {
-                Path = path;
+                if (Path.Contains("{{AssetsPath}}") && newPath.Contains(AssetsPath))
+                {
+                    newPath = newPath.Replace(AssetsPath, "{{AssetsPath}}");
+                }
+            
+                Path = newPath;
             }
         }
         
