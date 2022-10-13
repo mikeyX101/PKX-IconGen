@@ -41,7 +41,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 11),
+    "version": (0, 2, 12),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -1072,10 +1072,9 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
         for (prop_name, _) in CAMERAPROPS:
             if prop_name == "focus":
-                if scene.is_ortho:
-                    row = col.row(align=True)
-                    row.prop(scene, prop_name)
-                    col.operator(PKXCameraFocusOperator.bl_idname)
+                row = col.row(align=True)
+                row.prop(scene, prop_name)
+                col.operator(PKXCameraFocusOperator.bl_idname)
             elif prop_name == "fov":
                 if not scene.is_ortho:
                     row = col.row(align=True)
