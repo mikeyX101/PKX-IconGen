@@ -137,6 +137,15 @@ def import_models(prd: PokemonRenderData):
             bsdf.inputs[blender_compat.principled_bsdf_in.specular].default_value = 0
             bsdf.inputs[blender_compat.principled_bsdf_in.roughness].default_value = 1
 
+            #  Fix normal maps output being in Alpha
+            alpha_input = bsdf.inputs[blender_compat.principled_bsdf_in.alpha]
+            if len(alpha_input.links) > 0:
+                bump_link = alpha_input.links[0]
+                bump_node = bump_link.from_node
+                if bump_node.bl_idname == "ShaderNodeBump":
+                    tree.links.remove(bump_link)
+                    tree.links.new(bump_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.normal])
+
             #  Fix alpha output being in Emission Strength/Transmission Roughness
             transmission_roughness_input = bsdf.inputs[blender_compat.principled_bsdf_in.transmission_roughness]
             if len(transmission_roughness_input.links) > 0:

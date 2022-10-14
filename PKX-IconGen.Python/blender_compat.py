@@ -34,7 +34,8 @@ class PrincipledBSDFInputs(object):
                  roughness,
                  transmission_roughness,
                  emission_strength,
-                 alpha):
+                 alpha,
+                 normal):
         self.base_color = base_color
         self.metallic = metallic
         self.specular = specular
@@ -42,6 +43,7 @@ class PrincipledBSDFInputs(object):
         self.transmission_roughness = transmission_roughness
         self.emission_strength = emission_strength
         self.alpha = alpha
+        self.normal = normal
 
 
 class PrincipledBSDFOutputs(object):
@@ -66,7 +68,8 @@ principled_bsdf_in: PrincipledBSDFInputs = PrincipledBSDFInputs(
     roughness=7,
     transmission_roughness=16,
     emission_strength=18,
-    alpha=19
+    alpha=19,
+    normal=20
 )
 principled_bsdf_out: PrincipledBSDFOutputs = PrincipledBSDFOutputs(
     bsdf=0
@@ -87,5 +90,6 @@ if (3, 0, 0) <= blender_ver < (3, 3, 0):
         roughness=9,
         transmission_roughness=18,
         emission_strength=20,
-        alpha=21
+        alpha=21,
+        normal=22
     )
