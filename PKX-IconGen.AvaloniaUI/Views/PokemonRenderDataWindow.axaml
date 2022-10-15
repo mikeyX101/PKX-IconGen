@@ -234,7 +234,7 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
           <TextBox Text="{ReflectionBinding SecondaryLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="5" IsReadOnly="True" />
 
           <TextBlock Text="Extras: " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="6" />
-          <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="*" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="12">
+          <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="*" Margin="0,0,16,0" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="12">
 
             <TextBlock Text="Removed Objs:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0"/>
             <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="0">

@@ -44,6 +44,7 @@
   </Window.Styles>
   <Window.Resources>
     <conv:PathStringFileNameStringConverter x:Key="PathStringFileNameStringConverter" />
+    <conv:TextureEnumerableHasCustomTextureConverter x:Key="TextureEnumerableHasCustomTextureConverter" />
   </Window.Resources>
 
   <Panel>
@@ -191,8 +192,8 @@ Please note that this can drastically increase the rendering and processing time
                     <i:Icon FontSize="16" Value="mdi-check">
                       <i:Icon.IsVisible>
                         <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.Or}">
-                          <Binding Path="!!Render.Textures.Count"/>
-                          <Binding Path="!!Shiny.Render.Textures.Count"/>
+                          <Binding Path="Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="Shiny.Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                         </MultiBinding>
                       </i:Icon.IsVisible>
                     </i:Icon>

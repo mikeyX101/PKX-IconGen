@@ -13,7 +13,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.2.8</AssemblyVersion>
+    <AssemblyVersion>0.2.9</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.2.0</Version>
     <StartupObject></StartupObject>
@@ -26,7 +26,7 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.2.8</PackageVersion>
+    <PackageVersion>0.2.9</PackageVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>

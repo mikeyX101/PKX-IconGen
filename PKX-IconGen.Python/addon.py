@@ -41,7 +41,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 13),
+    "version": (0, 2, 14),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -911,6 +911,7 @@ TEXTURESPROPS = [
          name="Mapping",
          description="Direct mapping of the texture for this material",
          size=2,
+         step=1,
          subtype="XYZ",
          default=(0, 0),
          min=-50,
