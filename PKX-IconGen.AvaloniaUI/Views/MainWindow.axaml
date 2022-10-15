@@ -171,9 +171,10 @@ Please note that this can drastically increase the rendering and processing time
           </Panel>
         </Grid>
         <!--Pokemon-->
-        <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
+        <Grid VerticalAlignment="Center" Margin="4,0,0,0" ColumnDefinitions="0.65*, *, 0.75*, 0.25*" RowDefinitions="*" Grid.Column="1" Grid.Row="9">
           <TextBlock Text="Name" Grid.Column="0" />
           <TextBlock Text="Model" Grid.Column="1" />
+          <TextBlock HorizontalAlignment="Center" Text="Has Custom Textures" Grid.Column="2" />
         </Grid>
         <ListBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
@@ -183,10 +184,20 @@ Please note that this can drastically increase the rendering and processing time
           </ListBox.Styles>
           <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type data:PokemonRenderData}">
-                <Grid ColumnDefinitions="0.65*, *, 0.25*" RowDefinitions="*">
+                <Grid ColumnDefinitions="0.65*, *, 0.75*, 0.25*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
-                  <Panel HorizontalAlignment="Right" Grid.Column="2">
+                  <Panel HorizontalAlignment="Center" Grid.Column="2">
+                    <i:Icon FontSize="16" Value="mdi-check">
+                      <i:Icon.IsVisible>
+                        <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.Or}">
+                          <Binding Path="!!Render.Textures.Count"/>
+                          <Binding Path="!!Shiny.Render.Textures.Count"/>
+                        </MultiBinding>
+                      </i:Icon.IsVisible>
+                    </i:Icon>
+                  </Panel>
+                  <Panel HorizontalAlignment="Right" Grid.Column="3">
                     <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand, FallbackValue=None}" CommandParameter="{Binding .}">
                       <i:Icon FontSize="16" Value="mdi-pencil" />
                     </Button>
