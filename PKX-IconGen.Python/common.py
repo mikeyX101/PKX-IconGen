@@ -162,7 +162,10 @@ def import_models(prd: PokemonRenderData):
                 tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
             # Setup shiny color
-            if shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
+            # Don't set up if bump maps are used on this material, but reduce bump strength while we're at it
+            if tree.nodes.find("Bump") != -1:
+                tree.nodes["Bump"].inputs[blender_compat.bump_in.strength].default_value = 0.05
+            elif shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
                 setup_shiny_mats(tree)
 
             # Cache nodes

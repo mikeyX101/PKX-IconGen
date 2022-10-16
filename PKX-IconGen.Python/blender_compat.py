@@ -25,6 +25,12 @@ class MappingInputs(object):
         self.location = location
 
 
+class BumpInputs(object):
+
+    def __init__(self, strength):
+        self.strength = strength
+
+
 class PrincipledBSDFInputs(object):
 
     def __init__(self,
@@ -76,6 +82,9 @@ principled_bsdf_out: PrincipledBSDFOutputs = PrincipledBSDFOutputs(
 )
 mapping_in: MappingInputs = MappingInputs(
     location=1
+)
+bump_in: BumpInputs = BumpInputs(
+    strength=0
 )
 tex_image_in: TexImageInputs = TexImageInputs(
     vector=0

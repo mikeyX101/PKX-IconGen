@@ -18,7 +18,6 @@
 import copy
 from typing import List, Optional
 import bpy
-import bpy.utils.previews
 import os
 
 import bpy_extras.view3d_utils
@@ -41,7 +40,7 @@ from math import degrees
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 14),
+    "version": (0, 2, 15),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -58,7 +57,6 @@ render_textures: dict[str, Texture] = dict()
 custom_texture_path_invalid: bool = False
 custom_texture_scale_invalid: bool = False
 custom_texture_reused: bool = False
-preview_textures = bpy.utils.previews.new()
 camera = None
 camera_focus = None
 camera_light = None
@@ -350,6 +348,7 @@ def update_animation_pose(self, context):
     armature = get_armature()
 
     clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
+    # While debugging, if an error occurs here, make sure to clear cache between different JSON files
     action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(value)]
 
     armature.animation_data.action = action
@@ -455,10 +454,6 @@ def update_current_texture_image(self, context):
 
     if value is not None:
         self.texture_material = None
-        if value.name not in preview_textures:
-            preview_tex = preview_textures.new(value.name)
-            preview_tex.image_size = value.size
-            preview_tex.image_pixels_float = value.pixels
 
         texture: Texture = get_texture_obj(value.name)
         self.custom_texture_path = texture.path or ""
@@ -1117,8 +1112,7 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                 row.prop(scene, prop_name)
 
                 if scene.current_texture_image is not None:
-                    preview_tex = preview_textures[scene.current_texture_image.name]
-                    col.template_icon(icon_value=preview_tex.icon_id, scale=5)
+                    col.template_icon(icon_value=scene.current_texture_image.preview.icon_id, scale=5)
             else:
                 image_col = col.column()
                 image_col.enabled = scene.current_texture_image is not None
@@ -1229,7 +1223,6 @@ CLASSES = [
 # We cannot register without data, addon is not meant to be used standalone anyway
 def register(data: PokemonRenderData):
     global prd
-    global preview_textures
     prd = data
 
     for prop_list in ALLPROPS:
