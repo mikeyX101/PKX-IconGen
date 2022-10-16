@@ -137,6 +137,10 @@ def import_models(prd: PokemonRenderData):
             bsdf.inputs[blender_compat.principled_bsdf_in.specular].default_value = 0
             bsdf.inputs[blender_compat.principled_bsdf_in.roughness].default_value = 1
 
+            #  Reduce bump map strength
+            if tree.nodes.find("Bump") != -1:
+                tree.nodes["Bump"].inputs[blender_compat.bump_in.strength].default_value = 0.05
+
             #  Fix normal maps output being in Alpha
             alpha_input = bsdf.inputs[blender_compat.principled_bsdf_in.alpha]
             if len(alpha_input.links) > 0:
@@ -162,10 +166,7 @@ def import_models(prd: PokemonRenderData):
                 tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
 
             # Setup shiny color
-            # Don't set up if bump maps are used on this material, but reduce bump strength while we're at it
-            if tree.nodes.find("Bump") != -1:
-                tree.nodes["Bump"].inputs[blender_compat.bump_in.strength].default_value = 0.05
-            elif shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
+            if shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
                 setup_shiny_mats(tree)
 
             # Cache nodes
@@ -187,14 +188,19 @@ def import_models(prd: PokemonRenderData):
 
 
 def setup_shiny_mats(tree):
+    uses_bump: bool = tree.nodes.find("Bump") != -1
+
     tex_number: int = 0
     for node in tree.nodes:
         if node.bl_idname == "ShaderNodeTexImage":
             texture_output_socket = node.outputs[0].links[0].to_socket
 
-            color1_node = tree.nodes.new("ShaderNodeGroup")
-            color1_node.name = f"{SHINYCOLOR1_NAME}.{tex_number}"
-            color1_node.node_tree = bpy.data.node_groups['Color1']
+            if not uses_bump:
+                color1_node = tree.nodes.new("ShaderNodeGroup")
+                color1_node.name = f"{SHINYCOLOR1_NAME}.{tex_number}"
+                color1_node.node_tree = bpy.data.node_groups['Color1']
+            else:
+                color1_node = None
 
             color2_node = tree.nodes.new("ShaderNodeGroup")
             color2_node.name = f"{SHINYCOLOR2_NAME}.{tex_number}"
@@ -205,11 +211,15 @@ def setup_shiny_mats(tree):
             mix_node.blend_type = "MIX"
             mix_node.inputs[0].default_value = 0
 
-            tree.links.new(node.outputs[0], color1_node.inputs[0])  # ShaderNodeTexImage.Color -> PKX_ShinyColor1.TexColor
-            tree.links.new(node.outputs[1], color1_node.inputs[1])  # ShaderNodeTexImage.Alpha -> PKX_ShinyColor1.TexAlpha
+            if color1_node is not None:
+                tree.links.new(node.outputs[0], color1_node.inputs[0])  # ShaderNodeTexImage.Color -> PKX_ShinyColor1.TexColor
+                tree.links.new(node.outputs[1], color1_node.inputs[1])  # ShaderNodeTexImage.Alpha -> PKX_ShinyColor1.TexAlpha
 
-            tree.links.new(color1_node.outputs[0], color2_node.inputs[0])  # PKX_ShinyColor1.TexColor -> PKX_ShinyColor2.Image
-            tree.links.new(color1_node.outputs[1], color2_node.inputs[1])  # PKX_ShinyColor1.TexAlpha -> PKX_ShinyColor2.Alpha
+                tree.links.new(color1_node.outputs[0], color2_node.inputs[0])  # PKX_ShinyColor1.TexColor -> PKX_ShinyColor2.Image
+                tree.links.new(color1_node.outputs[1], color2_node.inputs[1])  # PKX_ShinyColor1.TexAlpha -> PKX_ShinyColor2.Alpha
+            else:
+                tree.links.new(node.outputs[0], color2_node.inputs[0])  # ShaderNodeTexImage.Color -> PKX_ShinyColor2.Image
+                tree.links.new(node.outputs[1], color2_node.inputs[1])  # ShaderNodeTexImage.Alpha -> PKX_ShinyColor2.Alpha
 
             tree.links.new(color2_node.outputs[0], mix_node.inputs[2])  # PKX_ShinyColor2.TexColor -> PKX_ShinyMixRGB.Color2
             # TODO Manage Alpha
