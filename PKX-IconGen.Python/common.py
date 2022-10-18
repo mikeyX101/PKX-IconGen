@@ -39,8 +39,8 @@ class PkxIconGenCache(object):
         self.shiny_color1: Final[list] = []
         self.shiny_color2: Final[list] = []
         self.shiny_mix: Final[list] = []
-        # Mapping/Mat by Blender images
-        self.img_mat_mapping: Final[dict[str, list]] = {}
+        # Mapping/Mat/Defaults by Blender images - (mat_name, mapping_node, [default_x, default_y])
+        self.img_mat_mapping: Final[dict[str, list[(str, any, [float, float])]]] = {}
         # TexImage by Blender materials
         self.mat_tex_image: Final[dict[str, list]] = {}
         # TexImage by Blender images
@@ -59,11 +59,13 @@ class PkxIconGenCache(object):
         if tex_node.image.name not in self.img_mat_mapping:
             self.img_mat_mapping[tex_node.image.name] = []
 
-        mapping_node = tex_node.inputs[0].links[0].from_node
+        mapping_node = tex_node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
         if mapping_node.bl_idname != "ShaderNodeMapping":
             print(f"Node attached to ShaderNodeTexImage for image {tex_node.image.name} was not ShaderNodeMapping, but {mapping_node.bl_idname} instead.")
         else:
-            self.img_mat_mapping[tex_node.image.name].append((mat.name, mapping_node))
+            x = mapping_node.inputs[1].default_value[0]
+            y = mapping_node.inputs[1].default_value[1]
+            self.img_mat_mapping[tex_node.image.name].append((mat.name, mapping_node, [x, y]))
 
 
 SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
@@ -392,6 +394,13 @@ def set_material_map(image_obj, mat_obj, x: float, y: float):
             if img_vector_input_node.bl_idname == "ShaderNodeMapping":
                 img_vector_input_node.inputs[1].default_value[0] = x
                 img_vector_input_node.inputs[1].default_value[1] = y
+
+
+def reset_materials_maps():
+    for img_infos in list(pkx_cache.img_mat_mapping.values()):
+        for (_, mapping_node, defaults) in img_infos:
+            mapping_node.inputs[1].default_value[0] = defaults[0]
+            mapping_node.inputs[1].default_value[1] = defaults[1]
 
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):

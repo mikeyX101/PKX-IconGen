@@ -32,9 +32,10 @@ from data.render_job import RenderJob
 import common
 
 
-def reset_mode_textures(prd: PokemonRenderData, mode: EditMode):
+def reset_all(prd: PokemonRenderData, mode: EditMode):
     for texture in prd.get_mode_textures(mode):
         common.reset_texture_images(texture)
+    common.reset_materials_maps()
 
 
 def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
@@ -116,20 +117,20 @@ if __name__ == "__main__":
     last_rendered_mode = EditMode.NORMAL
 
     if job.data.render.secondary_camera is not None:
-        reset_mode_textures(job.data, last_rendered_mode)
+        reset_all(job.data, last_rendered_mode)
         sync_prd_to_scene(job.data, EditMode.NORMAL_SECONDARY)
         blender_render.filepath = job.secondary_path
         bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
         last_rendered_mode = EditMode.NORMAL_SECONDARY
 
-    reset_mode_textures(job.data, last_rendered_mode)
+    reset_all(job.data, last_rendered_mode)
     sync_prd_to_scene(job.data, EditMode.SHINY)
     blender_render.filepath = job.shiny_path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
     last_rendered_mode = EditMode.SHINY
 
     if job.data.shiny.render.secondary_camera is not None:
-        reset_mode_textures(job.data, last_rendered_mode)
+        reset_all(job.data, last_rendered_mode)
         sync_prd_to_scene(job.data, EditMode.SHINY_SECONDARY)
         blender_render.filepath = job.shiny_secondary_path
         bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)

@@ -39,7 +39,7 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 17),
+    "version": (0, 2, 18),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -335,6 +335,7 @@ def update_mode(self, context):
     for texture in list(render_textures.values()):
         common.reset_texture_images(texture)
 
+    common.reset_materials_maps()
     reset_texture_props(self)
 
     common.switch_model(prd.shiny, mode)
@@ -538,7 +539,7 @@ def get_initial_texture_materials(name: str) -> list[Material]:
 
     image_obj = bpy.data.images[name]
 
-    for (mat_name, node) in common.pkx_cache.img_mat_mapping[image_obj.name]:
+    for (mat_name, node, _) in common.pkx_cache.img_mat_mapping[image_obj.name]:
         x = node.inputs[1].default_value[0]
         y = node.inputs[1].default_value[1]
         mats_data.append(Material(mat_name, Vector2(x, y)))
