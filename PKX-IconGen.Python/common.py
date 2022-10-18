@@ -36,19 +36,34 @@ from importer import import_hsd
 
 class PkxIconGenCache(object):
     def __init__(self):
-        self.shiny_color1: list = []
-        self.shiny_color2: list = []
-        self.shiny_mix: list = []
-        # Mapping by Blender materials
-        self.mapping: dict[str, list] = {}
+        self.shiny_color1: Final[list] = []
+        self.shiny_color2: Final[list] = []
+        self.shiny_mix: Final[list] = []
+        # Mapping/Mat by Blender images
+        self.img_mat_mapping: Final[dict[str, list]] = {}
         # TexImage by Blender materials
-        self.mat_tex_image: dict[str, list] = {}
+        self.mat_tex_image: Final[dict[str, list]] = {}
         # TexImage by Blender images
-        self.img_tex_image: dict[str, list] = {}
+        self.img_tex_image: Final[dict[str, list]] = {}
+        # Name of materials that have been modified after getting imported
+        self.processed_mats: Final[list[str]] = []
 
     def init_mat_cache(self, mat_name: str):
-        self.mapping[mat_name] = []
         self.mat_tex_image[mat_name] = []
+
+    def add_mat_mapping(self, tex_node, mat):
+        if tex_node.bl_idname != "ShaderNodeTexImage":
+            print(f"Tried using {tex_node.bl_idname} to add to Mat/Mapping cache")
+            return
+
+        if tex_node.image.name not in self.img_mat_mapping:
+            self.img_mat_mapping[tex_node.image.name] = []
+
+        mapping_node = tex_node.inputs[0].links[0].from_node
+        if mapping_node.bl_idname != "ShaderNodeMapping":
+            print(f"Node attached to ShaderNodeTexImage for image {tex_node.image.name} was not ShaderNodeMapping, but {mapping_node.bl_idname} instead.")
+        else:
+            self.img_mat_mapping[tex_node.image.name].append((mat.name, mapping_node))
 
 
 SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
@@ -128,6 +143,9 @@ def import_models(prd: PokemonRenderData):
 
     mats = bpy.data.materials
     for mat in mats:
+        if mat.name in pkx_cache.processed_mats:
+            break
+
         tree = mat.node_tree
         if tree is not None:
             #  Rough Materials
@@ -169,13 +187,14 @@ def import_models(prd: PokemonRenderData):
             if shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
                 setup_shiny_mats(tree)
 
-            # Cache nodes
+            # Cache
+            pkx_cache.processed_mats.append(mat.name)
+
             pkx_cache.init_mat_cache(mat.name)
             for node in tree.nodes:
-                if node.bl_idname == "ShaderNodeMapping":
-                    pkx_cache.mapping[mat.name].append(node)
-                elif node.bl_idname == "ShaderNodeTexImage":
+                if node.bl_idname == "ShaderNodeTexImage":
                     pkx_cache.mat_tex_image[mat.name].append(node)
+                    pkx_cache.add_mat_mapping(node, mat)
                 elif SHINYCOLOR1_NAME in node.name:
                     pkx_cache.shiny_color1.append(node)
                 elif SHINYCOLOR2_NAME in node.name:
@@ -300,18 +319,6 @@ def get_image_nodes(image_obj):
         pkx_cache.img_tex_image[image_obj.name] = nodes
 
     return pkx_cache.img_tex_image[image_obj.name]
-
-
-def get_image_materials(image_obj):
-    mats: list = list()
-    if image_obj is not None:
-        for mat in bpy.data.materials:
-            if mat.node_tree is not None:
-                for node in mat.node_tree.nodes:
-                    if is_node_teximage_with_image(node, image_obj):
-                        mats.append(mat)
-                        break
-    return mats
 
 
 def set_custom_image(image_obj, texture_path: str) -> bool:

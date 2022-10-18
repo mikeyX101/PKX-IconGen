@@ -35,12 +35,11 @@ from data.vector2 import Vector2
 from data.vector3 import Vector3
 from data.edit_mode import EditMode
 from math import radians
-from math import degrees
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 16),
+    "version": (0, 2, 17),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -538,13 +537,11 @@ def get_initial_texture_materials(name: str) -> list[Material]:
     mats_data: list[Material] = list[Material]()
 
     image_obj = bpy.data.images[name]
-    mats = common.get_image_materials(image_obj)
 
-    for mat in mats:
-        for node in common.pkx_cache.mapping[mat.name]:
-            x = node.inputs[1].default_value[0]
-            y = node.inputs[1].default_value[1]
-            mats_data.append(Material(mat.name, Vector2(x, y)))
+    for (mat_name, node) in common.pkx_cache.img_mat_mapping[image_obj.name]:
+        x = node.inputs[1].default_value[0]
+        y = node.inputs[1].default_value[1]
+        mats_data.append(Material(mat_name, Vector2(x, y)))
 
     return mats_data
 

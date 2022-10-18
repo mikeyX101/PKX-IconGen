@@ -35,13 +35,6 @@ class Texture(object):
 
         return None
 
-    def apply_texture(self, name: str) -> Optional[Material]:
-        for mat in self.mats:
-            if mat.name == name:
-                return mat
-
-        return None
-
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Texture']:
         if obj is None:
