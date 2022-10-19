@@ -34,12 +34,13 @@ from data.texture import Texture
 from data.vector2 import Vector2
 from data.vector3 import Vector3
 from data.edit_mode import EditMode
+from math import degrees
 from math import radians
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 18),
+    "version": (0, 2, 19),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -106,8 +107,9 @@ class PKXDeleteOperator(bpy.types.Operator):
     def execute(self, context):
         objs = context.selected_objects
 
-        removed_objects.extend([obj.name for obj in objs])
-        for obj in objs:
+        objects_to_remove = [obj for obj in objs if "PKXIconGen_" not in obj.name]
+        removed_objects.extend([obj.name for obj in objects_to_remove])
+        for obj in objects_to_remove:
             obj.hide_render = True
             obj.hide_viewport = True
 
@@ -179,6 +181,10 @@ class PKXCameraFocusOperator(bpy.types.Operator):
     """Move camera focus to a place you leftclick, rightclick or 'esc' to cancel"""
     bl_idname = "view3d.pkx_camera_focus_cast"
     bl_label = "Click Focus"
+
+    @classmethod
+    def poll(cls, context):
+        return not context.scene.advanced_camera_editing
 
     def modal(self, context, event):
         if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
@@ -255,7 +261,7 @@ class PKXSaveOperator(bpy.types.Operator):
     bl_label = "Save PKX Json"
 
     def execute(self, context):
-        sync_props_to_prd()
+        sync_props_to_prd(context)
 
         json: str = prd.to_json()
         print(f"Output: {json}")
@@ -284,6 +290,36 @@ class PKXSaveQuitOperator(bpy.types.Operator):
         except:
             return {'CANCELLED'}
         bpy.ops.wm.quit_blender()
+        return {'FINISHED'}
+
+
+class PKXSelectCamera(bpy.types.Operator):
+    """Select Camera"""
+    bl_idname = "wm.pkx_select_camera"
+    bl_label = "Select Camera"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.advanced_camera_editing
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action="DESELECT")
+        get_camera().select_set(True)
+        return {'FINISHED'}
+
+
+class PKXSelectFocusPoint(bpy.types.Operator):
+    """Select Camera Focus Point"""
+    bl_idname = "wm.pkx_select_camera_focus_point"
+    bl_label = "Select Camera Focus Point"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.advanced_camera_editing
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action="DESELECT")
+        get_camera_focus().select_set(True)
         return {'FINISHED'}
 
 
@@ -326,7 +362,9 @@ def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
 
 # Update Functions
 def update_mode(self, context):
-    sync_props_to_prd()
+    if self.advanced_camera_editing:
+        sync_camera_to_props(context)
+    sync_props_to_prd(context)
 
     value = self.mode
     global mode
@@ -339,8 +377,8 @@ def update_mode(self, context):
     reset_texture_props(self)
 
     common.switch_model(prd.shiny, mode)
-    sync_prd_to_props()
-    sync_props_to_scene()
+    sync_prd_to_props(context)
+    sync_props_to_scene(context)
 
 
 def update_animation_pose(self, context):
@@ -446,6 +484,32 @@ def update_shading(self, context):
     value = self.shading
 
     common.update_shading(ObjectShading[value], context)
+
+
+def update_advanced_camera_editing(self, context):
+    value: bool = self.advanced_camera_editing
+
+    camera = get_camera()
+    camera_focus = get_camera_focus()
+
+    camera.hide_select = not value
+    camera_focus.hide_select = not value
+
+    for area in bpy.context.screen.areas:
+        if area.type == "VIEW_3D":
+            for space in area.spaces:
+                if not space.use_local_camera:
+                    space.show_gizmo = value
+
+    if not value:
+        bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
+
+        camera.select_set(False)
+        camera_focus.select_set(False)
+
+        sync_camera_to_props(context)
+    else:
+        bpy.ops.wm.tool_set_by_id(name="builtin.move")
 
 
 # Textures Updates
@@ -560,8 +624,19 @@ def reset_texture_props(scene):
 
 
 # State sync functions
-def sync_props_to_scene():
-    scene = bpy.data.scenes["Scene"]
+def sync_camera_to_props(context):
+    scene = context.scene
+    camera = get_camera()
+    camera_focus = get_camera_focus()
+
+    scene.pos = camera.location
+    scene.focus = camera_focus.location
+    scene.fov = degrees(camera.data.angle)
+    scene.ortho_scale = camera.data.ortho_scale
+
+
+def sync_props_to_scene(context):
+    scene = context.scene
     armature = get_armature()
     camera = get_camera()
     camera_focus = get_camera_focus()
@@ -597,10 +672,10 @@ def sync_props_to_scene():
     common.update_shading(ObjectShading[scene.shading], None)
 
 
-def sync_prd_to_props():
+def sync_prd_to_props(context=None):
     global removed_objects
     global render_textures
-    scene = bpy.data.scenes["Scene"]
+    scene = context.scene if context is not None else bpy.context.scene
 
     prd_camera: Optional[Camera] = prd.get_mode_camera(mode)
     animation_pose: Optional[int] = prd.get_mode_animation_pose(mode)
@@ -642,9 +717,9 @@ def sync_prd_to_props():
     scene.shading = prd.get_mode_shading(mode).name
 
 
-def sync_props_to_prd():
+def sync_props_to_prd(context):
     global prd
-    scene = bpy.data.scenes["Scene"]
+    scene = context.scene
 
     camera_pos = scene.pos
     camera_focus_pos = scene.focus
@@ -802,6 +877,13 @@ CAMERAPROPS = [
          min=0,
          default=7.31429,
          update=update_camera_ortho_scale
+     )),
+    ('advanced_camera_editing',
+     bpy.props.BoolProperty(
+         name="Advanced Camera Editing",
+         description="Allows editing the camera within the 3D view",
+         default=False,
+         update=update_advanced_camera_editing
      ))
 ]
 
@@ -1063,7 +1145,7 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+        col.enabled = can_edit(EditMode[scene.mode], scene.secondary_enabled) and not scene.advanced_camera_editing
         for (prop_name, _) in CAMERAPROPS:
             if prop_name == "focus":
                 row = col.row(align=True)
@@ -1077,9 +1159,15 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
                 if scene.is_ortho:
                     row = col.row(align=True)
                     row.prop(scene, prop_name)
-            else:
+            elif prop_name != "advanced_camera_editing":
                 row = col.row(align=True)
                 row.prop(scene, prop_name)
+        col.separator()
+        col = layout.column()
+        label = "Stop using advanced camera editing" if scene.advanced_camera_editing else "Use advanced camera editing"
+        col.prop(scene, 'advanced_camera_editing', text=label, toggle=True)
+        col.operator(PKXSelectCamera.bl_idname)
+        col.operator(PKXSelectFocusPoint.bl_idname)
 
 
 class PKXLightPanel(PKXPanel, bpy.types.Panel):
@@ -1180,6 +1268,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
 
         col = layout.column()
         col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+
         row = col.row()
         row.label(text="Shading:")
         row.prop(context.scene, "shading", expand=True)
@@ -1214,7 +1303,9 @@ CLASSES = [
     PKXReplaceByAssetsPathOperator,
     PKXCopyRemovedObjectsOperator,
     PKXCameraFocusOperator,
-    PKXCopyTexturesOperator
+    PKXCopyTexturesOperator,
+    PKXSelectCamera,
+    PKXSelectFocusPoint
 ]
 
 
@@ -1241,11 +1332,11 @@ def register(data: PokemonRenderData):
 
     common.update_shading(ObjectShading[scene.shading], None)
 
-    # unselect on start
+    # Unselect on start
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
 
-    # key bind
+    # Key binds
     wm = bpy.context.window_manager
 
     km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')
