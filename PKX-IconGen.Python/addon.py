@@ -40,7 +40,7 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 21),
+    "version": (0, 2, 22),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -257,7 +257,7 @@ class PKXSaveOperator(bpy.types.Operator):
     bl_label = "Save PKX Json"
 
     def execute(self, context):
-        if self.advanced_camera_editing:
+        if context.scene.advanced_camera_editing:
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
@@ -1223,12 +1223,13 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                         row.label(text="Custom texture cannot be reused due to limitations. Make a copy of the texture and use the copy.", icon="ERROR")
                     row = image_col.row(align=True)
                     row.operator(PKXReplaceByAssetsPathOperator.bl_idname)
+                    image_col.separator()
+                elif prop_name == "texture_material":
+                    row = image_col.row(align=True)
+                    row.prop(scene, prop_name)
                 elif prop_name == "texture_mapping":
                     row = image_col.row(align=True)
                     row.enabled = scene.texture_material is not None
-                    row.prop(scene, prop_name)
-                else:
-                    row = image_col.row(align=True)
                     row.prop(scene, prop_name)
 
 
