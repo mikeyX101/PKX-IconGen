@@ -126,6 +126,9 @@ def import_models(prd: PokemonRenderData):
 
         print(f"Importing: {true_path}")
         import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
+        armature = objs["Armature0"]
+        armature.hide_select = True
+        armature.hide_viewport = True
         any_imported = True
 
     if objs.find("Armature1") == -1 and shiny_info.render.model is not None:
@@ -137,6 +140,9 @@ def import_models(prd: PokemonRenderData):
         print(f"Importing: {shiny_true_path}")
         import_hsd.load(None, bpy.context, shiny_true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
         switch_model(shiny_info, EditMode.NORMAL)  # Hide shiny model on load
+        shiny_armature = objs["Armature1"]
+        shiny_armature.hide_select = True
+        shiny_armature.hide_viewport = True
         any_imported = True
 
     if any_imported:
@@ -158,8 +164,9 @@ def import_models(prd: PokemonRenderData):
             bsdf.inputs[blender_compat.principled_bsdf_in.roughness].default_value = 1
 
             #  Reduce bump map strength
-            if tree.nodes.find("Bump") != -1:
-                tree.nodes["Bump"].inputs[blender_compat.bump_in.strength].default_value = 0.05
+            bump_node_idx = tree.nodes.find("Bump")
+            if bump_node_idx != -1:
+                tree.nodes[bump_node_idx].inputs[blender_compat.bump_in.strength].default_value = 0.05
 
             #  Fix normal maps output being in Alpha
             alpha_input = bsdf.inputs[blender_compat.principled_bsdf_in.alpha]
@@ -300,11 +307,11 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
         objs = bpy.data.objects
 
         if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-            hide_armature(objs["Armature0"])
-            show_armature(objs["Armature1"])
+            show_armature(objs["Armature0"], False)
+            show_armature(objs["Armature1"], True)
         else:
-            hide_armature(objs["Armature1"])
-            show_armature(objs["Armature0"])
+            show_armature(objs["Armature1"], False)
+            show_armature(objs["Armature0"], True)
     else:
         raise Exception("PRD had no filter or alt model.")
 
@@ -414,22 +421,26 @@ def get_armature(prd: PokemonRenderData, mode: EditMode):
     return armature
 
 
-def show_armature(armature_obj):
-    armature_obj.hide_render = False
-    armature_obj.hide_viewport = False
+def show_armature(armature_obj, show: bool):
+    not_show = not show
+
+    armature_obj.hide_render = not_show
 
     for child in armature_obj.children:
-        child.hide_render = False
-        child.hide_viewport = False
+        child.hide_render = not_show
+        child.hide_viewport = not_show
 
 
-def hide_armature(armature_obj):
-    armature_obj.hide_render = True
-    armature_obj.hide_viewport = True
+def allow_select_all_armatures(allow_select: bool):
+    not_allow_select = not allow_select
 
-    for child in armature_obj.children:
-        child.hide_render = True
-        child.hide_viewport = True
+    for child in bpy.data.objects["Armature0"].children:
+        child.hide_select = not_allow_select
+
+    shiny_armature_idx = bpy.data.objects.find("Armature1")
+    if shiny_armature_idx != -1:
+        for child in bpy.data.objects[shiny_armature_idx].children:
+            child.hide_select = not_allow_select
 
 
 def remove_objects(removed_objects: List[str]):
@@ -441,19 +452,18 @@ def remove_objects(removed_objects: List[str]):
         obj.hide_viewport = True
 
 
-def update_shading(shading: ObjectShading, context=None):
-    context = context or bpy.context
-    current_selected = list(context.selected_objects)
-    bpy.ops.object.select_all(action="SELECT")
+def update_shading(shading: ObjectShading):
+    use_smooth = shading == ObjectShading.SMOOTH
 
-    if shading == ObjectShading.FLAT:
-        bpy.ops.object.shade_flat()
-    elif shading == ObjectShading.SMOOTH:
-        bpy.ops.object.shade_smooth()
+    for child in bpy.data.objects["Armature0"].children:
+        for polygon in child.data.polygons:
+            polygon.use_smooth = use_smooth
 
-    bpy.ops.object.select_all(action="DESELECT")
-    for obj in current_selected:
-        obj.select_set(True)
+    shiny_armature_idx = bpy.data.objects.find("Armature1")
+    if shiny_armature_idx != -1:
+        for child in bpy.data.objects[shiny_armature_idx].children:
+            for polygon in child.data.polygons:
+                polygon.use_smooth = use_smooth
 
 
 def hue2rgb(hue: float) -> List[float]:

@@ -40,7 +40,7 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 19),
+    "version": (0, 2, 20),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -57,10 +57,6 @@ render_textures: dict[str, Texture] = dict()
 custom_texture_path_invalid: bool = False
 custom_texture_scale_invalid: bool = False
 custom_texture_reused: bool = False
-camera = None
-camera_focus = None
-camera_light = None
-armature = None
 
 
 # Operators
@@ -128,7 +124,7 @@ class PKXResetDeletedOperator(bpy.types.Operator):
     def execute(self, context):
         global removed_objects
         removed_objects = []
-        common.show_armature(get_armature())
+        common.show_armature(get_armature(), True)
 
         return {'FINISHED'}
 
@@ -145,7 +141,7 @@ class PKXCopyRemovedObjectsOperator(bpy.types.Operator):
     def execute(self, context):
         global removed_objects
         removed_objects = list(prd.render.removed_objects)
-        common.show_armature(get_armature())
+        common.show_armature(get_armature(), True)
         common.remove_objects(removed_objects)
 
         return {'FINISHED'}
@@ -325,35 +321,19 @@ class PKXSelectFocusPoint(bpy.types.Operator):
 
 # Access Functions
 def get_camera():
-    global camera
-
-    if camera is None:
-        camera = bpy.data.objects["PKXIconGen_Camera"]
-    return camera
+    return bpy.data.objects["PKXIconGen_Camera"]
 
 
 def get_camera_focus():
-    global camera_focus
-
-    if camera_focus is None:
-        camera_focus = bpy.data.objects["PKXIconGen_FocusPoint"]
-    return camera_focus
+    return bpy.data.objects["PKXIconGen_FocusPoint"]
 
 
 def get_camera_light():
-    global camera_light
-
-    if camera_light is None:
-        camera_light = bpy.data.objects["PKXIconGen_TopLight"]
-    return camera_light
+    return bpy.data.objects["PKXIconGen_TopLight"]
 
 
 def get_armature():
-    global armature
-
-    armature = common.get_armature(prd, mode)
-
-    return armature
+    return common.get_armature(prd, mode)
 
 
 def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
@@ -483,7 +463,7 @@ def update_color2_a(self, context):
 def update_shading(self, context):
     value = self.shading
 
-    common.update_shading(ObjectShading[value], context)
+    common.update_shading(ObjectShading[value])
 
 
 def update_advanced_camera_editing(self, context):
@@ -494,6 +474,8 @@ def update_advanced_camera_editing(self, context):
 
     camera.hide_select = not value
     camera_focus.hide_select = not value
+
+    common.allow_select_all_armatures(not value)
 
     for area in bpy.context.screen.areas:
         if area.type == "VIEW_3D":
@@ -658,7 +640,7 @@ def sync_props_to_scene(context):
         os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
     scene.frame_set(scene.animation_frame)
 
-    common.show_armature(armature)
+    common.show_armature(armature, True)
     common.remove_objects(removed_objects)
 
     if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
@@ -669,7 +651,7 @@ def sync_props_to_scene(context):
 
     common.set_textures(list(render_textures.values()))
 
-    common.update_shading(ObjectShading[scene.shading], None)
+    common.update_shading(ObjectShading[scene.shading])
 
 
 def sync_prd_to_props(context=None):
@@ -805,12 +787,14 @@ MAINPROPS = [
              ('SHINY', "Shiny", "Shiny icon"),
              ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
          ],
+         options={'ANIMATABLE'},
          update=update_mode
      )),
     ('secondary_enabled',
      bpy.props.BoolProperty(
          name="Enable secondary cameras",
-         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose"
+         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose",
+         options={'ANIMATABLE'}
      ))
 ]
 
@@ -821,6 +805,7 @@ ANIMATIONPROPS = [
          description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
          min=0,
          max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
+         options={'ANIMATABLE'},
          update=update_animation_pose
      )),
     ('animation_frame',
@@ -831,6 +816,7 @@ ANIMATIONPROPS = [
          max=1000,
          soft_min=0,
          soft_max=500,
+         options={'ANIMATABLE'},
          update=update_animation_frame
      ))
 ]
@@ -843,6 +829,7 @@ CAMERAPROPS = [
          subtype="XYZ",
          unit="NONE",
          default=(14, -13.5, 5.5),
+         options={'ANIMATABLE'},
          update=update_camera_pos
      )),
     ('focus',
@@ -852,6 +839,7 @@ CAMERAPROPS = [
          subtype="XYZ",
          unit="NONE",
          default=(0, 0, 0),
+         options={'ANIMATABLE'},
          update=update_focus
      )),
     ('is_ortho',
@@ -859,6 +847,7 @@ CAMERAPROPS = [
          name='Use Orthographic Camera',
          description="Use an orthographic camera instead of a perspective camera",
          default=True,
+         options={'ANIMATABLE'},
          update=update_camera_is_ortho
      )),
     ('fov',
@@ -868,6 +857,7 @@ CAMERAPROPS = [
          subtype="ANGLE",
          min=0,
          default=40,
+         options={'ANIMATABLE'},
          update=update_camera_fov
      )),
     ('ortho_scale',
@@ -876,13 +866,15 @@ CAMERAPROPS = [
          description="\"Zoom\" of an orthographic camera",
          min=0,
          default=7.31429,
+         options={'ANIMATABLE'},
          update=update_camera_ortho_scale
      )),
     ('advanced_camera_editing',
      bpy.props.BoolProperty(
          name="Advanced Camera Editing",
-         description="Allows editing the camera within the 3D view",
+         description="Allows editing the camera within the 3D view. This will disable the ability to remove objects, go back to the normal mode to do so",
          default=False,
+         options={'ANIMATABLE'},
          update=update_advanced_camera_editing
      ))
 ]
@@ -899,6 +891,7 @@ LIGHTPROPS = [
              ('AREA', "Area", "Area light"),
          ],
          default=3,  # Area
+         options={'ANIMATABLE'},
          update=update_light_type
      )),
     ('light_strength',
@@ -909,6 +902,7 @@ LIGHTPROPS = [
          step=125,
          default=125,
          min=0,
+         options={'ANIMATABLE'},
          update=update_light_strength
      )),
     ('light_color',
@@ -919,6 +913,7 @@ LIGHTPROPS = [
          default=(1, 1, 1),
          min=0,
          max=1,
+         options={'ANIMATABLE'},
          update=update_light_color
      )),
     ('light_distance',
@@ -928,6 +923,7 @@ LIGHTPROPS = [
          unit="NONE",
          default=5,
          min=0,
+         options={'ANIMATABLE'},
          update=update_light_distance
      ))
 ]
@@ -963,6 +959,7 @@ TEXTURESPROPS = [
          description="Texture search",
          type=bpy.types.Image,
          poll=poll_current_texture_image,
+         options={'ANIMATABLE'},
          update=update_current_texture_image,
      )),
     ('custom_texture_path',
@@ -971,6 +968,7 @@ TEXTURESPROPS = [
          description="Path to texture used to replace the original one, must be on the same integer scale as the original texture: 1x, 2x, 3x, etc. {{AssetsPath}} can be used here",
          default="",
          subtype="FILE_PATH",
+         options={'ANIMATABLE'},
          update=update_custom_texture_path,
      )),
     ('texture_material',
@@ -979,6 +977,7 @@ TEXTURESPROPS = [
          description="Material that uses the texture. Used for mapping",
          type=bpy.types.Material,
          poll=poll_texture_materials,
+         options={'ANIMATABLE'},
          update=update_texture_material,
      )),
     ('texture_mapping',
@@ -991,6 +990,7 @@ TEXTURESPROPS = [
          default=(0, 0),
          min=-50,
          max=50,
+         options={'ANIMATABLE'},
          update=update_texture_mapping
      ))
 ]
@@ -1080,6 +1080,7 @@ ADVANCEDPROPS = [
              ('SMOOTH', "Smooth", "Smooth shading, can give better results for more round Pokemon, can cause visual \"weirdness\".")
          ],
          default=0,  # Flat
+         options={'ANIMATABLE'},
          update=update_shading
      ))
 ]
@@ -1166,8 +1167,10 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         col = layout.column()
         label = "Stop using advanced camera editing" if scene.advanced_camera_editing else "Use advanced camera editing"
         col.prop(scene, 'advanced_camera_editing', text=label, toggle=True)
-        col.operator(PKXSelectCamera.bl_idname)
-        col.operator(PKXSelectFocusPoint.bl_idname)
+        if scene.advanced_camera_editing:
+            row = col.row(align=True)
+            row.operator(PKXSelectCamera.bl_idname)
+            row.operator(PKXSelectFocusPoint.bl_idname)
 
 
 class PKXLightPanel(PKXPanel, bpy.types.Panel):
@@ -1330,7 +1333,7 @@ def register(data: PokemonRenderData):
     textures: List[Texture] = list(render_textures.values())
     common.set_textures(textures)
 
-    common.update_shading(ObjectShading[scene.shading], None)
+    common.update_shading(ObjectShading[scene.shading])
 
     # Unselect on start
     for obj in bpy.context.selected_objects:
