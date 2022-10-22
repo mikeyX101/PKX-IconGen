@@ -40,7 +40,7 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 20),
+    "version": (0, 2, 21),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -257,6 +257,8 @@ class PKXSaveOperator(bpy.types.Operator):
     bl_label = "Save PKX Json"
 
     def execute(self, context):
+        if self.advanced_camera_editing:
+            sync_camera_to_props(context)
         sync_props_to_prd(context)
 
         json: str = prd.to_json()
