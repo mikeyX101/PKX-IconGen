@@ -31,8 +31,8 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls {
             AvaloniaProperty.Register<FileTextField, bool>(nameof(IsAssetsPathField), defaultBindingMode: BindingMode.OneTime);
         
         [UsedImplicitly] 
-        public static readonly StyledProperty<string> PathProperty =
-            AvaloniaProperty.Register<FileTextField, string>(nameof(Path), defaultBindingMode: BindingMode.TwoWay, defaultValue: "");
+        public static readonly StyledProperty<string?> PathProperty =
+            AvaloniaProperty.Register<FileTextField, string?>(nameof(Path), defaultBindingMode: BindingMode.TwoWay, defaultValue: null);
         
         [UsedImplicitly] 
         public static readonly StyledProperty<string> TitleProperty =
@@ -52,7 +52,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls {
             set => SetValue(IsAssetsPathFieldProperty, value);
         }
         
-        public string Path
+        public string? Path
         {
             get => GetValue(PathProperty);
             set => SetValue(PathProperty, value);

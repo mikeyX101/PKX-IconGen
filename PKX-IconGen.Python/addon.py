@@ -40,13 +40,14 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 22),
+    "version": (0, 2, 23),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
     "location": "View3D > PKX-IconGen",
     "doc_url": "https://github.com/mikeyX101/PKX-IconGen"
 }
+addon_ver_str: str = '.'.join([str(v) for v in bl_info['version']])
 
 addon_keymaps = []
 
@@ -1107,7 +1108,7 @@ class PKXPanel:
 
 class PKXMainPanel(PKXPanel, bpy.types.Panel):
     bl_idname = 'VIEW3D_PT_PKX_MAIN_PANEL'
-    bl_label = 'PKX-IconGen'
+    bl_label = f"PKX-IconGen {addon_ver_str}"
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
@@ -1115,8 +1116,6 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
         col = layout.column()
         layout.use_property_split = True
         layout.use_property_decorate = False
-
-        col.label(text="PKX-IconGen")
         for (prop_name, _) in MAINPROPS:
             expand = prop_name == "mode"
 
