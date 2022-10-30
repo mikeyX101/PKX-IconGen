@@ -70,8 +70,8 @@ namespace PKXIconGen.Core.ImageProcessing
             using Image shiny = mainImages[1];
             
             token?.ThrowIfCancellationRequested();
-            stepOutput?.Invoke($"Combining images for {Job.Data.Output}...".AsMemory());
-            CoreManager.Logger.Information("Combining images for {Name}...", Job.Data.Output);
+            stepOutput?.Invoke($"Combining images for {Job.Data.Name}...".AsMemory());
+            CoreManager.Logger.Information("Combining images for {Output} ({Name})...", Job.Data.Output, Job.Data.Name);
             main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
             if (secondaryTask != null && shinySecondaryTask != null)
@@ -83,11 +83,11 @@ namespace PKXIconGen.Core.ImageProcessing
 
                 main.Mutate(ctx => ctx.AddImageRight(secondary));
             }
-            CoreManager.Logger.Information("Combining images for {Name}...Done!", Job.Data.Output);
+            CoreManager.Logger.Information("Combining images for {Output} ({Name})...Done!", Job.Data.Output, Job.Data.Name);
 
             await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.Output + ".png"));
-            stepOutput?.Invoke($"Finished rendering {Job.Data.Output}!".AsMemory());
-            CoreManager.Logger.Information("Finished rendering {Name}!", Job.Data.Output);
+            stepOutput?.Invoke($"Finished rendering {Job.Data.Name}!".AsMemory());
+            CoreManager.Logger.Information("Finished rendering {Output} ({Name})!", Job.Data.Output, Job.Data.Name);
         }
 
         private async Task<Image> ProcessIconAsync(string path, IconMode mode, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
@@ -109,19 +109,19 @@ namespace PKXIconGen.Core.ImageProcessing
                     {
                         if (Job.Data.Render.Glow.Alpha != 0)
                         {
-                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Output}...".AsMemory());
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}...", mode, Job.Data.Output);
+                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                             ctx.ApplyEdgeGlow(Job.Data.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}...Done!", mode, Job.Data.Output);
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                         token?.ThrowIfCancellationRequested();
                         if (Job.Data.Render.Background.Alpha != 0)
                         {
-                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Output}...".AsMemory());
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}...", mode, Job.Data.Output);
+                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                             using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Render.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}...Done!", mode, Job.Data.Output);
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                     });
                     break;
@@ -131,19 +131,19 @@ namespace PKXIconGen.Core.ImageProcessing
                     {
                         if (Job.Data.Shiny.Render.Glow.Alpha != 0)
                         {
-                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Output}...".AsMemory());
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}...", mode, Job.Data.Output);
+                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                             ctx.ApplyEdgeGlow(Job.Data.Shiny.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Name}...Done!", mode, Job.Data.Output);
+                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                         token?.ThrowIfCancellationRequested();
                         if (Job.Data.Shiny.Render.Background.Alpha != 0)
                         {
-                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Output}...".AsMemory());
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}...", mode, Job.Data.Output);
+                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                             using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Shiny.Render.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Name}...Done!", mode, Job.Data.Output);
+                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                     });
                     break;
@@ -160,8 +160,8 @@ namespace PKXIconGen.Core.ImageProcessing
         {
             return Task.Run(() =>
             {
-                stepOutput?.Invoke($"Applying style for game {Game} for {Job.Data.Output}...".AsMemory());
-                CoreManager.Logger.Information("Applying style for game {Game} for {Name}...", Game, Job.Data.Output);
+                stepOutput?.Invoke($"Applying style for game {Game} for {Job.Data.Name}...".AsMemory());
+                CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...", Game, Job.Data.Output, Job.Data.Name);
                 switch (Game)
                 {
                     case Game.PokemonColosseum:
@@ -177,7 +177,7 @@ namespace PKXIconGen.Core.ImageProcessing
                     case Game.Undefined or _:
                         throw new InvalidOperationException("Selected style was 'Undefined'.");
                 }
-                CoreManager.Logger.Information("Applying style for game {Game} for {Name}...Done!", Game, Job.Data.Output);
+                CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...Done!", Game, Job.Data.Output, Job.Data.Name);
                 return img;
             });
         }

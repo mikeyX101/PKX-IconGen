@@ -40,7 +40,7 @@ from math import radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 23),
+    "version": (0, 2, 24),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX#4697",
@@ -99,7 +99,7 @@ class PKXDeleteOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0
+        return len([obj for obj in context.selected_objects if "PKXIconGen_" not in obj.name]) > 0
 
     def execute(self, context):
         objs = context.selected_objects
@@ -1203,6 +1203,8 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
 
                 if scene.current_texture_image is not None:
                     col.template_icon(icon_value=scene.current_texture_image.preview.icon_id, scale=5)
+                    row = col.row(align=True)
+                    row.label(text=f"Regular texture size: {scene.current_texture_image.size[0]}x{scene.current_texture_image.size[1]}")
             else:
                 image_col = col.column()
                 image_col.enabled = scene.current_texture_image is not None
