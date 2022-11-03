@@ -45,46 +45,14 @@ public sealed class ShinyExtractor: IDisposable, IAsyncDisposable
 
     private Game DetectGame()
     {
-        bool isXD = true;
-        byte currentSteamByte;
-        byte?[] colorSignature =
-        {
-            0x00, 0x00, 0x00, null, 0x00, 0x00, 0x00, null, 0x00, 0x00, 0x00, null, 0x00, 0x00, 0x00, null,
-            null, null, null, null
-        };
+        // Detect where header ends
+        PkxStream.Seek(0, SeekOrigin.Begin);
+        byte firstByte = (byte)PkxStream.ReadByte();
         
-        // Detect shiny color at 0x70 == XD
-        PkxStream.Seek(0x70, SeekOrigin.Begin);
-        foreach (var sigByte in colorSignature)
-        {
-            currentSteamByte = (byte)PkxStream.ReadByte();
-            if (sigByte.HasValue && sigByte.Value != currentSteamByte)
-            {
-                isXD = false;
-            }
-        }
-        if (isXD)
-        {
-            return Game.PokemonXDGaleOfDarkness;
-        }
-        
-        bool isColo = true;
-        // Detect shiny color at Length-0x20 == Colo
-        PkxStream.Position = PkxStream.Length - 0x20;
-        foreach (var sigByte in colorSignature)
-        {
-            currentSteamByte = (byte)PkxStream.ReadByte();
-            if (sigByte.HasValue && sigByte.Value != currentSteamByte)
-            {
-                isColo = false;
-            }
-        }
-        if (isColo)
-        {
-            return Game.PokemonColosseum;
-        }
+        PkxStream.Seek(0x40, SeekOrigin.Begin);
+        byte datByte = (byte)PkxStream.ReadByte();
 
-        return Game.Undefined;
+        return firstByte == datByte ? Game.PokemonColosseum : Game.PokemonXDGaleOfDarkness;
     }
     
     public ShinyColor[]? GetColors()

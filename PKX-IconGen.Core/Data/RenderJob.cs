@@ -52,10 +52,10 @@ namespace PKXIconGen.Core.Data
                 runner.OnFinish += onFinish;
             }
 
-            stepOutput?.Invoke($"Rendering {Data.Output}...".AsMemory());
-            CoreManager.Logger.Information("Rendering {Name}...", Data.Output);
+            stepOutput?.Invoke($"Rendering {Data.Name}...".AsMemory());
+            CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
             await runner.RunAsync(token);
-            CoreManager.Logger.Information("Rendering {Name}...Done!", Data.Output);
+            CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
 
             IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost);
             await iconProcessor.ProcessJobAsync(token, stepOutput);
