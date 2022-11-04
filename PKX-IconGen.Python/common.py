@@ -25,6 +25,7 @@ import bpy
 from typing import List, Optional, Final
 
 import blender_compat
+from patches import apply_patches_by_model_name
 from data.edit_mode import EditMode
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
@@ -114,7 +115,8 @@ def get_relative_asset_path(model: str) -> str:
 
 def import_models(prd: PokemonRenderData):
     objs = bpy.data.objects
-    any_imported: bool = False
+    normal_imported: bool = False
+    shiny_imported: bool = False
 
     shiny_info: ShinyInfo = prd.shiny
 
@@ -129,7 +131,7 @@ def import_models(prd: PokemonRenderData):
         armature = objs["Armature0"]
         armature.hide_select = True
         armature.hide_viewport = True
-        any_imported = True
+        normal_imported = True
 
     if objs.find("Armature1") == -1 and shiny_info.render.model is not None:
         if assets_path is not None:
@@ -143,11 +145,15 @@ def import_models(prd: PokemonRenderData):
         shiny_armature = objs["Armature1"]
         shiny_armature.hide_select = True
         shiny_armature.hide_viewport = True
-        any_imported = True
+        shiny_imported = True
 
-    if any_imported:
+    if normal_imported or shiny_imported:
         bpy.ops.wm.save_mainfile()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(bpy.data.filepath), "edit.blend"))
+
+    # Run patches
+    apply_patches_by_model_name(prd.render.model)
+    apply_patches_by_model_name(prd.shiny.render.model)
 
     mats = bpy.data.materials
     for mat in mats:
@@ -166,7 +172,9 @@ def import_models(prd: PokemonRenderData):
             #  Reduce bump map strength
             bump_node_idx = tree.nodes.find("Bump")
             if bump_node_idx != -1:
-                tree.nodes[bump_node_idx].inputs[blender_compat.bump_in.strength].default_value = 0.05
+                node_input = tree.nodes[bump_node_idx].inputs[blender_compat.bump_in.strength]
+                if node_input.default_value == 1:  # Patches could change the value, changes only if it's still the same
+                    node_input.default_value = 0.05
 
             #  Fix normal maps output being in Alpha
             alpha_input = bsdf.inputs[blender_compat.principled_bsdf_in.alpha]

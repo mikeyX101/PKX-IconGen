@@ -19,10 +19,21 @@
 import bpy
 
 
+class MixInputs(object):
+
+    def __init__(self, factor, color1, color2):
+        self.factor = factor
+        self.color1 = color1
+        self.color2 = color2
+
+
 class MappingInputs(object):
 
-    def __init__(self, location):
+    def __init__(self, vector, location, rotation, scale):
+        self.vector = vector
         self.location = location
+        self.rotation = rotation
+        self.scale = scale
 
 
 class BumpInputs(object):
@@ -81,13 +92,21 @@ principled_bsdf_out: PrincipledBSDFOutputs = PrincipledBSDFOutputs(
     bsdf=0
 )
 mapping_in: MappingInputs = MappingInputs(
-    location=1
+    vector=0,
+    location=1,
+    rotation=2,
+    scale=3
 )
 bump_in: BumpInputs = BumpInputs(
     strength=0
 )
 tex_image_in: TexImageInputs = TexImageInputs(
     vector=0
+)
+mix_in: MixInputs = MixInputs(
+    factor=0,
+    color1=1,
+    color2=2
 )
 
 # Overrides
