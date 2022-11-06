@@ -237,7 +237,7 @@ namespace PKXIconGen.Core.Services
                 }
                 else
                 {
-                    OnOutput?.Invoke(("EXCEPTION> An error occured in Blender, see logs for further details :\n" + e.StackTrace).AsMemory());
+                    OnOutput?.Invoke(("EXCEPTION> An error occured in Blender, see logs for further details :\n Exit code: " + e.ExitCode + "\n" + e.StackTrace).AsMemory());
                 }
 
                 throw;

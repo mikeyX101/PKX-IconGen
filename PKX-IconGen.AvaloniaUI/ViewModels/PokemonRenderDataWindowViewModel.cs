@@ -215,7 +215,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             modifyBlenderDataCancelTokenSource = new CancellationTokenSource();
 
             CurrentlyModifying = true;
-            await Data.ModifyAsync(BlenderRunnerInfo, modifyBlenderDataCancelTokenSource.Token, onFinish: EndModifyBlenderData);
+            try
+            {
+                await Data.ModifyAsync(BlenderRunnerInfo, modifyBlenderDataCancelTokenSource.Token, onFinish: EndModifyBlenderData);
+            }
+            catch (Exception e)
+            {
+                await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured, reason below and details in logs.\n" + e.Message);
+                EndModifyBlenderData();
+            }
         }
         private void EndModifyBlenderData()
         {

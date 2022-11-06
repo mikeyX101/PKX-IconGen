@@ -1,4 +1,0 @@
-Commented out lights creation
-Commented out print-outs
-
-Generated images are named after the model

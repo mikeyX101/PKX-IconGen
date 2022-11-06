@@ -61,7 +61,7 @@
       <StackPanel Name="IconPanel" Orientation="Horizontal">
         <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}"  />
         <Image Width="75" Height="75" IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource StringToBitmap}}" Margin="32" />
-        <TextBlock Margin="32" TextWrapping="Wrap" MaxWidth="350" Text="{Binding DialogText}" />
+        <TextBlock Margin="32" TextWrapping="Wrap" Text="{Binding DialogText}" />
       </StackPanel>
     </DockPanel>
   </Panel>
