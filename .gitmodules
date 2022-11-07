@@ -1,0 +1,4 @@
+[submodule "PKX-IconGen.Python/importer"]
+	path = PKX-IconGen.Python/importer
+	url = https://github.com/mikeyX101/Blender-Addon-Gamecube-Models.git
+	branch = pkx-icongen

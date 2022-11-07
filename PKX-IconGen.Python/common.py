@@ -176,30 +176,6 @@ def import_models(prd: PokemonRenderData):
                 if node_input.default_value == 1:  # Patches could change the value, changes only if it's still the same
                     node_input.default_value = 0.05
 
-            #  Fix normal maps output being in Alpha
-            alpha_input = bsdf.inputs[blender_compat.principled_bsdf_in.alpha]
-            if len(alpha_input.links) > 0:
-                bump_link = alpha_input.links[0]
-                bump_node = bump_link.from_node
-                if bump_node.bl_idname == "ShaderNodeBump":
-                    tree.links.remove(bump_link)
-                    tree.links.new(bump_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.normal])
-
-            #  Fix alpha output being in Emission Strength/Transmission Roughness
-            transmission_roughness_input = bsdf.inputs[blender_compat.principled_bsdf_in.transmission_roughness]
-            if len(transmission_roughness_input.links) > 0:
-                alpha_link = transmission_roughness_input.links[0]
-                alpha_node = alpha_link.from_node
-                tree.links.remove(alpha_link)
-                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
-
-            emission_strength_input = bsdf.inputs[blender_compat.principled_bsdf_in.emission_strength]
-            if len(emission_strength_input.links) > 0:
-                alpha_link = emission_strength_input.links[0]
-                alpha_node = alpha_link.from_node
-                tree.links.remove(alpha_link)
-                tree.links.new(alpha_node.outputs[0], bsdf.inputs[blender_compat.principled_bsdf_in.alpha])
-
             # Setup shiny color
             if shiny_info.color1 is not None and shiny_info.color2 is not None and tree.nodes.find(f"{SHINYMIXNODE_NAME}.0") == -1:
                 setup_shiny_mats(tree)
