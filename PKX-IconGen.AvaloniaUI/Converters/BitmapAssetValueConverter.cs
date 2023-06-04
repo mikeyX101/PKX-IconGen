@@ -21,7 +21,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -67,9 +66,8 @@ namespace PKXIconGen.AvaloniaUI.Converters
                 }
 
                 if (uri != null) 
-                { 
-                    IAssetLoader assets = AvaloniaLocator.Current.GetService<IAssetLoader>() ?? throw new InvalidOperationException("Asset Loader was null.");
-                    Stream assetStream = assets.Open(uri);
+                {
+                    Stream assetStream = AssetLoader.Open(uri);
                     return new Bitmap(assetStream);
                 }
             }

@@ -24,7 +24,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reflection;
 using System.Threading.Tasks;
-using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.Services;
@@ -55,36 +55,30 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public async void Import()
         {
-            List<FileDialogFilter>? filters = null;
-            if (IsWindows)
+            List<string> extensions = new() { "*.json" };
+            List<FilePickerFileType> filters = new()
             {
-                filters = new List<FileDialogFilter>();
-                List<string> extensions = new() {
-                    "json"
-                };
-                filters.Add(new FileDialogFilter { Extensions = extensions, Name = "PKX-IconGen Json" });
+                new FilePickerFileType("PKX-IconGen Json") { Patterns = extensions }
+            };
+            
+            IReadOnlyList<IStorageFile> files = await FileDialogHelper.GetFiles("Select Json files to import...", filters);
+            try
+            {
+                foreach (IStorageFile file in files)
+                {
+                    Stream fileStream = await file.OpenReadAsync();
+                    OnImport?.Invoke(await JsonIO.ImportAsync<PokemonRenderData>(fileStream));
+                }
             }
-
-            string[]? paths = await FileDialogHelper.GetFiles("Select Json files to import...", filters);
-            if (paths != null)
+            catch (ArgumentNullException ex)
             {
-                try
-                {
-                    await foreach (PokemonRenderData? data in JsonIO.ImportAsyncEnumerable<PokemonRenderData>(paths))
-                    {
-                        OnImport?.Invoke(data);
-                    }
-                }
-                catch (ArgumentNullException ex)
-                {
-                    CoreManager.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
-                    await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while importing. The given Json is invalid.\nClose the application and see the logs for further details.");
-                }
-                catch (Exception ex) 
-                {
-                    CoreManager.Logger.Error(ex, "An unexpected exception occured while importing data");
-                    await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An unexpected error occured while importing. \nClose the application and see the logs for further details.");
-                }
+                CoreManager.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
+                await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while importing. The given Json is invalid.\nClose the application and see the logs for further details.");
+            }
+            catch (Exception ex) 
+            {
+                CoreManager.Logger.Error(ex, "An unexpected exception occured while importing data");
+                await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An unexpected error occured while importing. \nClose the application and see the logs for further details.");
             }
         }
         public delegate void ImportDel(PokemonRenderData? data);
@@ -93,29 +87,32 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ReactiveCommand<Unit, Unit> ExportCommand { get; }
         private async Task Export()
         {
-            IEnumerable<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData;
+            IEnumerable<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData.Where(prd => prd is not null).Cast<PokemonRenderData>();
             if (data.Count() == 1)
             {
                 PokemonRenderData renderData = data.First();
 
                 List<string> extensions = new() {
-                    "json"
+                    "*.json"
                 };
-                List<FileDialogFilter> filters = new(new List<FileDialogFilter> { new() { Extensions = extensions, Name = "PKX-IconGen Json" } });
-                string? filePath = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Output + ".json");
-                if (filePath != null)
+                List<FilePickerFileType> filters = new()
                 {
-                    await JsonIO.ExportAsync(renderData, filePath);
+                    new FilePickerFileType("PKX-IconGen Json") { Patterns = extensions }
+                };
+                IStorageFile? file = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Output + ".json", defaultExtension: "json");
+                if (file != null)
+                {
+                    await JsonIO.ExportAsync(renderData, await file.OpenWriteAsync());
                 }
             }
             else if (data.Count() > 1)
             {
-                string? directory = await FileDialogHelper.GetFolder("Export Render Data");
+                IStorageFolder? directory = await FileDialogHelper.GetFolder("Export Render Data");
                 if (directory != null)
                 {
                     foreach (PokemonRenderData prd in data)
                     {
-                        await JsonIO.ExportAsync(prd, Path.Combine(directory, prd.Output + ".json"));
+                        await JsonIO.ExportAsync(prd, Path.Combine(directory.Path.AbsolutePath, prd.Output + ".json"));
                     }
                 }
             }

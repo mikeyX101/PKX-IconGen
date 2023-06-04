@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>PKXIconGen.AvaloniaUI</RootNamespace>
     <ApplicationIcon>Assets\gen-icon.ico</ApplicationIcon>
@@ -16,7 +15,6 @@
     <AssemblyVersion>0.2.11</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.2.0</Version>
-    <StartupObject></StartupObject>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
 
@@ -29,6 +27,10 @@
     <PackageVersion>0.2.11</PackageVersion>
 
     <IsPackable>false</IsPackable>
+
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+
+    <LangVersion>11</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -61,22 +63,23 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
+    <PackageReference Include="Avalonia" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-rc1.1" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.10.18" />
-    <PackageReference Include="AvaloniaColorPicker" Version="1.3.4" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.0.0-rc1.1" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.0.0-rc1.1" />
+    <PackageReference Include="AvaloniaColorPicker" Version="1.3.5-preview4" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.9">
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Projektanker.Icons.Avalonia" Version="5.5.0" />
-    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="5.5.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia" Version="6.6.0-preview6" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="6.6.0-preview6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PKX-IconGen.Core\PKX-IconGen.Core.csproj" />

@@ -165,7 +165,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ReadOnlyObservableCollection<PokemonRenderData> PokemonRenderDataItems => pokemonRenderDataItems;
 
         public SelectionModel<PokemonRenderData> PokemonRenderDataSelection { get; init; }
-        public IReadOnlyList<PokemonRenderData> SelectedPokemonRenderData => PokemonRenderDataSelection.SelectedItems;
+        public IReadOnlyList<PokemonRenderData?> SelectedPokemonRenderData => PokemonRenderDataSelection.SelectedItems;
 
         private bool enableDeleteButton;
         public bool EnableDeleteButton
@@ -293,7 +293,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     (
                         !string.IsNullOrWhiteSpace(assets) || // Good if we have an assets path
                         selectedPRDs.All(prd =>  // otherwise check selected PRDs for model paths containing {{AssetsPath}}
-                            (!prd.Render.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
+                            (!prd?.Render.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
                             (
                                 string.IsNullOrWhiteSpace(prd.Shiny.Render.Model) || // No Shiny model or
                                 !prd.Shiny.Render.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
@@ -424,11 +424,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public async void DeleteSelectedRenderData()
         {
-            if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemons?\nThis operation is irreversible."))
+            if (await DialogHelper.ShowDialog(Models.Dialog.DialogType.Warning, Models.Dialog.DialogButtons.YesNo, "Are you sure you want to delete these Pokemon?\nThis operation is irreversible."))
             {
-                if (await DoDBQueryAsync(db => db.DeletePokemonRenderDataAsync(PokemonRenderDataSelection.SelectedItems)) > 0)
+                IEnumerable<PokemonRenderData> selectedPRDs = PokemonRenderDataSelection.SelectedItems.Where(prd => prd is not null).Cast<PokemonRenderData>();
+                if (await DoDBQueryAsync(db => db.DeletePokemonRenderDataAsync(selectedPRDs)) > 0)
                 {
-                    PokemonRenderDataItemsSource.Remove(PokemonRenderDataSelection.SelectedItems);
+                    PokemonRenderDataItemsSource.Remove(selectedPRDs);
                     PokemonRenderDataSelection.Clear();
                 }
             }
@@ -452,7 +453,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             CurrentlyRendering = true;
 
             Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
-            foreach (RenderJob job in SelectedPokemonRenderData.Select(prd => new RenderJob(prd, settings)))
+            IEnumerable<RenderJob> renderJobs = PokemonRenderDataSelection.SelectedItems.Where(prd => prd is not null).Select(prd => new RenderJob(prd!, settings));
+            foreach (RenderJob job in renderJobs)
             {
                 if (renderCancelTokenSource.IsCancellationRequested)
                 {

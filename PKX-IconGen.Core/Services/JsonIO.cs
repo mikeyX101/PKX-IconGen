@@ -34,7 +34,7 @@ namespace PKXIconGen.Core.Services
     /// </summary>
     public static class JsonIO
     {
-        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, };
+        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
         public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
         {
@@ -46,6 +46,19 @@ namespace PKXIconGen.Core.Services
             catch (Exception ex)
             {
                 CoreManager.Logger.Error(ex, "Error while serializing to JSON in file: {@FilePath}. Object getting serialized: {@Object}", path, data);
+                throw;
+            }
+        }
+        
+        public static async Task ExportAsync<T>(T data, Stream stream) where T : IJsonSerializable
+        {
+            try
+            {
+                await JsonSerializer.SerializeAsync(stream, data, DefaultOptions);
+            }
+            catch (Exception ex)
+            {
+                CoreManager.Logger.Error(ex, "Error while serializing to JSON in stream. Object getting serialized: {@Object}", data);
                 throw;
             }
         }
@@ -63,6 +76,19 @@ namespace PKXIconGen.Core.Services
                 throw;
             }
         }
+        
+        public static async Task<T?> ImportAsync<T>(Stream stream) where T : IJsonSerializable
+        {
+            try
+            {
+                return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
+            }
+            catch (Exception ex)
+            {
+                CoreManager.Logger.Error(ex, "Error while deserializing from JSON in stream");
+                throw;
+            }
+        }
 
         public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string path) where T : IJsonSerializable
         {
@@ -77,6 +103,19 @@ namespace PKXIconGen.Core.Services
                 throw;
             }
         }
+        
+        public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(Stream stream) where T : IJsonSerializable
+        {
+            try
+            {
+                return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, DefaultOptions);
+            }
+            catch (Exception ex)
+            {
+                CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in stream");
+                throw;
+            }
+        }
 
         public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<string> paths) where T : IJsonSerializable?
         {
@@ -84,6 +123,14 @@ namespace PKXIconGen.Core.Services
             {
                 await using FileStream file = File.OpenRead(path);
                 yield return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
+            }
+        }
+        
+        public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<Stream> streams) where T : IJsonSerializable?
+        {
+            foreach (Stream stream in streams)
+            {
+                yield return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
             }
         }
 

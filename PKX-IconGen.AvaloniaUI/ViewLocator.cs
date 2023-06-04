@@ -26,10 +26,15 @@ namespace PKXIconGen.AvaloniaUI
 {
     public class ViewLocator : IDataTemplate
     {
-        public IControl Build(object data)
+        public Control Build(object? data)
         {
-            var name = data.GetType().FullName!.Replace("ViewModel", "View");
-            var type = Type.GetType(name);
+            string? name = data?.GetType().FullName!.Replace("ViewModel", "View");
+            if (name is null)
+            {
+                return new TextBlock { Text = "No data" };
+            }
+            
+            Type? type = Type.GetType(name);
 
             if (type != null)
             {
@@ -41,7 +46,7 @@ namespace PKXIconGen.AvaloniaUI
             }
         }
 
-        public bool Match(object data)
+        public bool Match(object? data)
         {
             return data is ViewModelBase;
         }

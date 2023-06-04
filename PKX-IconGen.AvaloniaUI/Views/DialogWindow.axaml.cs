@@ -17,9 +17,7 @@
 */
 #endregion
 
-using Avalonia;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 
@@ -30,14 +28,6 @@ namespace PKXIconGen.AvaloniaUI.Views
         public DialogWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
 
         public void CloseFalse(object sender, RoutedEventArgs e)

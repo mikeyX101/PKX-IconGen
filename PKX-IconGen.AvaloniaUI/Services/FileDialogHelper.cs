@@ -17,64 +17,75 @@
 */
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 namespace PKXIconGen.AvaloniaUI.Services
 {
     public static class FileDialogHelper
     {
-        public static async Task<string?> GetFile(string title, List<FileDialogFilter>? filters = null, string? initialDirectory = null)
+        public static async Task<IStorageFile?> GetFile(string title, List<FilePickerFileType>? filters = null, string? initialDirectory = null, Window? callingWindow = null)
         {
-            OpenFileDialog fileDialog = new()
+            callingWindow ??= Utils.GetMainWindow();
+            
+            FilePickerOpenOptions dialogOptions = new()
             {
                 AllowMultiple = false,
                 Title = title,
-                Filters = filters,
-                Directory = initialDirectory
+                FileTypeFilter = filters,
+                SuggestedStartLocation = initialDirectory is not null ? await callingWindow.StorageProvider.TryGetFolderFromPathAsync(initialDirectory) : null
             };
-            string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            string? file = files?.FirstOrDefault();
-            return file;
+            IReadOnlyList<IStorageFile> files = await callingWindow.StorageProvider.OpenFilePickerAsync(dialogOptions);
+            return files.FirstOrDefault();
         }
-
-        public static async Task<string?> SaveFile(string title, List<FileDialogFilter>? filters = null, string? initialFileName = null, string? initialDirectory = null)
+        
+        public static async Task<IReadOnlyList<IStorageFile>> GetFiles(string title, List<FilePickerFileType>? filters = null, string? initialDirectory = null, Window? callingWindow = null)
         {
-            SaveFileDialog fileDialog = new()
-            {
-                Title = title,
-                Filters = filters,
-                InitialFileName = initialFileName,
-                Directory = initialDirectory
-            };
-            string? file = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            return file;
-        }
-
-        public static async Task<string[]?> GetFiles(string title, List<FileDialogFilter>? filters = null, string? initialDirectory = null)
-        {
-            OpenFileDialog fileDialog = new()
+            callingWindow ??= Utils.GetMainWindow();
+            
+            FilePickerOpenOptions dialogOptions = new()
             {
                 AllowMultiple = true,
                 Title = title,
-                Filters = filters,
-                Directory = initialDirectory
+                FileTypeFilter = filters,
+                SuggestedStartLocation = initialDirectory is not null ? await callingWindow.StorageProvider.TryGetFolderFromPathAsync(initialDirectory) : null
             };
-            string[]? files = await fileDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
+            IReadOnlyList<IStorageFile> files = await callingWindow.StorageProvider.OpenFilePickerAsync(dialogOptions);
             return files;
         }
 
-        public static async Task<string?> GetFolder(string title, string? initialDirectory = null)
+        public static async Task<IStorageFile?> SaveFile(string title, List<FilePickerFileType>? filters = null, string? initialFileName = null, string? defaultExtension = null, string? initialDirectory = null, Window? callingWindow = null)
         {
-            OpenFolderDialog folderDialog = new()
+            callingWindow ??= Utils.GetMainWindow();
+            
+            FilePickerSaveOptions dialogOptions = new()
             {
                 Title = title,
-                Directory = initialDirectory
+                FileTypeChoices = filters, 
+                SuggestedFileName = initialFileName,
+                DefaultExtension = defaultExtension,
+                SuggestedStartLocation = initialDirectory is not null ? await callingWindow.StorageProvider.TryGetFolderFromPathAsync(initialDirectory) : null,
+                ShowOverwritePrompt = true
             };
-            string? folder = await folderDialog.ShowAsync(Utils.GetApplicationLifetime().MainWindow);
-            return folder;
+            return await callingWindow.StorageProvider.SaveFilePickerAsync(dialogOptions);
+        }
+        
+        public static async Task<IStorageFolder?> GetFolder(string title, string? initialDirectory = null, Window? callingWindow = null)
+        {
+            callingWindow ??= Utils.GetMainWindow();
+            
+            FolderPickerOpenOptions dialogOptions = new()
+            {
+                AllowMultiple = false,
+                Title = title,
+                SuggestedStartLocation = initialDirectory is not null ? await callingWindow.StorageProvider.TryGetFolderFromPathAsync(initialDirectory) : null
+            };
+            IReadOnlyList<IStorageFolder> folders = await callingWindow.StorageProvider.OpenFolderPickerAsync(dialogOptions);
+            return folders.FirstOrDefault();
         }
     }
 }

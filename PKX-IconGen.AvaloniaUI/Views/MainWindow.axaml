@@ -112,7 +112,7 @@ USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
 
         <!--Icon Style-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
-        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
           <ComboBox.ItemTemplate>
             <DataTemplate DataType="{x:Type data:IconStyle}">
               <Panel VerticalAlignment="Center" Height="30">
@@ -134,7 +134,7 @@ Pokémon Battle Revolution uses different rendering as the Gamecube games, have 
 
         <!--Render Scale-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6">Render Scale:</TextBlock>
-        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
           <ToolTip.Tip>
 Integer scale used to know at what resolution the icons are going to be rendered.
 
@@ -177,7 +177,7 @@ Please note that this can drastically increase the rendering and processing time
           <TextBlock Text="Model" Grid.Column="1" />
           <TextBlock HorizontalAlignment="Center" Text="Has Custom Textures" Grid.Column="2" />
         </Grid>
-        <ListBox IsEnabled="{Binding !CurrentlyRendering}" Items="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
+        <ListBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding PokemonRenderDataItems}" Selection="{Binding PokemonRenderDataSelection}" SelectionMode="Multiple,Toggle" Margin="0,0,0,5" Background="#ff202020" Grid.Column="1" Grid.Row="10" Grid.RowSpan="8">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="6"/>

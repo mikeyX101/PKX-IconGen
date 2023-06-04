@@ -32,7 +32,7 @@ namespace PKXIconGen.AvaloniaUI.Converters
         {
             if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(string)))
             {
-                return $"#{color.ToUint32() & 0x00FFFFFF:X8}";
+                return $"#{color.ToUInt32() & 0x00FFFFFF:X8}";
             }
             return null;
         }

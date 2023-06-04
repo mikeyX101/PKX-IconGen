@@ -18,8 +18,6 @@
 #endregion
 
 using System;
-using Avalonia;
-using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using ReactiveUI;
@@ -31,18 +29,9 @@ namespace PKXIconGen.AvaloniaUI.Views
         public PokemonRenderDataWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             this.WhenActivated(d => d(ViewModel!.CancelCommand.Subscribe(Close)));
             this.WhenActivated(d => d(ViewModel!.SaveCommand.Subscribe(Close)));
         }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
-
-
     }
 }

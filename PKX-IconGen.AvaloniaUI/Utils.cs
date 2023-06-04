@@ -20,6 +20,7 @@
 using System;
 using System.Diagnostics;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 
 namespace PKXIconGen.AvaloniaUI
@@ -29,6 +30,11 @@ namespace PKXIconGen.AvaloniaUI
         public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
         {
             return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new InvalidOperationException();
+        }
+
+        public static Window GetMainWindow()
+        {
+            return GetApplicationLifetime().MainWindow!;
         }
 
         public static void OpenUrl(string url)

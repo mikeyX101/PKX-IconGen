@@ -43,9 +43,9 @@ namespace PKXIconGen.AvaloniaUI.Converters
         {
             if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(Color)))
             {
-                return Color.FromArgbUInt(color.ToUint32());
+                return Color.FromArgbUInt(color.ToUInt32());
             }
-            return Color.FromArgbUInt(Colors.Transparent.ToUint32());
+            return Color.FromArgbUInt(Colors.Transparent.ToUInt32());
         }
     }
 }

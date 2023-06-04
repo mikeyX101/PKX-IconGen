@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using PKXIconGen.AvaloniaUI.Models;
 using PKXIconGen.AvaloniaUI.Services;
 
@@ -36,7 +36,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         private readonly Button insertAssetsPathButton;
         private readonly Button browseFilesButton;
 
-        private readonly List<FileDialogFilter> filters;
+        private readonly List<FilePickerFileType> filters;
         
         public FileTextField()
         {
@@ -50,15 +50,10 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
             browseFilesButton = this.GetControl<Button>("BrowseFilesButton");
             browseFilesButton.Click += BrowseFiles;
 
-            filters = new List<FileDialogFilter>();
-        }
-        
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
+            filters = new List<FilePickerFileType>();
         }
 
-        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> change)
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
 
@@ -83,10 +78,11 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
                 {
                     FileSelectType.GCNModel => "GCN Pokemon Model",
                     FileSelectType.Executable => "Executable",
-                    FileSelectType.Directory or _ => ""
+                    FileSelectType.Directory => "Folder",
+                    _ => ""
                 };
                 
-                filters.Add(new FileDialogFilter { Extensions = extensions, Name = name });
+                filters.Add(new FilePickerFileType(name) { Patterns = extensions });
             }
         }
 
@@ -102,9 +98,10 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         
         private async void BrowseFiles(object? sender, RoutedEventArgs e)
         {
-            string? newPath = await OpenDialog();
-            if (newPath != null)
+            IStorageItem? newItem = await OpenDialog();
+            if (newItem != null)
             {
+                string newPath = newItem.Path.AbsolutePath;
                 if (newPath.Contains(AssetsPath))
                 {
                     newPath = newPath.Replace(AssetsPath, "{{AssetsPath}}");
@@ -114,7 +111,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
             }
         }
         
-        private async Task<string?> OpenDialog()
+        private async Task<IStorageItem?> OpenDialog()
         {
             string initialDirectory = string.IsNullOrWhiteSpace(Path) || Regex.IsMatch(Path, "^{{AssetsPath}}/?") ? AssetsPath + '/' : Path;
             return Type switch

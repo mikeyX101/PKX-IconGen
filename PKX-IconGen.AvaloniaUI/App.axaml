@@ -24,6 +24,6 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-      <FluentTheme Mode="Dark"/>
+      <FluentTheme Palettes=""/>
     </Application.Styles>
 </Application>

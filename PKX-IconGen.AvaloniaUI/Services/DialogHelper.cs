@@ -33,7 +33,7 @@ namespace PKXIconGen.AvaloniaUI.Services
 
         public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
         {
-            parent ??= Utils.GetApplicationLifetime().MainWindow;
+            parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
 
             DialogWindowViewModel vm = new(dialogType, dialogButtons, message, height, title);
             return await new DialogWindow
@@ -44,7 +44,7 @@ namespace PKXIconGen.AvaloniaUI.Services
 
         public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, uint? height = null, Window? parent = null)
         {
-            parent ??= Utils.GetApplicationLifetime().MainWindow;
+            parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
 
             DialogWindowViewModel vm = new(asset, dialogButtons, message, title, height);
             return await new DialogWindow
@@ -86,7 +86,7 @@ namespace PKXIconGen.AvaloniaUI.Services
             if (window != null)
             {
                 window.DataContext = vm;
-                parent ??= Utils.GetApplicationLifetime().MainWindow;
+                parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
                 return await window.ShowDialog<TResult>(parent);
             }
             else

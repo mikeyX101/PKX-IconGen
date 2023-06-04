@@ -30,25 +30,16 @@ namespace PKXIconGen.AvaloniaUI.Views
         public TextureDownloadWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             Closing += (sender, args) =>
             {
                 args.Cancel = ((TextureDownloadWindowViewModel?)DataContext)?.Downloading ?? false;
             };
         }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
-
         public void Close(object sender, RoutedEventArgs e)
         {
             Close();
         }
-        
-        
     }
 }

@@ -137,14 +137,14 @@ namespace PKXIconGen.Core.Services
         #region Settings
         public async Task<Settings> GetSettingsAsync()
         {
-            await using IDataContext ctx = this.CreateLinqToDbContext();
+            await using IDataContext ctx = this.CreateLinqToDBContext();
             
             return await ctx.GetTable<Settings>().FirstOrDefaultAsyncLinqToDB() ?? new Settings();
         }
 
         public int SaveSettingsProperty<TProperty>(Expression<Func<Settings, TProperty>> propertySelector, TProperty value)
         {
-            using IDataContext ctx = this.CreateLinqToDbContext();
+            using IDataContext ctx = this.CreateLinqToDBContext();
 
             int changed = ctx.GetTable<Settings>()
                 .Where(s => s.InternalID == SettingsId)
@@ -159,7 +159,7 @@ namespace PKXIconGen.Core.Services
         #region Pokemon Render Data
         public async Task<int> AddPokemonRenderDataAsync(PokemonRenderData prd)
         {
-            await using IDataContext ctx = this.CreateLinqToDbContext();
+            await using IDataContext ctx = this.CreateLinqToDBContext();
 
             int id = await ctx.InsertWithInt32IdentityAsync(prd);
             if (id > 0)
@@ -173,14 +173,14 @@ namespace PKXIconGen.Core.Services
 
         public async Task<int> UpdatePokemonRenderDataAsync(PokemonRenderData prd)
         {
-            await using IDataContext ctx = this.CreateLinqToDbContext();
+            await using IDataContext ctx = this.CreateLinqToDBContext();
             
             return await ctx.UpdateAsync(prd);
         }
 
         public async Task<List<PokemonRenderData>> GetPokemonRenderDataAsync(bool orderedByName = true)
         {
-            await using IDataContext ctx = this.CreateLinqToDbContext();
+            await using IDataContext ctx = this.CreateLinqToDBContext();
             
             List<PokemonRenderData> data = await ctx.GetTable<PokemonRenderData>().ToListAsyncLinqToDB();
             return orderedByName ? data.OrderBy(prd => prd.Name).ToList() : data;
@@ -188,7 +188,7 @@ namespace PKXIconGen.Core.Services
         
         public async Task<int> DeletePokemonRenderDataAsync(IEnumerable<PokemonRenderData> prds)
         {
-            await using IDataContext ctx = this.CreateLinqToDbContext();
+            await using IDataContext ctx = this.CreateLinqToDBContext();
             
             uint[] prdIds = prds.Select(prd => prd.Id).ToArray();
             return await ctx.GetTable<PokemonRenderData>()

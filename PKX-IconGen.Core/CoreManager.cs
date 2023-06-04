@@ -120,7 +120,7 @@ namespace PKXIconGen.Core
         {
             if (NullableLogger != null)
             {
-                ((Serilog.Core.Logger)Logger).Dispose();
+                ((Logger)Logger).Dispose();
                 NullableLogger = null;
             }
         }

@@ -19,7 +19,6 @@
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace PKXIconGen.AvaloniaUI.Views
 {
@@ -29,12 +28,7 @@ namespace PKXIconGen.AvaloniaUI.Views
         {
             InitializeComponent();
         }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
-
+        
         public void LogScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (e.ExtentDelta != Vector.Zero)

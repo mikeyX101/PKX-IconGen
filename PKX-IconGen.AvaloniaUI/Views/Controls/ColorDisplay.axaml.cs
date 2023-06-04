@@ -18,7 +18,6 @@
 #endregion
 
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace PKXIconGen.AvaloniaUI.Views.Controls
 {
@@ -27,11 +26,6 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         public ColorDisplay()
         {
             InitializeComponent();
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
     }
 }
