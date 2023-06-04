@@ -59,7 +59,7 @@
       </StackPanel>
 
       <Grid Name="IconPanel" ColumnDefinitions="150, *">
-        <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}" Grid.Column="0" />
+        <!--<i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}" Grid.Column="0" />-->
         <Image Width="75" Height="75" IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource StringToBitmap}}" Margin="32" Grid.Column="0" />
         <TextBlock Margin="32" TextWrapping="Wrap" Text="{Binding DialogText}" Grid.Column="1" />
       </Grid>

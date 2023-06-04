@@ -208,7 +208,7 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
           <TextBox Text="{Binding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="3" />
-          <i:Icon Value="{Binding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="3" />
+          <!--<i:Icon Value="{Binding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="3" />-->
           <TextBox Text="{Binding MainLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="3" IsReadOnly="True" />
 
           <TextBlock Text="*Secondary:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="4" />
@@ -230,7 +230,7 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
           <TextBox Text="{ReflectionBinding SecondaryLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="5" />
-          <i:Icon Value="{ReflectionBinding SecondaryLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="5" />
+          <!--<i:Icon Value="{ReflectionBinding SecondaryLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="5" />-->
           <TextBox Text="{ReflectionBinding SecondaryLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="5" IsReadOnly="True" />
 
           <TextBlock Text="Extras: " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="6" />

@@ -13,7 +13,7 @@
             <ToolTip.Tip>
                 Insert "{{AssetsPath}}" to the current caret location. You cannot have more than 1 "{{AssetsPath}}" in your path.
             </ToolTip.Tip>
-            <i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />
+            <!--<i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />-->
         </Button>
         <Button Name="BrowseFilesButton" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>

@@ -39,7 +39,7 @@
       <ContextMenu>
         <MenuItem Header="Clear Log" Command="{ReflectionBinding ClearLog}">
           <MenuItem.Icon>
-            <i:Icon Value="mdi-delete" />
+            <!--<i:Icon Value="mdi-delete" />-->
           </MenuItem.Icon>
         </MenuItem>
       </ContextMenu>
