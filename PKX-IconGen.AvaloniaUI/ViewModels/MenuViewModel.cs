@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using JetBrains.Annotations;
@@ -66,11 +67,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             {
                 foreach (IStorageFile file in files)
                 {
-                    Stream fileStream = await file.OpenReadAsync();
+                    await using Stream fileStream = await file.OpenReadAsync();
                     OnImport?.Invoke(await JsonIO.ImportAsync<PokemonRenderData>(fileStream));
                 }
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex) when (ex is ArgumentException or JsonException)
             {
                 CoreManager.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
                 await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while importing. The given Json is invalid.\nClose the application and see the logs for further details.");
@@ -102,7 +103,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 IStorageFile? file = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Output + ".json", defaultExtension: "json");
                 if (file != null)
                 {
-                    await JsonIO.ExportAsync(renderData, await file.OpenWriteAsync());
+                    await using Stream fileStream = await file.OpenWriteAsync();
+                    await JsonIO.ExportAsync(renderData, fileStream);
                 }
             }
             else if (data.Count() > 1)

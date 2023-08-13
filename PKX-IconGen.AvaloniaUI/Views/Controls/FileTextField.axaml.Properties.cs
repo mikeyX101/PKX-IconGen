@@ -43,8 +43,8 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls {
             AvaloniaProperty.Register<FileTextField, FileSelectType>(nameof(Type), defaultBindingMode: BindingMode.OneTime, inherits: true);
 
         [UsedImplicitly] 
-        public static readonly StyledProperty<string> AssetsPathProperty =
-            AvaloniaProperty.Register<FileTextField, string>(nameof(AssetsPath), defaultBindingMode: BindingMode.OneTime, inherits: true);
+        public static readonly StyledProperty<string?> AssetsPathProperty =
+            AvaloniaProperty.Register<FileTextField, string?>(nameof(AssetsPath), defaultBindingMode: BindingMode.OneTime, inherits: true);
         
         public bool IsAssetsPathField
         {
@@ -72,7 +72,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls {
         
         public string AssetsPath
         {
-            get => GetValue(AssetsPathProperty);
+            get => GetValue(AssetsPathProperty) ?? "";
             set => SetValue(AssetsPathProperty, value);
         }
     }

@@ -2,7 +2,7 @@
 
 # This is used to quickly launch Blender with the PKX-IconGen addon without the need of the C# PKX-IconGen application and allow debugging using PyCharm.
 
-# Make sure that your models are at the path in your JSON or you have an assets ppth set
+# Make sure that your models are at the path in your JSON or you have an assets path set
 # Working directory must be this directory
 # Arguments:
 #   $1 = Blender executable path

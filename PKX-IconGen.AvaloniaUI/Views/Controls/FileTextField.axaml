@@ -6,16 +6,16 @@
         
              mc:Ignorable="d" d:DesignWidth="512" d:DesignHeight="768"
              Name="Root" x:Class="PKXIconGen.AvaloniaUI.Views.Controls.FileTextField">
-    <Grid ColumnDefinitions="*,30,30" RowDefinitions="*">
+    <Grid ColumnDefinitions="*,35,35" RowDefinitions="*">
         <TextBox Name="FileTextBox" Text="{Binding #Root.Path, Mode=TwoWay}" Height="32" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" />
         
-        <Button Name="InsertAssetsPathButton" IsVisible="{Binding #Root.IsAssetsPathField}" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0">
+        <Button Name="InsertAssetsPathButton" IsVisible="{Binding #Root.IsAssetsPathField}" Width="35" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0">
             <ToolTip.Tip>
                 Insert "{{AssetsPath}}" to the current caret location. You cannot have more than 1 "{{AssetsPath}}" in your path.
             </ToolTip.Tip>
-            <!--<i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />-->
+            <i:Icon HorizontalAlignment="Center" VerticalAlignment="Center" Value="mdi-code-braces" />
         </Button>
-        <Button Name="BrowseFilesButton" Width="30" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="0">
+        <Button Name="BrowseFilesButton" Width="35" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="0">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">...</TextBlock>
         </Button>
     </Grid>

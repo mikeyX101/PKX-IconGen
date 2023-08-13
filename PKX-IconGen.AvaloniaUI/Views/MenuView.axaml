@@ -28,43 +28,43 @@
     <MenuItem Header="_File">
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Import..." Command="{ReflectionBinding Import}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-import" />-->
+          <i:Icon Value="mdi-import" />
         </MenuItem.Icon>
       </MenuItem>
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected..." Command="{Binding ExportCommand}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-export" />-->
+          <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-blender-software" />-->
+          <i:Icon Value="mdi-blender-software" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
       <MenuItem Header="Quit" Command="{ReflectionBinding Quit}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-close-thick" />-->
+          <i:Icon Value="mdi-close-thick" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Settings">
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Log Blender to Logs folder" Command="{ReflectionBinding ToggleLogBlender}">
         <MenuItem.Icon>
-          <!--<i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />-->
+          <i:Icon IsVisible="{Binding MainWindow.LogBlender}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="10% Saturation Boost" Command="{ReflectionBinding ToggleSaturationBoost}">
         <MenuItem.Icon>
-          <!--<i:Icon IsVisible="{Binding MainWindow.SaturationBoost}" Value="mdi-check" />-->
+          <i:Icon IsVisible="{Binding MainWindow.SaturationBoost}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Tools">
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Clean temporary folders" Command="{ReflectionBinding CleanTempFolders}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-delete-clock" />-->
+          <i:Icon Value="mdi-delete-clock" />
         </MenuItem.Icon>
       </MenuItem>
       <MenuItem Header="Download HD Textures" Command="{ReflectionBinding DownloadTextures}">
@@ -75,25 +75,25 @@
           </MultiBinding>
         </MenuItem.IsEnabled>
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-download" />-->
+          <i:Icon Value="mdi-download" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>
     <MenuItem Header="_Help">
       <MenuItem Header="PKX-IconGen on Github" Command="{ReflectionBinding GitHub}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-github" />-->
+          <i:Icon Value="mdi-github" />
         </MenuItem.Icon>
       </MenuItem>
       <MenuItem Header="Importer Addon on Github" Command="{ReflectionBinding ImporterAddon}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-github" />-->
+          <i:Icon Value="mdi-github" />
         </MenuItem.Icon>
       </MenuItem>
       <Separator />
       <MenuItem Header="About" Command="{ReflectionBinding About}">
         <MenuItem.Icon>
-          <!--<i:Icon Value="mdi-help-circle" />-->
+          <i:Icon Value="mdi-help-circle" />
         </MenuItem.Icon>
       </MenuItem>
     </MenuItem>

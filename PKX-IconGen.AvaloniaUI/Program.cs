@@ -35,7 +35,8 @@ namespace PKXIconGen.AvaloniaUI
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static async Task Main(string[] args) {
+        public static async Task Main(string[] args)
+        {
             CoreManager.Initiate();
             if (CoreManager.Initiated)
             {
@@ -55,10 +56,12 @@ namespace PKXIconGen.AvaloniaUI
                     }
                     catch (Exception settingsEx)
                     {
-                        CoreManager.Logger.Fatal(settingsEx, "An exception occured while fetching settings on Avalonia exception");
+                        CoreManager.Logger.Fatal(settingsEx,
+                            "An exception occured while fetching settings on Avalonia exception");
                     }
 
-                    CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}", settings);
+                    CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}",
+                        settings);
                 }
                 finally
                 {
@@ -73,10 +76,14 @@ namespace PKXIconGen.AvaloniaUI
 
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+        {
+            IconProvider.Current
+                .Register<MaterialDesignIconProvider>();
+
+            return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
-                .UseReactiveUI()
-                .WithIcons(container => container.Register<MaterialDesignIconProvider>());
+                .UseReactiveUI();
+        }
     }
 }

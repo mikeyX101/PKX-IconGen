@@ -295,7 +295,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                         selectedPRDs.All(prd =>  // otherwise check selected PRDs for model paths containing {{AssetsPath}}
                             (!prd?.Render.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
                             (
-                                string.IsNullOrWhiteSpace(prd.Shiny.Render.Model) || // No Shiny model or
+                                string.IsNullOrWhiteSpace(prd!.Shiny.Render.Model) || // No Shiny model or
                                 !prd.Shiny.Render.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
                             )
                         )

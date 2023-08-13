@@ -38,7 +38,7 @@ namespace PKXIconGen.Core.Data
         public uint Id { get; internal set; }
 
         private string name;
-        [Column, JsonPropertyName("name")]
+        [Column, JsonPropertyName("name"), JsonRequired]
         public string Name
         {
             get => name;
@@ -65,7 +65,7 @@ namespace PKXIconGen.Core.Data
         public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
 
         private RenderData render;
-        [Column, JsonPropertyName("render")]
+        [Column, JsonPropertyName("render"), JsonRequired]
         public RenderData Render
         {
             get => render;
@@ -77,7 +77,7 @@ namespace PKXIconGen.Core.Data
         }
         
         private ShinyInfo shiny;
-        [Column, JsonPropertyName("shiny")]
+        [Column, JsonPropertyName("shiny"), JsonRequired]
         public ShinyInfo Shiny 
         {
             get => shiny;

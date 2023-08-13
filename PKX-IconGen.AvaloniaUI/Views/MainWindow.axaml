@@ -88,7 +88,7 @@ On Linux: Path to the Blender executable. It is possible to specify a link or an
           </ToolTip.Tip>
         </pkxcon:FileTextField>
         <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
-          <!--<i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />-->
+          <i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
           <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText, Mode=OneWay}" Grid.Column="1" Grid.Row="0" />
         </Grid>
 
@@ -189,18 +189,18 @@ Please note that this can drastically increase the rendering and processing time
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
                   <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
                   <Panel HorizontalAlignment="Center" Grid.Column="2">
-                    <!--<i:Icon FontSize="16" Value="mdi-check">
+                    <i:Icon FontSize="16" Value="mdi-check">
                       <i:Icon.IsVisible>
                         <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.Or}">
                           <Binding Path="Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                           <Binding Path="Shiny.Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                         </MultiBinding>
                       </i:Icon.IsVisible>
-                    </i:Icon>-->
+                    </i:Icon>
                   </Panel>
                   <Panel HorizontalAlignment="Right" Grid.Column="3">
                     <Button HorizontalAlignment="Center" Command="{ReflectionBinding $parent[ListBox].DataContext.EditRenderDataCommand, FallbackValue=None}" CommandParameter="{Binding .}">
-                      <!--<i:Icon FontSize="16" Value="mdi-pencil" />-->
+                      <i:Icon FontSize="16" Value="mdi-pencil" />
                     </Button>
                   </Panel>
                 </Grid>

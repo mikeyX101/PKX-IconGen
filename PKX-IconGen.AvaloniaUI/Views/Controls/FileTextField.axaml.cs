@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -101,8 +100,8 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
             IStorageItem? newItem = await OpenDialog();
             if (newItem != null)
             {
-                string newPath = newItem.Path.AbsolutePath;
-                if (newPath.Contains(AssetsPath))
+                string newPath = newItem.Path.LocalPath;
+                if (AssetsPath != "" && newPath.Contains(AssetsPath))
                 {
                     newPath = newPath.Replace(AssetsPath, "{{AssetsPath}}");
                 }
@@ -113,7 +112,7 @@ namespace PKXIconGen.AvaloniaUI.Views.Controls
         
         private async Task<IStorageItem?> OpenDialog()
         {
-            string initialDirectory = string.IsNullOrWhiteSpace(Path) || Regex.IsMatch(Path, "^{{AssetsPath}}/?") ? AssetsPath + '/' : Path;
+            string? initialDirectory = !string.IsNullOrWhiteSpace(AssetsPath) && (string.IsNullOrWhiteSpace(Path) || Path.StartsWith("{{AssetsPath}}")) ? AssetsPath + '/' : Path;
             return Type switch
             {
                 FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),
