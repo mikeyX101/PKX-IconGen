@@ -17,6 +17,7 @@
 -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:assets="clr-namespace:PKXIconGen.AvaloniaUI.Assets"
         xmlns:data="using:PKXIconGen.Core.Data"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:views="using:PKXIconGen.AvaloniaUI.Views"
@@ -72,21 +73,7 @@
       <Grid ShowGridLines="False" ColumnDefinitions="0.25*,1.3*,1*" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,35">
         <!--Blender Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Blender Path:</TextBlock>
-        <pkxcon:FileTextField Path="{Binding BlenderPath}" Type="Executable" Title="Select a Blender executable..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="1">
-          <ToolTip.Tip>
-Path to the Blender executable. No need to have the import addon installed, it is included with PKX-IconGen.
-Tested versions:
-  2.83.18: Crashes on import
-  2.93.4: Works properly
-  3.0.0: Works properly
-
-On Windows: Path to the Blender executable.
-
-On MacOS: The default path is included, if any aliases have been made for Blender for different versions, you can specify that alias for Blender here. I also have no idea how OSX works exactly to be honest. 😂
-
-On Linux: Path to the Blender executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_293".
-          </ToolTip.Tip>
-        </pkxcon:FileTextField>
+        <pkxcon:FileTextField Path="{Binding BlenderPath}" Type="Executable" Title="Select a Blender executable..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="{x:Static assets:Resources.TooltipBlenderPath}" />
         <Grid IsVisible="{Binding !IsBlenderVersionValid}" VerticalAlignment="Top" ColumnDefinitions="20,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
           <i:Icon FontSize="16" Value="mdi-alert" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Grid.Column="0" Grid.Row="0" />
           <TextBlock FontSize="12" TextWrapping="Wrap" Classes.Warning="{Binding BlenderPathWarning}" Classes.Error="{Binding BlenderPathError}" Text="{Binding BlenderWarningText, Mode=OneWay}" Grid.Column="1" Grid.Row="0" />
@@ -94,25 +81,15 @@ On Linux: Path to the Blender executable. It is possible to specify a link or an
 
         <!--Blender Optional Arguments-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Blender Args:</TextBlock>
-        <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3">
-          <ToolTip.Tip>
-Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
-
-USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
-          </ToolTip.Tip>
-        </TextBox>
+        <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3" ToolTip.Tip="{x:Static assets:Resources.TooltipOptionnalArguments}" />
 
         <!--Output Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4">Output Path:</TextBlock>
-        <pkxcon:FileTextField Path="{Binding OutputPath}" Type="Directory" Title="Select an output path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="4">
-          <ToolTip.Tip>
-            Output path for the generated icons.
-          </ToolTip.Tip>
-        </pkxcon:FileTextField>
+        <pkxcon:FileTextField Path="{Binding OutputPath}" Type="Directory" Title="Select an output path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="4" ToolTip.Tip="{x:Static assets:Resources.TooltipOutputPath}" />
 
         <!--Icon Style-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="5">Icon Style:</TextBlock>
-        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5">
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding IconStyleItems, Mode=OneWay}" SelectedItem="{Binding SelectedIconStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="5" ToolTip.Tip="{x:Static assets:Resources.TooltipIconStyle}">
           <ComboBox.ItemTemplate>
             <DataTemplate DataType="{x:Type data:IconStyle}">
               <Panel VerticalAlignment="Center" Height="30">
@@ -120,33 +97,11 @@ USE ONLY IF YOU KNOW WHAT YOU'RE DOING.
               </Panel>
             </DataTemplate>
           </ComboBox.ItemTemplate>
-
-          <ToolTip.Tip>
-Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Battle Revolution.
-
-Pokémon Colosseum has no cropping.
-
-Pokémon XD uses the same rendering as Colosseum, but rounded corners are used for each icon.
-
-Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline. NOT AVAILABLE YET.
-          </ToolTip.Tip>
         </ComboBox>
 
         <!--Render Scale-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="6">Render Scale:</TextBlock>
-        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6">
-          <ToolTip.Tip>
-Integer scale used to know at what resolution the icons are going to be rendered.
-
-Use x1 for making new pokemon icons to be imported.
-Use the others for texture packs or any higher resolution needs.
-
-Base icon resolution for Colo/XD: 42px X 42px
-Base icon resolution for PBR: 48px X 48px
-
-Please note that this can drastically increase the rendering and processing time depending on your computer.
-          </ToolTip.Tip>
-        </ComboBox>
+        <ComboBox IsEnabled="{Binding !CurrentlyRendering}" ItemsSource="{Binding RenderScaleItems, Mode=OneWay}" SelectedItem="{Binding SelectedRenderScale}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="32" Grid.Column="1" Grid.Row="6" ToolTip.Tip="{x:Static assets:Resources.TooltipRenderScale}" />
 
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" Text="Pokemon" Grid.Column="1" Grid.Row="7" />
         <!--Pokemon Buttons-->
@@ -210,20 +165,7 @@ Please note that this can drastically increase the rendering and processing time
 
         <!--Assets Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="18">Assets Path:</TextBlock>
-        <pkxcon:FileTextField Path="{Binding AssetsPath}" Type="Directory" Title="Select the assets path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="18">
-          <ToolTip.Tip>
-Optional if custom Pokemon are used, needed for default Pokemon. Useful when exporting and sharing Pokemon data.
-
-From there you can include {{AssetsPath}} in a model path. Don't include a trailing slash or backslash.
-This is the "Game Files" folder from Colosseum Tool or GoD-Tool. Make sure to "export" everything containing "pkx".
-  
-In Colosseum/GoD Tool:
-Go in 4. Import/Export files
-Filter with "pkx"
-Enter "export"
-          </ToolTip.Tip>
-        </pkxcon:FileTextField>
-
+        <pkxcon:FileTextField Path="{Binding AssetsPath}" Type="Directory" Title="Select the assets path..." IsEnabled="{Binding !CurrentlyRendering}" Grid.Column="1" Grid.Row="18" ToolTip.Tip="{x:Static assets:Resources.TooltipAssetsPath}" />
         <!--Log-->
         <Grid Margin="16,0,16,8" Grid.Column="2" Grid.Row="0" Grid.RowSpan="18" ColumnDefinitions="*" RowDefinitions="20,*">
           <TextBlock Height="20" Margin="5" Grid.Column="0" Grid.Row="0">Log</TextBlock>

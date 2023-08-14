@@ -17,6 +17,7 @@
 -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:assets="clr-namespace:PKXIconGen.AvaloniaUI.Assets"
         xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -86,10 +87,7 @@
     <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="50,50,50,50,115,*,50" Margin="16">
       <TextBlock Text="{Binding Name, Mode=OneWay, Converter={StaticResource PkxHeaderConverter}}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
 
-      <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggle}" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
-        <ToolTip.Tip>
-          Toggle between Normal and Shiny data. Purple areas means that data switches between Normal and Shiny there.
-        </ToolTip.Tip>
+      <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{ReflectionBinding ShinyToggle}" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" ToolTip.Tip="{x:Static assets:Resources.TooltipShinyToggle}" >
         <Panel>
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Normal</TextBlock>
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Shiny</TextBlock>
@@ -97,38 +95,18 @@
       </ToggleButton>
       <Grid ColumnDefinitions="100,*,100,*" RowDefinitions="*" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2">
         <TextBlock Text="Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
-        <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="0">
-          <ToolTip.Tip>
-Name of the Pokemon
-          </ToolTip.Tip>
-        </TextBox>
+        <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="0" ToolTip.Tip="{x:Static assets:Resources.TooltipPokemonName}" />
 
         <TextBlock Text="*Output Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="2" Grid.Row="0" />
-        <TextBox Text="{Binding OutputName, Mode=TwoWay}" Height="32" Grid.Column="3" Grid.Row="0">
-          <ToolTip.Tip>
-            Output name for the rendered file. If unspecified, uses the Pokemon's name.
-          </ToolTip.Tip>
-        </TextBox>
+        <TextBox Text="{Binding OutputName, Mode=TwoWay}" Height="32" Grid.Column="3" Grid.Row="0" ToolTip.Tip="{x:Static assets:Resources.TooltipOutputName}" />
       </Grid>
       
       <TextBlock Text="Model:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="3" />
-      <pkxuc:FileTextField Path="{Binding Model}" AssetsPath="{Binding BlenderRunnerInfo.AssetsPath}" IsAssetsPathField="True" Type="GCNModel" Title="Select a model..." Grid.Column="1" Grid.Row="3">
-        <ToolTip.Tip>
-Path to the Pokemon model. It should be a .pkx or .dat file. A .pkx file contains extra information like shiny colors.
-
-If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
-Example: {{AssetsPath}}/pkx_lugia/lugia.pkx.dat
-
-NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET THEM DUE TO LIMITATIONS
-        </ToolTip.Tip>
-      </pkxuc:FileTextField>
+      <pkxuc:FileTextField Path="{Binding Model}" AssetsPath="{Binding BlenderRunnerInfo.AssetsPath}" IsAssetsPathField="True" Type="GCNModel" Title="Select a model..." Grid.Column="1" Grid.Row="3" ToolTip.Tip="{x:Static assets:Resources.TooltipModelPath}" />
 
       <Grid ShowGridLines="False" ColumnDefinitions="100,*,100,*" RowDefinitions="*,*,*" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">
         <TextBlock Text="Shiny:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="0" Grid.Row="0" />
-        <Grid ColumnDefinitions="70,50,*" RowDefinitions="*,*" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
-          <ToolTip.Tip>
-            Data used to change the color of a Pokemon to make it shiny. You can sync up data from the game if you're using a .pkx model by using the Sync button. The colors can be manually changed in Blender.
-          </ToolTip.Tip>
+        <Grid ColumnDefinitions="70,50,*" RowDefinitions="*,*" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" ToolTip.Tip="{x:Static assets:Resources.TooltipShinyInfo}">
           <RadioButton Content="Color: " Name="ShinyFilter" GroupName="Shiny" Command="{ReflectionBinding UseShinyColor}" Grid.Column="0" Grid.Row="0">
             <RadioButton.IsChecked>
               <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.And}">
@@ -146,34 +124,17 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
           <TextBox Text="{ReflectionBinding Color2, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="1" />
         </Grid>
         <Grid ColumnDefinitions="120,*" RowDefinitions="*" Grid.Column="1" Grid.Row="2">
-          <RadioButton IsChecked="{Binding !#ShinyFilter.IsChecked}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" Command="{ReflectionBinding UseShinyModel}" Grid.Column="0" Grid.Row="0">
-            <ToolTip.Tip>
-Model for the shiny version of the Pokemon. It should be a .pkx or .dat file. A .pkx file contains extra information like shiny colors.
-
-If your shiny model is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
-Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
-
-NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET THEM DUE TO LIMITATIONS
-            </ToolTip.Tip>
-          </RadioButton>
+          <RadioButton IsChecked="{Binding !#ShinyFilter.IsChecked}" Content="Shiny Model: " Name="ShinyModel" GroupName="Shiny" Margin="0,0,0,4" Command="{ReflectionBinding UseShinyModel}" Grid.Column="0" Grid.Row="0" ToolTip.Tip="{x:Static assets:Resources.TooltipShinyModelPath}" />
           <pkxuc:FileTextField Path="{Binding ShinyModel}" AssetsPath="{Binding BlenderRunnerInfo.AssetsPath}" IsAssetsPathField="True" Type="GCNModel" Title="Select a model..." IsEnabled="{Binding #ShinyModel.IsChecked}" Grid.Column="1" Grid.Row="0"/>
         </Grid>
         <TextBlock Text="Background:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="0" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="0">
-          <pkxuc:ColorDisplay Color="{Binding Background, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left">
-            <ToolTip.Tip>
-              Background color for this icon
-            </ToolTip.Tip>
-          </pkxuc:ColorDisplay>
+          <pkxuc:ColorDisplay Color="{Binding Background, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left" ToolTip.Tip="{x:Static assets:Resources.TooltipBackgroundColor}" />
         </Border>
         
         <TextBlock Text="Glow:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="1" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="1">
-          <pkxuc:ColorDisplay Color="{Binding Glow, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left">
-            <ToolTip.Tip>
-              Glow color for this icon. Setting it to fully transparent will disable the effect.
-            </ToolTip.Tip>
-          </pkxuc:ColorDisplay>
+          <pkxuc:ColorDisplay Color="{Binding Glow, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left" ToolTip.Tip="{x:Static assets:Resources.TooltipGlowColor}" />
         </Border>
       </Grid>
       

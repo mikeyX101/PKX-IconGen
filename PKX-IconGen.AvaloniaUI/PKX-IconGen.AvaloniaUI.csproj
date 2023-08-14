@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <Nullable>enable</Nullable>
@@ -12,7 +12,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.2.11</AssemblyVersion>
+    <AssemblyVersion>0.2.12</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
     <Version>0.2.0</Version>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
@@ -24,13 +24,15 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.2.11</PackageVersion>
+    <PackageVersion>0.2.12</PackageVersion>
 
     <IsPackable>false</IsPackable>
 
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 
     <LangVersion>11</LangVersion>
+
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -61,6 +63,18 @@
       <DependentUpon>TextureDownloadWindow.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Update="Assets\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <Compile Update="Assets\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <AvaloniaResource Update="Assets\Resources.resx">
+      <Generator>PublicResxFileCodeGenerator</Generator>
+    </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.0.3" />
