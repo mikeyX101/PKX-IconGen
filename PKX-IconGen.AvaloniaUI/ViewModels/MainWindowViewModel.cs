@@ -254,7 +254,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             PokemonRenderDataItemsSource.Connect()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .AutoRefresh(prd => prd.Name)
-                .AutoRefresh(prd => prd.Render)
+                .AutoRefresh(prd => prd.FaceRender)
                 .BindToObservableList(out IObservableList<PokemonRenderData> observableList)
                 .Subscribe();
             
@@ -293,10 +293,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     (
                         !string.IsNullOrWhiteSpace(assets) || // Good if we have an assets path
                         selectedPRDs.All(prd =>  // otherwise check selected PRDs for model paths containing {{AssetsPath}}
-                            (!prd?.Render.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
+                            (!prd?.FaceRender.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
                             (
-                                string.IsNullOrWhiteSpace(prd!.Shiny.Render.Model) || // No Shiny model or
-                                !prd.Shiny.Render.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
+                                string.IsNullOrWhiteSpace(prd!.FaceShiny.FaceRender.Model) || // No Shiny model or
+                                !prd.FaceShiny.FaceRender.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
                             )
                         )
                     )

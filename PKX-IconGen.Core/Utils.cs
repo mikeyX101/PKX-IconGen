@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace PKXIconGen.Core
@@ -41,7 +43,7 @@ namespace PKXIconGen.Core
             }
 
             float scale = (newEnd - newStart) / (originalEnd - originalStart);
-            return newStart + ((value - originalStart) * scale);
+            return newStart + (value - originalStart) * scale;
         }
 
         public static float ConvertRange(
@@ -138,6 +140,17 @@ namespace PKXIconGen.Core
         public static string? GetTrueModelPath(string? model, string? assetsPath)
         {
             return model?.Replace("{{AssetsPath}}", assetsPath);
+        }
+        
+        public static IDictionary<string, string> GetJsonPropNames<T>()
+        {
+            return typeof(T)
+                .GetProperties()
+                .Where(p => p.GetCustomAttributes(typeof(JsonPropertyNameAttribute)).Count() == 1)
+                .ToDictionary(
+                    p => p.Name,
+                    p => p.GetCustomAttributes(typeof(JsonPropertyNameAttribute)).OfType<JsonPropertyNameAttribute>().First().Name
+                );
         }
     }
 }

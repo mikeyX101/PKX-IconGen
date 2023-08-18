@@ -41,7 +41,7 @@ namespace PKXIconGen.Core.ImageProcessing
         }
         
         private RenderJob Job { get; set; }
-        private bool HasSecondary => Job.Data.Render.SecondaryCamera.HasValue;
+        private bool HasSecondary => Job.Data.FaceRender.SecondaryCamera.HasValue;
 
         private string FinalOutput { get; init; }
         
@@ -107,19 +107,19 @@ namespace PKXIconGen.Core.ImageProcessing
                 case IconMode.Normal or IconMode.NormalSecondary:
                     img.Mutate(ctx =>
                     {
-                        if (Job.Data.Render.Glow.Alpha != 0)
+                        if (Job.Data.FaceRender.Glow.Alpha != 0)
                         {
                             stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
                             CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            ctx.ApplyEdgeGlow(Job.Data.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
+                            ctx.ApplyEdgeGlow(Job.Data.FaceRender.Glow.ToPixel<RgbaVector>(), glowIntensity);
                             CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                         token?.ThrowIfCancellationRequested();
-                        if (Job.Data.Render.Background.Alpha != 0)
+                        if (Job.Data.FaceRender.Background.Alpha != 0)
                         {
                             stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
                             CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Render.Background.ToPixel<Rgba32>());
+                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.FaceRender.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
                             CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
@@ -129,19 +129,19 @@ namespace PKXIconGen.Core.ImageProcessing
                 case IconMode.Shiny or IconMode.ShinySecondary:
                     img.Mutate(ctx =>
                     {
-                        if (Job.Data.Shiny.Render.Glow.Alpha != 0)
+                        if (Job.Data.FaceShiny.FaceRender.Glow.Alpha != 0)
                         {
                             stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
                             CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            ctx.ApplyEdgeGlow(Job.Data.Shiny.Render.Glow.ToPixel<RgbaVector>(), glowIntensity);
+                            ctx.ApplyEdgeGlow(Job.Data.FaceShiny.FaceRender.Glow.ToPixel<RgbaVector>(), glowIntensity);
                             CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }
                         token?.ThrowIfCancellationRequested();
-                        if (Job.Data.Shiny.Render.Background.Alpha != 0)
+                        if (Job.Data.FaceShiny.FaceRender.Background.Alpha != 0)
                         {
                             stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
                             CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.Shiny.Render.Background.ToPixel<Rgba32>());
+                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.FaceShiny.FaceRender.Background.ToPixel<Rgba32>());
                             ctx.AddImageBehind(background);
                             CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                         }

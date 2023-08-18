@@ -110,4 +110,7 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
     <data name="TooltipInsertAssetsPath" xml:space="preserve">
         <value>Insert "{{AssetsPath}}" to the current caret location. You cannot have more than 1 "{{AssetsPath}}" in your path.</value>
     </data>
+    <data name="TooltipBoxToggle" xml:space="preserve">
+        <value>Toggle between Face and Box data. Purple areas means that data switches between Normal and Shiny there.</value>
+    </data>
 </root>

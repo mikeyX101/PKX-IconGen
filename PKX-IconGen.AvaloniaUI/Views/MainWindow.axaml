@@ -142,13 +142,13 @@
               <DataTemplate DataType="{x:Type data:PokemonRenderData}">
                 <Grid ColumnDefinitions="0.65*, *, 0.75*, 0.25*, 0.10*" RowDefinitions="*">
                   <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Grid.Column="0" />
-                  <TextBlock VerticalAlignment="Center" Text="{Binding Render.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding FaceRender.Model, Converter={StaticResource PathStringFileNameStringConverter}}" Grid.Column="1" />
                   <Panel HorizontalAlignment="Center" Grid.Column="2">
                     <i:Icon FontSize="16" Value="mdi-check">
                       <i:Icon.IsVisible>
                         <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.Or}">
-                          <Binding Path="Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
-                          <Binding Path="Shiny.Render.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="FaceRender.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="FaceShiny.FaceRender.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                         </MultiBinding>
                       </i:Icon.IsVisible>
                     </i:Icon>

@@ -104,13 +104,11 @@ public sealed class ShinyExtractor: IDisposable, IAsyncDisposable
 
     public void Dispose()
     {
-        
+        PkxStream.Dispose();
     }
     
     public async ValueTask DisposeAsync()
     {
         await PkxStream.DisposeAsync();
-        
-        Dispose();
     }
 }

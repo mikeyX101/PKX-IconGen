@@ -86,18 +86,24 @@ namespace PKXIconGen.Core.Services
         {
             modelBuilder.Entity<Settings>().HasData(new Settings());
 
-            JsonSerializerOptions? serializerOptions = null;
+            JsonSerializerOptions serializerOptions = JsonIO.DefaultOptions;
             EntityTypeBuilder<PokemonRenderData> pokemonRenderDataEntityBuilder = modelBuilder.Entity<PokemonRenderData>();
 
             pokemonRenderDataEntityBuilder.Property(nameof(PokemonRenderData.OutputName)).IsRequired(false);
 
-            pokemonRenderDataEntityBuilder.Property<RenderData>(nameof(PokemonRenderData.Render))
+            pokemonRenderDataEntityBuilder.Property<RenderData>(nameof(PokemonRenderData.FaceRender))
                 .HasDefaultValue(new RenderData())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
                     v => JsonSerializer.Deserialize<RenderData>(v, serializerOptions) ?? new RenderData());
 
-            pokemonRenderDataEntityBuilder.Property<ShinyInfo>(nameof(PokemonRenderData.Shiny))
+            pokemonRenderDataEntityBuilder.Property<BoxInfo>(nameof(PokemonRenderData.BoxRender))
+                .HasDefaultValue(new BoxInfo())
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, serializerOptions),
+                    v => JsonSerializer.Deserialize<BoxInfo>(v, serializerOptions) ?? new BoxInfo());
+            
+            pokemonRenderDataEntityBuilder.Property<ShinyInfo>(nameof(PokemonRenderData.FaceShiny))
                 .HasDefaultValue(new ShinyInfo())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),

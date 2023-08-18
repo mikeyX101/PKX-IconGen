@@ -134,5 +134,11 @@ namespace PKXIconGen.AvaloniaUI.Assets {
                 return ResourceManager.GetString("TooltipInsertAssetsPath", resourceCulture);
             }
         }
+        
+        public static string TooltipBoxToggle {
+            get {
+                return ResourceManager.GetString("TooltipBoxToggle", resourceCulture);
+            }
+        }
     }
 }

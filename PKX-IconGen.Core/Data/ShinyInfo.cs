@@ -19,9 +19,12 @@
 
 using System;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
+using PKXIconGen.Core.Data.Compatibility;
 
 namespace PKXIconGen.Core.Data
 {
+    [JsonConverter(typeof(ShinyInfoJsonConverter))]
     public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>, ICloneable
     {
         [JsonPropertyName("color1")]
@@ -30,20 +33,29 @@ namespace PKXIconGen.Core.Data
         [JsonPropertyName("color2")]
         public ShinyColor? Color2 { get; set; }
 
-        [JsonPropertyName("render")]
-        public RenderData Render { get; init; }
+        [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceRender instead.")]
+        public RenderData Render
+        {
+            set => FaceRender = value;
+        }
+        [JsonPropertyName("face")]
+        public RenderData FaceRender { get; private set; }
+        
+        [JsonPropertyName("box")]
+        public BoxInfo BoxRender { get; set; }
         
         public ShinyInfo()
         {
             Color1 = ShinyColor.GetDefaultShinyColor1();
             Color2 = ShinyColor.GetDefaultShinyColor2();
-            Render = new RenderData();
+            FaceRender = new RenderData();
+            BoxRender = new BoxInfo();
         }
-
+        
         [JsonConstructor]
-        public ShinyInfo(ShinyColor? color1, ShinyColor? color2, RenderData render)
+        public ShinyInfo(ShinyColor? color1, ShinyColor? color2, RenderData faceRender, BoxInfo? boxRender)
         {
-            if ((!color1.HasValue || !color2.HasValue) && render.Model is null)
+            if ((!color1.HasValue || !color2.HasValue) && faceRender.Model is null)
             {
                 Color1 = ShinyColor.GetDefaultShinyColor1();
                 Color2 = ShinyColor.GetDefaultShinyColor2();
@@ -54,7 +66,8 @@ namespace PKXIconGen.Core.Data
                 Color2 = color2;
             }
             
-            Render = render;
+            FaceRender = faceRender;
+            BoxRender = boxRender ?? new BoxInfo();
         }
 
         public bool Equals(ShinyInfo? other)
@@ -62,7 +75,7 @@ namespace PKXIconGen.Core.Data
             return other is not null &&
                 (Color1 is null && other.Color1 is null || Color1 is not null && Color1.Equals(other.Color1)) &&
                 (Color2 is null && other.Color2 is null || Color2 is not null && Color2.Equals(other.Color2)) &&
-                Render.Equals(other.Render);
+                FaceRender.Equals(other.FaceRender);
         }
         public override bool Equals(object? obj)
         {
@@ -79,11 +92,11 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public override int GetHashCode() => (Color1, Color2, Render).GetHashCode();
+        public override int GetHashCode() => (Color1, Color2, FaceRender, BoxRender).GetHashCode();
 
         public object Clone()
         {
-            return new ShinyInfo(Color1, Color2, (RenderData)Render.Clone());
+            return new ShinyInfo(Color1, Color2, (RenderData)FaceRender.Clone(), (BoxInfo)BoxRender.Clone());
         }
     }
 }

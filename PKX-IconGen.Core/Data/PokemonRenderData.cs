@@ -64,26 +64,48 @@ namespace PKXIconGen.Core.Data
         [JsonIgnore]
         public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
 
-        private RenderData render;
-        [Column, JsonPropertyName("render"), JsonRequired]
-        public RenderData Render
+        [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceRender instead.")]
+        protected RenderData Render
         {
-            get => render;
+            set => faceRender = value;
+        }
+        private RenderData faceRender;
+        [Column("FaceRender"), JsonPropertyName("face")]
+        public RenderData FaceRender
+        {
+            get => faceRender;
             set
             {
-                render = value;
+                faceRender = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private BoxInfo boxRender;
+        [Column("BoxRender"), JsonPropertyName("box")]
+        public BoxInfo BoxRender
+        {
+            get => boxRender;
+            set
+            {
+                boxRender = value;
                 OnPropertyChanged();
             }
         }
         
-        private ShinyInfo shiny;
-        [Column, JsonPropertyName("shiny"), JsonRequired]
-        public ShinyInfo Shiny 
+        [JsonPropertyName("shiny"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceShiny instead.")]
+        protected ShinyInfo Shiny
         {
-            get => shiny;
+            set => faceShiny = value;
+        }
+        private ShinyInfo faceShiny;
+        [Column("Shiny"), JsonPropertyName("face_shiny")]
+        public ShinyInfo FaceShiny 
+        {
+            get => faceShiny;
             set
             {
-                shiny = value;
+                faceShiny = value;
                 OnPropertyChanged();
             }
         }
@@ -93,8 +115,8 @@ namespace PKXIconGen.Core.Data
         {
             get
             {
-                string shinyModel = shiny.Render.Model is not null ? $"_{Path.GetFileNameWithoutExtension(shiny.Render.Model)}" : "";
-                return $"{Id}_{Output}_{Path.GetFileNameWithoutExtension(render.Model!)}{shinyModel}";
+                string shinyModel = faceShiny.FaceRender.Model is not null ? $"_{Path.GetFileNameWithoutExtension(faceShiny.FaceRender.Model)}" : "";
+                return $"{Id}_{Output}_{Path.GetFileNameWithoutExtension(faceRender.Model!)}{shinyModel}";
             }
         }
 
@@ -105,19 +127,19 @@ namespace PKXIconGen.Core.Data
             name = "";
             OutputName = "";
 
-            render = new RenderData();
-            shiny = new ShinyInfo();
+            faceRender = new RenderData();
+            faceShiny = new ShinyInfo();
         }
         
-        public PokemonRenderData(uint id, string name, string? outputName, RenderData render, ShinyInfo shiny)
+        public PokemonRenderData(uint id, string name, string? outputName, RenderData faceRender, ShinyInfo faceShiny)
         {
             Id = id;
 
             this.name = name;
             OutputName = !string.IsNullOrEmpty(outputName) ? outputName : null;
 
-            this.render = render;
-            this.shiny = shiny;
+            this.faceRender = faceRender;
+            this.faceShiny = faceShiny;
         }
 
         [JsonConstructor]
@@ -137,20 +159,10 @@ namespace PKXIconGen.Core.Data
             
             runner.OnFinish += newData =>
             {
-                if (newData is not null)
-                {
-                    RenderData oldRender = Render;
-                    ShinyInfo oldShiny = Shiny;
-
-                    // Put non-Blender data back into new instances
-                    newData.Render.Background = oldRender.Background;
-                    newData.Shiny.Render.Background = oldShiny.Render.Background;
-                    newData.Render.Glow = oldRender.Glow;
-                    newData.Shiny.Render.Glow = oldShiny.Render.Glow;
-                    
-                    Render = newData.Render;
-                    Shiny = newData.Shiny;
-                }
+                if (newData is null) return;
+                
+                FaceRender = newData.FaceRender;
+                FaceShiny = newData.FaceShiny;
             };
             await runner.RunAsync(token);
             onFinish?.Invoke();
@@ -161,8 +173,8 @@ namespace PKXIconGen.Core.Data
             return other is not null &&
                 Id == other.Id &&
                 Name == other.Name &&
-                Render.Equals(other.Render) &&
-                Shiny.Equals(other.Shiny);
+                FaceRender.Equals(other.FaceRender) &&
+                FaceShiny.Equals(other.FaceShiny);
         }
         public override bool Equals(object? obj)
         {
@@ -184,13 +196,13 @@ namespace PKXIconGen.Core.Data
                 Id, 
                 Name,
                 OutputName,
-                Render,
-                Shiny
+                FaceRender,
+                FaceShiny
             ).GetHashCode();
 
         public object Clone()
         {
-            return new PokemonRenderData(Id, Name, OutputName, (RenderData)Render.Clone(), (ShinyInfo)Shiny.Clone());
+            return new PokemonRenderData(Id, Name, OutputName, (RenderData)FaceRender.Clone(), (ShinyInfo)FaceShiny.Clone());
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

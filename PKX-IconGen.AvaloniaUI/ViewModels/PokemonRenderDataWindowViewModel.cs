@@ -42,6 +42,31 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 UpdateBindings();
             }
         }
+        private bool showBox;
+        private bool ShowBox
+        {
+            get => showBox;
+            set
+            {
+                if (value)
+                {
+                    boxFrame = BoxAnimationFrame.First;
+                }
+                
+                showBox = value;
+                UpdateBindings();
+            }
+        }
+        private BoxAnimationFrame boxFrame;
+        private BoxAnimationFrame BoxFrame
+        {
+            get => boxFrame;
+            set
+            {
+                boxFrame = value;
+                UpdateBindings();
+            }
+        }
         private bool showShiny;
         private bool ShowShiny
         {
@@ -52,7 +77,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 UpdateBindings();
             }
         }
-        private RenderData CurrentRenderData => ShowShiny ? Data.Shiny.Render : Data.Render;
+        private RenderData CurrentRenderData => ShowShiny ? Data.FaceShiny.FaceRender : Data.FaceRender;
 
         public string Title { get; init; }
         public IBlenderRunnerInfo BlenderRunnerInfo { get; init; }
@@ -78,9 +103,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         public string? Model
         {
-            get => Data.Render.Model;
+            get => Data.FaceRender.Model;
             set {
-                Data.Render.Model = value;
+                Data.FaceRender.Model = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -88,24 +113,24 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Shiny
         public ShinyColor? Color1 {
-            get => Data.Shiny.Color1;
+            get => Data.FaceShiny.Color1;
             private set {
-                Data.Shiny.Color1 = value;
+                Data.FaceShiny.Color1 = value;
                 this.RaisePropertyChanged();
             }
         }
         public ShinyColor? Color2 {
-            get => Data.Shiny.Color2;
+            get => Data.FaceShiny.Color2;
             private set {
-                Data.Shiny.Color2 = value;
+                Data.FaceShiny.Color2 = value;
                 this.RaisePropertyChanged();
             }
         }
         public string? ShinyModel
         {
-            get => Data.Shiny.Render.Model;
+            get => Data.FaceShiny.FaceRender.Model;
             set {
-                Data.Shiny.Render.Model = value;
+                Data.FaceShiny.FaceRender.Model = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -253,6 +278,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 Color1 = ShinyColor.GetDefaultShinyColor1();
                 Color2 = ShinyColor.GetDefaultShinyColor2();
                 ShinyModel = null;
+                
+                UpdateBindings();
             }
         }
         
@@ -264,6 +291,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 ShinyModel = "";
                 Color1 = null;
                 Color2 = null;
+                
+                UpdateBindings();
             }
         }
         #endregion
@@ -296,7 +325,6 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         
-        [UsedImplicitly]
         public void ShinyToggle() => ShowShiny = !ShowShiny;
         public ReactiveCommand<Unit, object> CancelCommand { get; }
         private static object Cancel() => false;

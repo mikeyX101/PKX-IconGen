@@ -18,12 +18,13 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:PKXIconGen.AvaloniaUI"
-             x:Class="PKXIconGen.AvaloniaUI.App">
+             x:Class="PKXIconGen.AvaloniaUI.App"
+             RequestedThemeVariant="Default">
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
     <Application.Styles>
-      <FluentTheme Palettes=""/>
+      <FluentTheme />
     </Application.Styles>
 </Application>

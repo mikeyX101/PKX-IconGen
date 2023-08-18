@@ -34,12 +34,12 @@ class PokemonRenderData(object):
     def __init__(self,
                  name: str,
                  output_name: Optional[str],
-                 render: RenderData,
-                 shiny: ShinyInfo):
+                 face: RenderData,
+                 face_shiny: ShinyInfo):
         self.name = name
         self.output_name = output_name
-        self.render = render
-        self.shiny = shiny
+        self.face = face
+        self.face_shiny = face_shiny
 
     def to_json(self) -> str:
         return json.dumps(self, default=vars, separators=(',', ':'))

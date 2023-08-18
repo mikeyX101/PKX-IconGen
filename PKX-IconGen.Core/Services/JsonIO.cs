@@ -25,6 +25,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
+using PKXIconGen.Core.Data.Compatibility;
 
 namespace PKXIconGen.Core.Services
 {
@@ -34,7 +35,11 @@ namespace PKXIconGen.Core.Services
     /// </summary>
     public static class JsonIO
     {
-        private static readonly JsonSerializerOptions DefaultOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+        public static readonly JsonSerializerOptions DefaultOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new ShinyInfoJsonConverter() }
+        };
 
         public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
         {

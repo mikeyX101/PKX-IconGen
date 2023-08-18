@@ -20,6 +20,7 @@ from typing import Optional
 from typing import List
 
 from .camera import Camera
+from .color import Color
 from .object_shading import ObjectShading
 from .texture import Texture
 
@@ -34,7 +35,10 @@ class RenderData(object):
                  secondary_camera: Optional[Camera],
                  removed_objects: List[str],
                  textures: Optional[List[Texture]],
-                 shading: Optional[ObjectShading]):
+                 shading: Optional[ObjectShading],
+                 bg: Optional[Color],
+                 glow: Optional[Color]
+    ):
         self.model = model
 
         self.animation_pose = animation_pose
@@ -46,6 +50,9 @@ class RenderData(object):
         self.removed_objects = removed_objects
         self.textures = textures or list[Texture]()  # Optional for compatibility, should always be not null
         self.shading = shading or ObjectShading.FLAT  # Optional for compatibility, should always be not null
+
+        self.bg = bg or Color(0, 0, 0, 1)
+        self.glow = glow or Color(1, 1, 1, 0)
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['RenderData']:
@@ -70,6 +77,14 @@ class RenderData(object):
         if "shading" in obj.__dict__.keys():
             shading = ObjectShading(obj.shading)
 
+        bg: Optional[Color] = None
+        if "bg" in obj.__dict__.keys():
+            bg = Color.parse_obj(obj.bg)
+
+        glow: Optional[Color] = None
+        if "glow" in obj.__dict__.keys():
+            glow = Color.parse_obj(obj.glow)
+
         return RenderData(
             model,
             obj.animation_pose,
@@ -78,5 +93,7 @@ class RenderData(object):
             secondary_camera,
             obj.removed_objects,
             textures,
-            shading
+            shading,
+            bg,
+            glow
         )

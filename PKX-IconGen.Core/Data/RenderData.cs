@@ -81,7 +81,7 @@ namespace PKXIconGen.Core.Data
          * This also allows for transparent backgrounds or edge detected post-processing.
          */
         [JsonPropertyName("bg")]
-        public Color Background { get; set; } = new(0,0,0,1);
+        public Color Background { get; set; }
 
         /**
          * Glow color for this render.
@@ -89,7 +89,7 @@ namespace PKXIconGen.Core.Data
          * If alpha is set to 0, the post-processing step for the glow is skipped.
          */
         [JsonPropertyName("glow")]
-        public Color Glow { get; set; } = new(1, 1, 1, 0);
+        public Color Glow { get; set; }
 
         public RenderData() {
             Model = null;
@@ -104,6 +104,9 @@ namespace PKXIconGen.Core.Data
             Textures = new List<Texture>();
 
             ObjectShading = ObjectShading.Flat;
+            
+            Background = new Color(0,0,0,1);
+            Glow = new Color(1, 1, 1, 0);
         }
 
         [JsonConstructor]
@@ -115,7 +118,9 @@ namespace PKXIconGen.Core.Data
             Camera? secondaryCamera, 
             SortedSet<string> removedObjects, 
             List<Texture>? textures, 
-            ObjectShading objectShading)
+            ObjectShading objectShading,
+            Color background,
+            Color glow)
         {
             Model = model;
 
@@ -129,6 +134,9 @@ namespace PKXIconGen.Core.Data
             Textures = textures ?? new List<Texture>();
 
             ObjectShading = objectShading;
+
+            Background = background;
+            Glow = glow;
         }
 
         public bool Equals(RenderData? other)
@@ -181,19 +189,17 @@ namespace PKXIconGen.Core.Data
         public object Clone()
         {
             return new RenderData(
-                Model, 
-                AnimationPose, 
-                AnimationFrame, 
-                MainCamera, 
+                Model,
+                AnimationPose,
+                AnimationFrame,
+                MainCamera,
                 SecondaryCamera,
                 new SortedSet<string>(RemovedObjects),
                 new List<Texture>(Textures),
-                ObjectShading
-            )
-            {
-                Background = this.Background,
-                Glow = this.Glow
-            };
+                ObjectShading,
+                Background,
+                Glow
+            );
         }
     }
 }

@@ -7,7 +7,7 @@
         
              mc:Ignorable="d" d:DesignWidth="512" d:DesignHeight="768"
              x:Class="PKXIconGen.AvaloniaUI.Views.Controls.ColorDisplay"
-             Name="Root" Width="315" Height="40">
+             Name="Root" Height="40">
     <UserControl.Resources>
         <conv:AvaloniaColorHexStringConverter x:Key="AvaloniaColorHexStringConverter"/>
     </UserControl.Resources>
@@ -16,19 +16,19 @@
         <StackPanel Orientation="Horizontal">
             <TextBlock Text="{Binding #Root.Color, Converter={StaticResource AvaloniaColorHexStringConverter}}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="45">
+        <StackPanel Orientation="Horizontal" Width="50">
             <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.R}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="45">
+        <StackPanel Orientation="Horizontal" Width="50">
             <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.G}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="45">
+        <StackPanel Orientation="Horizontal" Width="50">
             <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.B}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="45">
+        <StackPanel Orientation="Horizontal" Width="50">
             <TextBlock Text="A:" Margin="2" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.A}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
