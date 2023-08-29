@@ -187,9 +187,13 @@ namespace PKXIconGen.Core.ImageProcessing
                 await danceFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceOutput + ".png"));
                 await danceFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceShinyOutput + ".png"));
             }
+            else
+            {
+                await bodyFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyOutput + ".png"));
+                await bodyFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyShinyOutput + ".png"));
+            }
             
-            await bodyFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyOutput + ".png"));
-            await bodyFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyShinyOutput + ".png"));
+            
             stepOutput?.Invoke($"Finished rendering box {Job.Data.Name}!".AsMemory());
             CoreManager.Logger.Information("Finished rendering box {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
         }
