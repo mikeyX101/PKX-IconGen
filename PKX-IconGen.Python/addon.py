@@ -28,22 +28,23 @@ from data.light import Light, LightType
 from data.material import Material
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData
+from data.render_data import RenderData
+from data.render_target import RenderTarget
 from data.camera import Camera
 from data.shiny_color import ColorChannel, ShinyColors, ShinyColor
 from data.texture import Texture
 from data.vector2 import Vector2
 from data.vector3 import Vector3
 from data.edit_mode import EditMode
-from math import degrees
-from math import radians
+from math import degrees, radians
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 2, 25),
+    "version": (0, 3, 0),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
-    "author": "Samuel Caron/mikeyX#4697",
+    "author": "Samuel Caron/mikeyx",
     "location": "View3D > PKX-IconGen",
     "doc_url": "https://github.com/mikeyX101/PKX-IconGen"
 }
@@ -51,7 +52,7 @@ addon_ver_str: str = '.'.join([str(v) for v in bl_info['version']])
 
 addon_keymaps = []
 
-mode: EditMode = EditMode.NORMAL
+mode: EditMode = EditMode.FACE_NORMAL  # Mode should be a singular flag
 prd: PokemonRenderData
 removed_objects: List[str] = list()
 render_textures: dict[str, Texture] = dict()
@@ -137,11 +138,11 @@ class PKXCopyRemovedObjectsOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+        return False#mode in EditMode.ANY_FACE_SHINY
 
     def execute(self, context):
         global removed_objects
-        removed_objects = list(prd.render.removed_objects)
+        removed_objects = list(prd.face.removed_objects)
         common.show_armature(get_armature(), True)
         common.remove_objects(removed_objects)
 
@@ -155,7 +156,7 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY
+        return False#mode in EditMode.ANY_FACE_SHINY
 
     def execute(self, context):
         global render_textures
@@ -163,7 +164,7 @@ class PKXCopyTexturesOperator(bpy.types.Operator):
             common.reset_texture_images(texture)
 
         texture_copies: List[Texture] = list()
-        for texture in prd.render.textures:
+        for texture in prd.face.textures:
             texture_copies.append(copy.deepcopy(texture))
         render_textures = make_texture_dict(texture_copies)
 
@@ -340,16 +341,28 @@ def get_armature():
 
 
 def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
-    return mode == EditMode.NORMAL or mode == EditMode.SHINY or secondary_enabled
+    return mode in EditMode.ANY_FACE_MAIN or (mode in EditMode.ANY_FACE_SECONDARY and secondary_enabled) or mode in EditMode.ANY_BOX
 
 
 # Update Functions
+def update_main_mode(self, context):
+    if self.main_mode == "FACE":
+        self.face_mode = "FACE_NORMAL"
+    elif self.main_mode == "BOX":
+        self.box_mode = "BOX_FIRST"
+
+
 def update_mode(self, context):
     if self.advanced_camera_editing:
         sync_camera_to_props(context)
     sync_props_to_prd(context)
 
-    value = self.mode
+    if self.main_mode == "FACE":
+        value = self.face_mode
+    elif self.main_mode == "BOX":
+        value = self.box_mode
+    else:
+        raise Exception("Unknown main mode.")
     global mode
     mode = EditMode[value]
 
@@ -667,7 +680,7 @@ def sync_prd_to_props(context=None):
     animation_frame: Optional[int] = prd.get_mode_animation_frame(mode)
 
     if prd_camera is None:
-        prd_camera = Camera.default()
+        prd_camera = Camera.default(RenderTarget[scene.main_mode])
 
     scene.pos = prd_camera.pos.to_mathutils_vector()
     scene.focus = prd_camera.focus.to_mathutils_vector()
@@ -735,43 +748,53 @@ def sync_props_to_prd(context):
 
     prd_camera: Camera = Camera(camera_pos_vector, camera_focus_pos_vector, is_ortho, fov, ortho_scale, light)
 
-    if mode == EditMode.NORMAL:
-        prd.render.main_camera = prd_camera
-        prd.render.animation_pose = animation_pose
-        prd.render.animation_frame = animation_frame
-        prd.render.removed_objects = removed_objs
-        prd.render.textures = textures
-        prd.render.shading = shading
+    def update_render(prd_render_data: RenderData):
+        prd_render_data.main_camera = prd_camera
+        prd_render_data.animation_pose = animation_pose
+        prd_render_data.animation_frame = animation_frame
+        prd_render_data.removed_objects = removed_objs
+        prd_render_data.textures = textures
+        prd_render_data.shading = shading
 
-    elif mode == EditMode.NORMAL_SECONDARY:
-        if secondary_enabled:
-            prd.render.secondary_camera = prd_camera
-        else:
-            prd.render.secondary_camera = None
-        prd.render.animation_pose = animation_pose
-        prd.render.animation_frame = animation_frame
-        prd.render.removed_objects = removed_objs
-        prd.render.textures = textures
-        prd.render.shading = shading
+    prd.update_mode_render(mode, update_render)
 
-    elif mode == EditMode.SHINY:
-        prd.shiny.render.main_camera = prd_camera
-        prd.shiny.render.animation_pose = animation_pose
-        prd.shiny.render.animation_frame = animation_frame
-        prd.shiny.render.removed_objects = removed_objs
-        prd.shiny.render.textures = textures
-        prd.shiny.render.shading = shading
-
-    elif mode == EditMode.SHINY_SECONDARY:
-        if secondary_enabled:
-            prd.shiny.render.secondary_camera = prd_camera
-        else:
-            prd.shiny.render.secondary_camera = None
-        prd.shiny.render.animation_pose = animation_pose
-        prd.shiny.render.animation_frame = animation_frame
-        prd.shiny.render.removed_objects = removed_objs
-        prd.shiny.render.textures = textures
-        prd.shiny.render.shading = shading
+    # if mode == EditMode.FACE_NORMAL:
+    #     prd.face.main_camera = prd_camera
+    #     prd.face.animation_pose = animation_pose
+    #     prd.face.animation_frame = animation_frame
+    #     prd.face.removed_objects = removed_objs
+    #     prd.face.textures = textures
+    #     prd.face.shading = shading
+    #
+    # elif mode == EditMode.FACE_NORMAL_SECONDARY:
+    #     if secondary_enabled:
+    #         prd.face.secondary_camera = prd_camera
+    #     else:
+    #         prd.face.secondary_camera = None
+    #     prd.face.animation_pose = animation_pose
+    #     prd.face.animation_frame = animation_frame
+    #     prd.face.removed_objects = removed_objs
+    #     prd.face.textures = textures
+    #     prd.face.shading = shading
+    #
+    # elif mode == EditMode.FACE_SHINY:
+    #     prd.shiny.face.main_camera = prd_camera
+    #     prd.shiny.face.animation_pose = animation_pose
+    #     prd.shiny.face.animation_frame = animation_frame
+    #     prd.shiny.face.removed_objects = removed_objs
+    #     prd.shiny.face.textures = textures
+    #     prd.shiny.face.shading = shading
+    #
+    # elif mode == EditMode.FACE_SHINY_SECONDARY:
+    #     if secondary_enabled:
+    #         prd.shiny.face.secondary_camera = prd_camera
+    #     else:
+    #         prd.shiny.face.secondary_camera = None
+    #     prd.shiny.face.animation_pose = animation_pose
+    #     prd.shiny.face.animation_frame = animation_frame
+    #     prd.shiny.face.removed_objects = removed_objs
+    #     prd.shiny.face.textures = textures
+    #     prd.shiny.face.shading = shading
 
     if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
         prd.shiny.color1 = ShinyColor(scene.color1_r, scene.color1_g, scene.color1_b, scene.color1_a)
@@ -780,15 +803,41 @@ def sync_props_to_prd(context):
 
 # Props
 MAINPROPS = [
-    ('mode',
+    ('main_mode',
+     bpy.props.EnumProperty(
+         name="Main mode",
+         description="Main mode",
+         items=[
+             ('FACE', "Face", "Change Face icons"),
+             ('BOX', "Box", "Change Box Icons")
+         ],
+         options={'ANIMATABLE'},
+         update=update_main_mode
+     )),
+    ('face_mode',
      bpy.props.EnumProperty(
          name="Mode",
-         description="Edit mode",
+         description="Face edit mode",
          items=[
-             ('NORMAL', "Normal", "Regular icon"),
-             ('NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
-             ('SHINY', "Shiny", "Shiny icon"),
-             ('SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
+             ('FACE_NORMAL', "Normal", "Regular face icon"),
+             ('FACE_NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
+             ('FACE_SHINY', "Shiny", "Shiny face icon"),
+             ('FACE_SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
+         ],
+         options={'ANIMATABLE'},
+         update=update_mode
+     )),
+    ('box_mode',
+     bpy.props.EnumProperty(
+         name="Mode",
+         description="Box edit mode",
+         items=[
+             ('BOX_FIRST', "First", "First box icon. Colosseum uses only this frame"),
+             ('BOX_FIRST_SHINY', "First Shiny", "First shiny box icon. Colosseum uses only this frame"),
+             ('BOX_SECOND', "Second", "Second box icon"),
+             ('BOX_SECOND_SHINY', "Second Shiny", "Second shiny box icon"),
+             ('BOX_THIRD', "Third", "Third box icon"),
+             ('BOX_THIRD_SHINY', "Third Shiny", "Third shiny box icon"),
          ],
          options={'ANIMATABLE'},
          update=update_mode
@@ -1114,13 +1163,25 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
+        main_mode = context.scene.main_mode
+
         layout.use_property_split = True
         layout.use_property_decorate = False
         for (prop_name, _) in MAINPROPS:
-            expand = prop_name == "mode"
+            expand = prop_name == "main_mode" or prop_name == "face_mode" or prop_name == "box_mode"
 
-            row = col.row(align=True)
-            row.prop(context.scene, prop_name, expand=expand)
+            if prop_name == "main_mode":
+                col.label(text=f"Main mode")
+                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+            elif main_mode == "FACE" and (prop_name == "face_mode" or prop_name == "secondary_enabled"):
+                if prop_name == "face_mode":
+                    col.label(text=f"Face mode")
+                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+            elif main_mode == "BOX" and prop_name == "box_mode":
+                col.label(text=f"Box mode")
+                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+
+        col.separator()
         col.operator(PKXDeleteOperator.bl_idname)
         col.operator(PKXResetDeletedOperator.bl_idname)
         col.operator(PKXSaveQuitOperator.bl_idname)
@@ -1147,7 +1208,7 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(EditMode[scene.mode], scene.secondary_enabled) and not scene.advanced_camera_editing
+        col.enabled = can_edit(mode, scene.secondary_enabled) and not scene.advanced_camera_editing
         for (prop_name, _) in CAMERAPROPS:
             if prop_name == "focus":
                 row = col.row(align=True)
@@ -1195,7 +1256,7 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(EditMode[scene.mode], scene.secondary_enabled)
+        col.enabled = can_edit(mode, scene.secondary_enabled)
         for (prop_name, _) in TEXTURESPROPS:
             if prop_name == "current_texture_image":
                 row = col.row(align=True)
@@ -1242,7 +1303,7 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return prd.shiny.color1 is not None and prd.shiny.color2 is not None and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY)
+        return prd.shiny.color1 is not None and prd.shiny.color2 is not None and (mode in EditMode.ANY_SHINY)
 
     def draw(self, context):
         col = self.layout.column()
@@ -1274,7 +1335,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         layout = self.layout
 
         col = layout.column()
-        col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+        col.enabled = can_edit(mode, context.scene.secondary_enabled)
 
         row = col.row()
         row.label(text="Shading:")
@@ -1285,7 +1346,7 @@ def init_simple_subpanel(self, context, props):
     layout = self.layout
 
     col = layout.column()
-    col.enabled = can_edit(EditMode[context.scene.mode], context.scene.secondary_enabled)
+    col.enabled = can_edit(mode, context.scene.secondary_enabled)
     for (prop_name, _) in props:
         row = col.row(align=True)
         row.prop(context.scene, prop_name)
@@ -1329,7 +1390,7 @@ def register(data: PokemonRenderData):
         bpy.utils.register_class(c)
 
     scene = bpy.data.scenes["Scene"]
-    scene.secondary_enabled = data.render.secondary_camera is not None
+    scene.secondary_enabled = data.face.secondary_camera is not None
 
     sync_prd_to_props()
     common.remove_objects(removed_objects)
@@ -1368,7 +1429,7 @@ def unregister():
     for c in CLASSES:
         bpy.utils.unregister_class(c)
 
-    # key bind
+    # key binds
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()

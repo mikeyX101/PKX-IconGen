@@ -110,7 +110,7 @@ mix_in: MixInputs = MixInputs(
 )
 
 # Overrides
-if (3, 0, 0) <= blender_ver < (3, 3, 0):
+if (3, 0, 0) <= blender_ver:  # < (3, 6, 1):
     principled_bsdf_in = PrincipledBSDFInputs(
         base_color=0,
         metallic=6,

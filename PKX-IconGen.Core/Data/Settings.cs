@@ -42,7 +42,7 @@ namespace PKXIconGen.Core.Data
         public RenderScale RenderScale { get; set; }
         [Column]
         public string AssetsPath { get; set; }
-
+        
         [Column]
         public bool LogBlender { get; set; }
         
@@ -58,6 +58,7 @@ namespace PKXIconGen.Core.Data
             CurrentGame = Game.Undefined;
             RenderScale = RenderScale.X1;
             AssetsPath = "";
+            
             LogBlender = false;
             SaturationBoost = true;
         }

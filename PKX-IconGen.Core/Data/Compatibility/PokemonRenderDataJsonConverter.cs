@@ -24,11 +24,11 @@ using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data.Compatibility;
 
-public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
+public sealed class PokemonRenderDataJsonConverter : JsonConverter<PokemonRenderData>
 {
-    private static readonly IDictionary<string, string> JsonPropNames = Utils.GetJsonPropNames<ShinyInfo>();
+    private static readonly IDictionary<string, string> JsonPropNames = Utils.GetJsonPropNames<PokemonRenderData>();
     
-    public override ShinyInfo? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override PokemonRenderData? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
@@ -40,19 +40,28 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
             throw new JsonException();
         }
 
-        ShinyColor? color1 = null;
-        ShinyColor? color2 = null;
+        string? name = null;
+        string? outputName = null;
         string? model = null;
         RenderData? faceRender = null;
         BoxInfo? boxRender = null;
+        ShinyInfo? shiny = null;
 
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
             {
+                if (name is null)
+                {
+                    throw new JsonException("Name missing");
+                }
                 if (faceRender is null)
                 {
                     throw new JsonException("Face render data missing");
+                }
+                if (shiny is null)
+                {
+                    throw new JsonException("Shiny info missing");
                 }
                 
                 if (model is null)
@@ -60,9 +69,14 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
 #pragma warning disable CS0618 // Type or member is obsolete
                     model = faceRender.Model;
 #pragma warning restore CS0618 // Type or member is obsolete
+                    
+                    if (model is null)
+                    {
+                        throw new JsonException("Model missing, also checked for deprecated model from face render data");
+                    }
                 }
                 
-                return new ShinyInfo(color1, color2, model, faceRender, boxRender);
+                return new PokemonRenderData(name, outputName, model, faceRender, boxRender, shiny);
             }
 
             // Get the key.
@@ -75,34 +89,39 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
 
             // Get the value.
             reader.Read();
+            
             if (!string.IsNullOrWhiteSpace(propertyName) && reader.TokenType == JsonTokenType.StartObject)
             {
                 string jsonData = JsonDocument.ParseValue(ref reader).RootElement.ToString();
                 if (!string.IsNullOrWhiteSpace(jsonData))
                 {
-                    if (propertyName == JsonPropNames[nameof(ShinyInfo.Color1)])
-                    {
-                        color1 = JsonSerializer.Deserialize<ShinyColor>(jsonData, options);
-                    }
-                    else if (propertyName == JsonPropNames[nameof(ShinyInfo.Color2)])
-                    {
-                        color2 = JsonSerializer.Deserialize<ShinyColor>(jsonData, options);
-                    }
 #pragma warning disable CS0618 // Type or member is obsolete
-                    else if (propertyName == JsonPropNames[nameof(ShinyInfo.Render)] || propertyName == JsonPropNames[nameof(ShinyInfo.FaceRender)])
+                    if (propertyName == JsonPropNames[nameof(PokemonRenderData.Render)] || propertyName == JsonPropNames[nameof(PokemonRenderData.FaceRender)])
 #pragma warning restore CS0618 // Type or member is obsolete
                     {
                         faceRender = JsonSerializer.Deserialize<RenderData>(jsonData, options);
                     }
-                    else if (propertyName == JsonPropNames[nameof(ShinyInfo.BoxRender)])
+                    else if (propertyName == JsonPropNames[nameof(PokemonRenderData.BoxRender)])
                     {
                         boxRender = JsonSerializer.Deserialize<BoxInfo>(jsonData, options);
+                    }
+                    else if (propertyName == JsonPropNames[nameof(PokemonRenderData.Shiny)])
+                    {
+                        shiny = JsonSerializer.Deserialize<ShinyInfo>(jsonData, options);
                     }
                 }
             }
             else if (!string.IsNullOrWhiteSpace(propertyName) && reader.TokenType == JsonTokenType.String)
             {
-                if (propertyName == JsonPropNames[nameof(ShinyInfo.Model)])
+                if (propertyName == JsonPropNames[nameof(PokemonRenderData.Name)])
+                {
+                    name = reader.GetString();
+                }
+                else if (propertyName == JsonPropNames[nameof(PokemonRenderData.OutputName)])
+                {
+                    outputName = reader.GetString();
+                }
+                else if (propertyName == JsonPropNames[nameof(PokemonRenderData.Model)])
                 {
                     model = reader.GetString();
                 }
@@ -112,26 +131,25 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
         throw new JsonException();
     }
 
-    public override void Write(Utf8JsonWriter writer, ShinyInfo value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, PokemonRenderData value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
         
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color1)]);
-        writer.WriteRawValue(JsonSerializer.Serialize(value.Color1, options), true);
-        
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color2)]);
-        writer.WriteRawValue(JsonSerializer.Serialize(value.Color2, options), true);
-
-        if (value.Model is not null)
+        writer.WriteString(JsonPropNames[nameof(PokemonRenderData.Name)], value.Name);
+        if (!string.IsNullOrWhiteSpace(value.OutputName))
         {
-            writer.WriteString(JsonPropNames[nameof(ShinyInfo.Model)], value.Model);
+            writer.WriteString(JsonPropNames[nameof(PokemonRenderData.OutputName)], value.OutputName);
         }
+        writer.WriteString(JsonPropNames[nameof(PokemonRenderData.Model)], value.Model);
         
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.FaceRender)]);
+        writer.WritePropertyName(JsonPropNames[nameof(PokemonRenderData.FaceRender)]);
         writer.WriteRawValue(JsonSerializer.Serialize(value.FaceRender, options), true);
         
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.BoxRender)]);
+        writer.WritePropertyName(JsonPropNames[nameof(PokemonRenderData.BoxRender)]);
         writer.WriteRawValue(JsonSerializer.Serialize(value.BoxRender, options), true);
+        
+        writer.WritePropertyName(JsonPropNames[nameof(PokemonRenderData.Shiny)]);
+        writer.WriteRawValue(JsonSerializer.Serialize(value.Shiny, options), true);
         
         writer.WriteEndObject();
     }

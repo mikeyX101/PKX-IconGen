@@ -54,7 +54,7 @@ namespace PKXIconGen.Core.Services
             internal static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
                 new BlenderRunner(blenderRunnerInfo, prd.TemplateName, new string[]
                 {
-                    $"--python", Paths.ModifyData
+                    "--python", Paths.ModifyData
                 }, JsonIO.ToJsonString(prd), prd.Output);
         }
 

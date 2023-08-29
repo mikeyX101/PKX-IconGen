@@ -21,6 +21,8 @@ import json
 from types import SimpleNamespace
 from typing import Optional
 
+from .game import Game
+from .render_target import RenderTarget
 from .pokemon_render_data import PokemonRenderData
 
 
@@ -29,18 +31,32 @@ class RenderJob(object):
     def __init__(self,
                  data: PokemonRenderData,
                  scale: int,
-                 game: int,
-                 main_path: str,
-                 shiny_path: str,
-                 secondary_path: str,
-                 shiny_secondary_path: str):
+                 game: Game,
+                 target: RenderTarget,
+                 face_main_path: str,
+                 face_shiny_path: str,
+                 face_secondary_path: str,
+                 face_shiny_secondary_path: str,
+                 box_first_main_path: str,
+                 box_first_shiny_path: str,
+                 box_second_main_path: str,
+                 box_second_shiny_path: str,
+                 box_third_main_path: str,
+                 box_third_shiny_path: str):
         self.data = data
         self.scale = scale
         self.game = game
-        self.main_path = main_path
-        self.shiny_path = shiny_path
-        self.secondary_path = secondary_path
-        self.shiny_secondary_path = shiny_secondary_path
+        self.target = target
+        self.face_main_path = face_main_path
+        self.face_shiny_path = face_shiny_path
+        self.face_secondary_path = face_secondary_path
+        self.face_shiny_secondary_path = face_shiny_secondary_path
+        self.box_first_main_path = box_first_main_path
+        self.box_first_shiny_path = box_first_shiny_path
+        self.box_second_main_path = box_second_main_path
+        self.box_second_shiny_path = box_second_shiny_path
+        self.box_third_main_path = box_third_main_path
+        self.box_third_shiny_path = box_third_shiny_path
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['RenderJob']:
@@ -50,11 +66,19 @@ class RenderJob(object):
         return RenderJob(
             PokemonRenderData.parse_obj(obj.data),
             obj.scale,
-            obj.game,
-            obj.main_path,
-            obj.shiny_path,
-            obj.secondary_path,
-            obj.shiny_secondary_path)
+            Game(obj.game),
+            RenderTarget(obj.target),
+            obj.face_main_path,
+            obj.face_shiny_path,
+            obj.face_secondary_path,
+            obj.face_shiny_secondary_path,
+            obj.box_first_main_path,
+            obj.box_first_shiny_path,
+            obj.box_second_main_path,
+            obj.box_second_shiny_path,
+            obj.box_third_main_path,
+            obj.box_third_shiny_path
+        )
 
     @staticmethod
     def from_json(json_str: str) -> Optional['RenderJob']:

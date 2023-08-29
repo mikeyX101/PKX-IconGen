@@ -27,9 +27,9 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions;
 
 public static class ImageEdgeGlowExtensions
 {
-    public static IImageProcessingContext ApplyEdgeGlow(this IImageProcessingContext ctx, RgbaVector glowColor, float glowIntensity)
+    public static IImageProcessingContext ApplyEdgeGlow(this IImageProcessingContext ctx, RgbaVector glowColor, float glowIntensity, int expandByPixels)
     {
-        return ctx.ApplyProcessor(new EdgeGlowProcessor(glowColor, glowIntensity));
+        return ctx.ApplyProcessor(new EdgeGlowProcessor(glowColor, glowIntensity, expandByPixels));
     }
     
     private static IImageProcessingContext ApplyEdgeGlowBlur(this IImageProcessingContext ctx, float glowIntensity, Rectangle sourceRectangle)
@@ -41,17 +41,19 @@ public static class ImageEdgeGlowExtensions
     {
         private RgbaVector GlowColor { get; }
         private float GlowIntensity { get; }
+        private int ExpandByPixels { get; }
         
-        public EdgeGlowProcessor(RgbaVector glowColor, float glowIntensity)
+        public EdgeGlowProcessor(RgbaVector glowColor, float glowIntensity, int expandByPixels)
         {
             GlowColor = glowColor;
             GlowIntensity = glowIntensity;
+            ExpandByPixels = expandByPixels;
         }
 
         public IImageProcessor<TPixel> CreatePixelSpecificProcessor<TPixel>(Configuration configuration, Image<TPixel> source,
             Rectangle sourceRectangle) where TPixel : unmanaged, IPixel<TPixel>
         {
-            return new EdgeGlowProcessor<TPixel>(configuration, source, sourceRectangle, GlowColor, GlowIntensity);
+            return new EdgeGlowProcessor<TPixel>(configuration, source, sourceRectangle, GlowColor, GlowIntensity, ExpandByPixels);
         }
     }
     
@@ -63,8 +65,9 @@ public static class ImageEdgeGlowExtensions
         
         private RgbaVector GlowColor { get; }
         private float GlowIntensity { get; }
+        private int ExpandByPixels { get; }
         
-        public EdgeGlowProcessor(Configuration configuration, Image<TPixel> source, Rectangle sourceRectangle, RgbaVector glowColor, float glowIntensity)
+        public EdgeGlowProcessor(Configuration configuration, Image<TPixel> source, Rectangle sourceRectangle, RgbaVector glowColor, float glowIntensity, int expandByPixels)
         {
             Configuration = configuration;
             Source = source;
@@ -72,6 +75,7 @@ public static class ImageEdgeGlowExtensions
 
             GlowColor = glowColor;
             GlowIntensity = glowIntensity;
+            ExpandByPixels = expandByPixels;
         }
         
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
@@ -90,16 +94,9 @@ public static class ImageEdgeGlowExtensions
                             row[x].W = row[x].W == 0 ? 0 : (row[x].W + GlowColor.A) / 2; // Average alpha with glow color
                         }
                     }, SourceRectangle, PixelConversionModifiers.Premultiply)
-                    #if !DEBUG
+                    .Dilate(ExpandByPixels)
                     .ApplyEdgeGlowBlur(GlowIntensity, SourceRectangle)
-                    #endif
             );
-            
-            #if DEBUG
-            glowEffect.SaveAsPng(System.IO.Path.Combine(Paths.TempFolder, "glowEffectBeforeBlur.png"));
-            glowEffect.Mutate(ctx => ctx.ApplyEdgeGlowBlur(GlowIntensity, SourceRectangle));
-            glowEffect.SaveAsPng(System.IO.Path.Combine(Paths.TempFolder, "glowEffectAfterBlur.png"));
-            #endif
             
             Source.Mutate(ctx => ctx.AddImageBehind(glowEffect));
         }

@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using PKXIconGen.Core.Data.Compatibility;
@@ -32,30 +33,65 @@ namespace PKXIconGen.Core.Data
         
         [JsonPropertyName("color2")]
         public ShinyColor? Color2 { get; set; }
+        
+        private string? model;
+        /// <summary>
+        /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
+        /// </summary>
+        [JsonPropertyName("model")]
+        [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "False during init")]
+        public string? Model
+        {
+            get => model is not null ? Utils.CleanModelPathString(model) : model;
+            set
+            {
+                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
+                if (FaceRender?.Textures is not null && FaceRender.Textures.Count != 0)
+                {
+                    FaceRender.Textures.Clear();
+                    CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+                }
+                if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
+                {
+                    FaceRender.RemovedObjects.Clear();
+                    CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
+                }
+                
+                BoxRender?.ResetTexturesAndRemovedObjects();
+                
+                model = value is not null ? Utils.CleanModelPathString(value) : value;
+            }
+        }
 
         [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceRender instead.")]
         public RenderData Render
         {
+            get => FaceRender;
             set => FaceRender = value;
         }
-        [JsonPropertyName("face")]
+        [JsonPropertyName("face"), JsonRequired]
         public RenderData FaceRender { get; private set; }
         
-        [JsonPropertyName("box")]
+        [JsonPropertyName("box"), JsonRequired]
         public BoxInfo BoxRender { get; set; }
         
         public ShinyInfo()
         {
             Color1 = ShinyColor.GetDefaultShinyColor1();
             Color2 = ShinyColor.GetDefaultShinyColor2();
-            FaceRender = new RenderData();
+            Model = null;
+            FaceRender = new RenderData(RenderTarget.Face);
             BoxRender = new BoxInfo();
         }
         
         [JsonConstructor]
-        public ShinyInfo(ShinyColor? color1, ShinyColor? color2, RenderData faceRender, BoxInfo? boxRender)
+        public ShinyInfo(ShinyColor? color1, ShinyColor? color2, string? model, RenderData faceRender, BoxInfo? boxRender)
         {
-            if ((!color1.HasValue || !color2.HasValue) && faceRender.Model is null)
+            if (model is not null)
+            {
+                this.model = model;
+            }
+            if (!color1.HasValue || !color2.HasValue)
             {
                 Color1 = ShinyColor.GetDefaultShinyColor1();
                 Color2 = ShinyColor.GetDefaultShinyColor2();
@@ -75,6 +111,7 @@ namespace PKXIconGen.Core.Data
             return other is not null &&
                 (Color1 is null && other.Color1 is null || Color1 is not null && Color1.Equals(other.Color1)) &&
                 (Color2 is null && other.Color2 is null || Color2 is not null && Color2.Equals(other.Color2)) &&
+                (Model is null && other.Model is null || Model is not null && Model.Equals(other.Model)) &&
                 FaceRender.Equals(other.FaceRender);
         }
         public override bool Equals(object? obj)
@@ -92,11 +129,11 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public override int GetHashCode() => (Color1, Color2, FaceRender, BoxRender).GetHashCode();
+        public override int GetHashCode() => (Color1, Color2, Model, FaceRender, BoxRender).GetHashCode();
 
         public object Clone()
         {
-            return new ShinyInfo(Color1, Color2, (RenderData)FaceRender.Clone(), (BoxInfo)BoxRender.Clone());
+            return new ShinyInfo(Color1, Color2, Model, (RenderData)FaceRender.Clone(), (BoxInfo)BoxRender.Clone());
         }
     }
 }

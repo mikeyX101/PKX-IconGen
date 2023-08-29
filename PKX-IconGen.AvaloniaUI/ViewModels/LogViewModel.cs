@@ -93,7 +93,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 });
                 await updatePendingTask;
                 
-                updatePendingTask.Dispose();
+                updatePendingTask?.Dispose();
                 updatePendingTask = null;
             }
         }

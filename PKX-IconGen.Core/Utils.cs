@@ -29,6 +29,16 @@ namespace PKXIconGen.Core
 {
     public static class Utils
     {
+        public static string CleanModelPathString(string modelPath)
+        {
+            char[] invalidChars = Path.GetInvalidPathChars();
+            modelPath = invalidChars
+                .Aggregate(modelPath, (current, invalidChar) => current.Replace(invalidChar.ToString(), ""));
+
+            modelPath = modelPath.Replace("\"", "");
+            return modelPath;
+        }
+        
         public static float ConvertRange(
             int originalStart, int originalEnd, // original range
             float newStart, float newEnd, // desired range

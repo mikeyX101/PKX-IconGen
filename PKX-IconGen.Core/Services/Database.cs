@@ -95,7 +95,7 @@ namespace PKXIconGen.Core.Services
                 .HasDefaultValue(new RenderData())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),
-                    v => JsonSerializer.Deserialize<RenderData>(v, serializerOptions) ?? new RenderData());
+                    v => JsonSerializer.Deserialize<RenderData>(v, serializerOptions) ?? new RenderData(RenderTarget.Face));
 
             pokemonRenderDataEntityBuilder.Property<BoxInfo>(nameof(PokemonRenderData.BoxRender))
                 .HasDefaultValue(new BoxInfo())
@@ -103,7 +103,7 @@ namespace PKXIconGen.Core.Services
                     v => JsonSerializer.Serialize(v, serializerOptions),
                     v => JsonSerializer.Deserialize<BoxInfo>(v, serializerOptions) ?? new BoxInfo());
             
-            pokemonRenderDataEntityBuilder.Property<ShinyInfo>(nameof(PokemonRenderData.FaceShiny))
+            pokemonRenderDataEntityBuilder.Property<ShinyInfo>(nameof(PokemonRenderData.Shiny))
                 .HasDefaultValue(new ShinyInfo())
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, serializerOptions),

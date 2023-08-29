@@ -24,7 +24,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         xmlns:pkxuc="using:PKXIconGen.AvaloniaUI.Views.Controls"
-        
+        xmlns:data="clr-namespace:PKXIconGen.Core.Data;assembly=PKX-IconGen.Core"
+
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
         x:DataType="vm:PokemonRenderDataWindowViewModel" x:CompileBindings="True"
@@ -84,10 +85,10 @@
       <TextBlock Text="(Cancelling will close Blender and all data in Blender will be lost.)" Margin="48" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="0" Grid.Row="1" />
     </Grid>
     
-    
-    
-    <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="100,50,50,50,115,*,50" Margin="16">
-      <Grid ColumnDefinitions="*,*" RowDefinitions="50,50" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2">
+    <Grid ShowGridLines="False" ColumnDefinitions="100,*" RowDefinitions="50,100,50,50,115,*,50" Margin="16">
+      <TextBlock Text="{Binding Name, Mode=OneWay, Converter={StaticResource PkxHeaderConverter}}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"/>
+      
+      <Grid ColumnDefinitions="*,*" RowDefinitions="50,50" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
       
         <TextBlock Text="Normal/Shiny" Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Column="0" Grid.Row="0" />
         <ToggleButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding ShinyToggle}" Grid.Column="0" Grid.Row="1" ToolTip.Tip="{x:Static assets:Resources.TooltipShinyToggle}" >
@@ -98,30 +99,25 @@
         </ToggleButton>
       
         <TextBlock Text="Face/Box" Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Column="1" Grid.Row="0" />
-        <ToggleSplitButton Margin="16,0,16,0" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding ShinyToggle}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="{x:Static assets:Resources.TooltipBoxToggle}">
-          <Panel>
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Face</TextBlock>
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Box</TextBlock>
-          </Panel>
-          
-          <ToggleSplitButton.Flyout>
-            <MenuFlyout Placement="Bottom">
-              <MenuItem Header="Item 1">
-                <MenuItem Header="Subitem 1" />
-                <MenuItem Header="Subitem 2" />
-                <MenuItem Header="Subitem 3" />
-              </MenuItem>
-              <MenuItem Header="Item 2"
-                        InputGesture="Ctrl+A" />
-              <MenuItem Header="Item 3" />
-            </MenuFlyout>
-          </ToggleSplitButton.Flyout>
-        </ToggleSplitButton>
-      
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Spacing="16" Grid.Column="1" Grid.Row="1">
+          <ToggleButton Name="FaceBoxButton" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding BoxToggle}" ToolTip.Tip="{x:Static assets:Resources.TooltipBoxToggle}" >
+            <Panel>
+              <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbunchecked">Face</TextBlock>
+              <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Classes="tbchecked">Box</TextBlock>
+            </Panel>
+          </ToggleButton>
+          <ComboBox IsEnabled="{Binding #FaceBoxButton.IsChecked}" ItemsSource="{Binding BoxAnimationItems, Mode=OneWay}" SelectedItem="{Binding BoxFrame}" HorizontalAlignment="Center" VerticalAlignment="Center" Height="32" ToolTip.Tip="{x:Static assets:Resources.TooltipBoxAnimationFrame}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type data:BoxAnimation}">
+                <Panel VerticalAlignment="Center" Height="30">
+                  <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}" />
+                </Panel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
       </Grid>
       
-      <TextBlock Text="{Binding Name, Mode=OneWay, Converter={StaticResource PkxHeaderConverter}}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"/>
-
       <Grid ColumnDefinitions="100,*,100,*" RowDefinitions="*" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2">
         <TextBlock Text="Name:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
         <TextBox Text="{Binding Name, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="0" ToolTip.Tip="{x:Static assets:Resources.TooltipPokemonName}" />

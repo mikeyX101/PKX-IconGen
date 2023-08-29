@@ -113,4 +113,8 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
     <data name="TooltipBoxToggle" xml:space="preserve">
         <value>Toggle between Face and Box data. Purple areas means that data switches between Normal and Shiny there.</value>
     </data>
+    <data name="TooltipBoxAnimationFrame" xml:space="preserve">
+        <value>Choose the animation frame to preview.
+Pokemon Colosseum only uses the first frame.</value>
+    </data>
 </root>

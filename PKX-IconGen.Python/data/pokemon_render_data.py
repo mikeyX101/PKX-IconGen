@@ -19,8 +19,9 @@
 import json
 
 from types import SimpleNamespace
-from typing import Optional, List
+from typing import Optional, List, Callable
 
+from .box_info import BoxInfo
 from .edit_mode import EditMode
 from .camera import Camera
 from .object_shading import ObjectShading
@@ -34,43 +35,60 @@ class PokemonRenderData(object):
     def __init__(self,
                  name: str,
                  output_name: Optional[str],
+                 model: str,
                  face: RenderData,
-                 face_shiny: ShinyInfo):
+                 box: BoxInfo,
+                 shiny: ShinyInfo):
         self.name = name
         self.output_name = output_name
+        self.model = model
         self.face = face
-        self.face_shiny = face_shiny
+        self.box = box
+        self.shiny = shiny
 
     def to_json(self) -> str:
         return json.dumps(self, default=vars, separators=(',', ':'))
 
     def get_mode_model(self, mode: EditMode) -> str:
-        if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
-            return self.render.model
-        elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-            if self.shiny.render.model is not None and self.shiny.render.model != "":
-                return self.shiny.render.model
-            else:
-                return self.render.model
+        if mode in EditMode.ANY_NORMAL:
+            return self.model
+        elif mode in EditMode.ANY_SHINY:
+            return self.shiny.model if self.shiny.model is not None else self.model
         else:
-            raise Exception("Unknown edit mode: " + mode.name)
+            raise Exception(f"Unknown edit mode: {mode.name}")
 
     def get_mode_render(self, mode: EditMode) -> RenderData:
-        if mode == EditMode.NORMAL or mode == EditMode.NORMAL_SECONDARY:
-            return self.render
-        elif mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
-            return self.shiny.render
+        if mode in EditMode.ANY_FACE_NORMAL:
+            return self.face
+        elif mode in EditMode.ANY_FACE_SHINY:
+            return self.shiny.face
+        elif mode == EditMode.BOX_FIRST:
+            return self.box.first
+        elif mode == EditMode.BOX_FIRST_SHINY:
+            return self.shiny.box.first
+        elif mode == EditMode.BOX_SECOND:
+            return self.box.second
+        elif mode == EditMode.BOX_SECOND_SHINY:
+            return self.shiny.box.second
+        elif mode == EditMode.BOX_THIRD:
+            return self.box.third
+        elif mode == EditMode.BOX_THIRD_SHINY:
+            return self.shiny.box.third
         else:
-            raise Exception("Unknown edit mode: " + mode.name)
+            raise Exception(f"Unknown edit mode: {mode.name}")
+
+    def update_mode_render(self, mode: EditMode, update_func: Callable[[RenderData], None]):
+        render: RenderData = self.get_mode_render(mode)
+        update_func(render)
 
     def get_mode_camera(self, mode: EditMode) -> Optional[Camera]:
         render: RenderData = self.get_mode_render(mode)
-        if mode == EditMode.NORMAL or mode == EditMode.SHINY:
+        if mode in EditMode.ANY_FACE_MAIN or mode in EditMode.ANY_BOX:
             return render.main_camera
-        elif mode == EditMode.NORMAL_SECONDARY or mode == EditMode.SHINY_SECONDARY:
+        elif mode in EditMode.ANY_FACE_SECONDARY:
             return render.secondary_camera
         else:
-            raise Exception("Unknown edit mode: " + mode.name)
+            raise Exception(f"Unknown edit mode: {mode.name}")
 
     def get_mode_animation_pose(self, mode: EditMode) -> int:
         render: RenderData = self.get_mode_render(mode)
@@ -104,7 +122,9 @@ class PokemonRenderData(object):
         return PokemonRenderData(
             obj.name,
             output_name,
-            RenderData.parse_obj(obj.render),
+            obj.model,
+            RenderData.parse_obj(obj.face),
+            BoxInfo.parse_obj(obj.box),
             ShinyInfo.parse_obj(obj.shiny))
 
     @staticmethod

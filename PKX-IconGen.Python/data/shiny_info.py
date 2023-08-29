@@ -18,16 +18,19 @@
 
 from typing import Optional
 
+from .box_info import BoxInfo
 from .render_data import RenderData
 from .shiny_color import ShinyColor
 
 
 class ShinyInfo(object):
     
-    def __init__(self, color1: Optional[ShinyColor], color2: Optional[ShinyColor], render: RenderData):
+    def __init__(self, color1: Optional[ShinyColor], color2: Optional[ShinyColor], model: Optional[str], face: RenderData, box: BoxInfo):
         self.color1 = color1
         self.color2 = color2
-        self.render = render
+        self.model = model
+        self.face = face
+        self.box = box
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['ShinyInfo']:
@@ -42,8 +45,14 @@ class ShinyInfo(object):
         if "color2" in obj.__dict__.keys():
             color2 = ShinyColor.parse_obj(obj.color2)
 
+        model: Optional[str] = None
+        if "model" in obj.__dict__.keys():
+            model = obj.model
+
         return ShinyInfo(
             color1,
             color2,
-            RenderData.parse_obj(obj.render)
+            model,
+            RenderData.parse_obj(obj.face),
+            BoxInfo.parse_obj(obj.box)
         )

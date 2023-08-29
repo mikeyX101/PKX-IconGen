@@ -12,9 +12,9 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.2.12</AssemblyVersion>
+    <AssemblyVersion>0.3.0</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
 
@@ -24,15 +24,15 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.2.12</PackageVersion>
+    <PackageVersion>0.3.0</PackageVersion>
 
     <IsPackable>false</IsPackable>
-
-    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 
     <LangVersion>11</LangVersion>
 
     <NeutralLanguage>en</NeutralLanguage>
+
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -77,13 +77,13 @@
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.3" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.0.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.3" />
+    <PackageReference Include="Avalonia" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.3" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.3" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.4" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.4" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.2" />
     <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.0.2" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.0.2" />

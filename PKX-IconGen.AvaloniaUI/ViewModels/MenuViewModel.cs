@@ -88,8 +88,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         public ReactiveCommand<Unit, Unit> ExportCommand { get; }
         private async Task Export()
         {
-            IEnumerable<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData.Where(prd => prd is not null).Cast<PokemonRenderData>();
-            if (data.Count() == 1)
+            List<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData.Where(prd => prd is not null).Cast<PokemonRenderData>().ToList();
+            if (data.Count == 1)
             {
                 PokemonRenderData renderData = data.First();
 
@@ -107,7 +107,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     await JsonIO.ExportAsync(renderData, fileStream);
                 }
             }
-            else if (data.Count() > 1)
+            else if (data.Count > 1)
             {
                 IStorageFolder? directory = await FileDialogHelper.GetFolder("Export Render Data");
                 if (directory != null)

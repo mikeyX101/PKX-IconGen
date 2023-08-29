@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive;
 using System.Threading;
 using JetBrains.Annotations;
@@ -50,17 +51,18 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             {
                 if (value)
                 {
-                    boxFrame = BoxAnimationFrame.First;
+                    boxFrame = BoxAnimationFrame.First.GetBoxAnimation();
                 }
                 
                 showBox = value;
                 UpdateBindings();
             }
         }
-        private BoxAnimationFrame boxFrame;
-        private BoxAnimationFrame BoxFrame
+        public BoxAnimation[] BoxAnimationItems { get; } = BoxAnimation.GetBoxAnimations();
+        private BoxAnimation? boxFrame = null;
+        public BoxAnimation BoxFrame
         {
-            get => boxFrame;
+            get => boxFrame ?? BoxAnimationItems.First(b => b.Frame == BoxAnimationFrame.First);
             set
             {
                 boxFrame = value;
@@ -77,7 +79,22 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 UpdateBindings();
             }
         }
-        private RenderData CurrentRenderData => ShowShiny ? Data.FaceShiny.FaceRender : Data.FaceRender;
+        private RenderData CurrentRenderData
+        {
+            get
+            {
+                RenderData renderData;
+                if (ShowShiny)
+                {
+                    renderData = ShowBox ? Data.Shiny.BoxRender.GetBoxRenderData(BoxFrame.Frame) : Data.Shiny.FaceRender;
+                }
+                else
+                {
+                    renderData = ShowBox ? Data.BoxRender.GetBoxRenderData(BoxFrame.Frame) : Data.FaceRender;
+                }
+                return renderData;
+            }
+        }
 
         public string Title { get; init; }
         public IBlenderRunnerInfo BlenderRunnerInfo { get; init; }
@@ -101,11 +118,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
 
-        public string? Model
+        public string Model
         {
-            get => Data.FaceRender.Model;
+            get => Data.Model;
             set {
-                Data.FaceRender.Model = value;
+                Data.Model = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -113,24 +130,24 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Shiny
         public ShinyColor? Color1 {
-            get => Data.FaceShiny.Color1;
+            get => Data.Shiny.Color1;
             private set {
-                Data.FaceShiny.Color1 = value;
+                Data.Shiny.Color1 = value;
                 this.RaisePropertyChanged();
             }
         }
         public ShinyColor? Color2 {
-            get => Data.FaceShiny.Color2;
+            get => Data.Shiny.Color2;
             private set {
-                Data.FaceShiny.Color2 = value;
+                Data.Shiny.Color2 = value;
                 this.RaisePropertyChanged();
             }
         }
         public string? ShinyModel
         {
-            get => Data.FaceShiny.FaceRender.Model;
+            get => Data.Shiny.Model;
             set {
-                Data.FaceShiny.FaceRender.Model = value;
+                Data.Shiny.Model = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -250,7 +267,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 EndModifyBlenderData();
             }
         }
-        private void EndModifyBlenderData()
+        [UsedImplicitly]
+        public void EndModifyBlenderData()
         {
             UpdateBindings();
             
@@ -316,7 +334,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 }
                 else
                 {
-                    await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "This game file doesn't support shiny color.");
+                    await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "This game file doesn't support shiny colors.");
                 }
             }
             catch (Exception)
@@ -326,6 +344,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         
         public void ShinyToggle() => ShowShiny = !ShowShiny;
+        public void BoxToggle() => ShowBox = !ShowBox;
         public ReactiveCommand<Unit, object> CancelCommand { get; }
         private static object Cancel() => false;
         public ReactiveCommand<Unit, object> SaveCommand { get; }

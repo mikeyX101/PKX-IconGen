@@ -1,6 +1,6 @@
 """ License 
     PKX-IconGen.Python - Python code for PKX-IconGen to interact with Blender
-    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+    Copyright (C) 2021-2023 Samuel Caron/mikeyx
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-from typing import Optional
+from typing import Optional, List
 
 import bpy
 import sys
@@ -25,17 +25,23 @@ sys.path.append(os.getcwd())
 
 from math import radians
 from data.camera import Camera
+from data.game import Game
 from data.light import Light
 from data.pokemon_render_data import PokemonRenderData
 from data.edit_mode import EditMode
 from data.render_job import RenderJob
+from data.render_target import RenderTarget
 import common
 
+last_rendered_mode: Optional[EditMode] = None
 
-def reset_all(prd: PokemonRenderData, mode: EditMode):
-    for texture in prd.get_mode_textures(mode):
-        common.reset_texture_images(texture)
-    common.reset_materials_maps()
+
+def reset_all(prd: PokemonRenderData):
+    global last_rendered_mode
+    if last_rendered_mode is not None:
+        for texture in prd.get_mode_textures(last_rendered_mode):
+            common.reset_texture_images(texture)
+        common.reset_materials_maps()
 
 
 def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
@@ -48,8 +54,8 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     focus = objs["PKXIconGen_FocusPoint"]
     light = objs["PKXIconGen_TopLight"]
 
-    prd_camera: Camera = prd.get_mode_camera(mode) or Camera.default()
-    prd_light: Light = prd_camera.light or Light.default()
+    prd_camera: Camera = prd.get_mode_camera(mode) or Camera.default(RenderTarget[scene.main_mode])
+    prd_light: Light = prd_camera.light or Light.default(RenderTarget[scene.main_mode])
     animation_pose: int = prd.get_mode_animation_pose(mode) or 0
     animation_frame: int = prd.get_mode_animation_frame(mode) or 0
 
@@ -75,7 +81,36 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     common.update_shading(prd.get_mode_shading(mode))
 
 
+def get_mode_base_resolution(mode: EditMode) -> int:
+    base_resolution: int
+    if mode in EditMode.ANY_FACE:
+        base_resolution = 48 if job.game == Game.POKEMONBATTLEREVOLUTION else 42
+    elif mode in EditMode.ANY_BOX:  # Box
+        base_resolution = 54 if job.game == Game.POKEMONBATTLEREVOLUTION else 64
+    else:
+        raise Exception(f"Invalid EditMode provided: {mode.name}")
+    return base_resolution
+
+
+def render_job_mode(job: RenderJob, path: str, mode: EditMode):
+    global last_rendered_mode
+
+    blender_render = bpy.data.scenes["Scene"].render
+
+    base_resolution = get_mode_base_resolution(mode)
+
+    blender_render.resolution_x = base_resolution * job.scale
+    blender_render.resolution_y = base_resolution * job.scale
+
+    reset_all(job.data)
+    sync_prd_to_scene(job.data, mode)
+    blender_render.filepath = path
+    bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
+    last_rendered_mode = mode
+
+
 if __name__ == "__main__":
+    # noinspection DuplicatedCode
     debug_json: Optional[str] = None
     debug_egg: Optional[str] = None
     job: RenderJob
@@ -102,36 +137,28 @@ if __name__ == "__main__":
         print(f"Rendering: {json}")
         job: RenderJob = RenderJob.from_json(json)
 
-    last_rendered_mode: Optional[EditMode] = None
     common.import_models(job.data)
+    render_targets: List[tuple[str, EditMode]] = []
+    if RenderTarget.FACE in job.target:
+        render_targets.append((job.face_main_path, EditMode.FACE_NORMAL))
 
-    blender_render = bpy.data.scenes["Scene"].render
+        if job.data.face.secondary_camera is not None:
+            render_targets.append((job.face_secondary_path, EditMode.FACE_NORMAL_SECONDARY))
 
-    base_resolution = 48 if job.game == 3 else 42  # For PBR, for Colo/XD
-    blender_render.resolution_x = base_resolution * job.scale
-    blender_render.resolution_y = base_resolution * job.scale
+        render_targets.append((job.face_shiny_path, EditMode.FACE_SHINY))
 
-    sync_prd_to_scene(job.data, EditMode.NORMAL)
-    blender_render.filepath = job.main_path
-    bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
-    last_rendered_mode = EditMode.NORMAL
+        if job.data.shiny.face.secondary_camera is not None:
+            render_targets.append((job.face_shiny_secondary_path, EditMode.FACE_SHINY_SECONDARY))
 
-    if job.data.render.secondary_camera is not None:
-        reset_all(job.data, last_rendered_mode)
-        sync_prd_to_scene(job.data, EditMode.NORMAL_SECONDARY)
-        blender_render.filepath = job.secondary_path
-        bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
-        last_rendered_mode = EditMode.NORMAL_SECONDARY
+    if RenderTarget.BOX in job.target:
+        render_targets.append((job.box_first_main_path, EditMode.BOX_FIRST))
+        render_targets.append((job.box_first_shiny_path, EditMode.BOX_FIRST_SHINY))
 
-    reset_all(job.data, last_rendered_mode)
-    sync_prd_to_scene(job.data, EditMode.SHINY)
-    blender_render.filepath = job.shiny_path
-    bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
-    last_rendered_mode = EditMode.SHINY
+        if job.game is Game.POKEMONXDGALEOFDARKNESS:
+            render_targets.append((job.box_second_main_path, EditMode.BOX_SECOND))
+            render_targets.append((job.box_second_shiny_path, EditMode.BOX_SECOND_SHINY))
+            render_targets.append((job.box_third_main_path, EditMode.BOX_THIRD))
+            render_targets.append((job.box_third_shiny_path, EditMode.BOX_THIRD_SHINY))
 
-    if job.data.shiny.render.secondary_camera is not None:
-        reset_all(job.data, last_rendered_mode)
-        sync_prd_to_scene(job.data, EditMode.SHINY_SECONDARY)
-        blender_render.filepath = job.shiny_secondary_path
-        bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
-        last_rendered_mode = EditMode.SHINY_SECONDARY
+    for target in render_targets:
+        render_job_mode(job, target[0], target[1])

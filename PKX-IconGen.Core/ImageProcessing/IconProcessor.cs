@@ -18,8 +18,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
@@ -30,16 +32,43 @@ using SixLabors.ImageSharp.Processing;
 
 namespace PKXIconGen.Core.ImageProcessing
 {
+    [Flags]
+    public enum Icon : short
+    {
+        FaceNormal = 1,
+        FaceNormalSecondary = 2,
+        FaceShiny = 4,
+        FaceShinySecondary = 8,
+            
+        BoxFirst = 16,
+        BoxFirstShiny = 32,
+        BoxSecond = 64,
+        BoxSecondShiny = 128,
+        BoxThird = 256,
+        BoxThirdShiny = 512,
+        
+        AnyFace = FaceNormal | FaceNormalSecondary | FaceShiny | FaceShinySecondary,
+        AnyBox = BoxFirst | BoxFirstShiny | BoxSecond | BoxSecondShiny | BoxThird | BoxThirdShiny
+    }
+
+    public static class IconExtensions
+    {
+        public static RenderData GetIconRenderData(this Icon icon, PokemonRenderData prd) => icon switch
+        {
+            Icon.FaceNormal or Icon.FaceNormalSecondary => prd.FaceRender,
+            Icon.FaceShiny or Icon.FaceShinySecondary => prd.Shiny.FaceRender,
+            Icon.BoxFirst => prd.BoxRender.First,
+            Icon.BoxFirstShiny => prd.Shiny.BoxRender.First,
+            Icon.BoxSecond => prd.BoxRender.Second,
+            Icon.BoxSecondShiny => prd.Shiny.BoxRender.Second,
+            Icon.BoxThird => prd.BoxRender.Third,
+            Icon.BoxThirdShiny => prd.Shiny.BoxRender.Third,
+            _ => throw new ArgumentOutOfRangeException(nameof(icon), "Unknown Icon")
+        };
+    }
+    
     public class IconProcessor
     {
-        private enum IconMode : byte
-        {
-            Normal = 0,
-            NormalSecondary = 1,
-            Shiny = 2,
-            ShinySecondary = 3
-        }
-        
         private RenderJob Job { get; set; }
         private bool HasSecondary => Job.Data.FaceRender.SecondaryCamera.HasValue;
 
@@ -47,50 +76,125 @@ namespace PKXIconGen.Core.ImageProcessing
         
         private bool SaturationBoost { get; init; }
 
-        private Game Game { get; set; }
+        private Game Game => Job.Game;
+        private RenderTarget Target => Job.Target;
+        
         
         public IconProcessor(RenderJob job, string finalOutput, bool saturationBoost)
         {
             Job = job;
             FinalOutput = finalOutput;
             SaturationBoost = saturationBoost;
-            Game = job.Game;
         }
-
-        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        
         public async Task ProcessJobAsync(CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
-            Task<Image> mainTask = ProcessIconAsync(Job.MainPath, IconMode.Normal, token, stepOutput);
-            Task<Image> shinyTask = ProcessIconAsync(Job.ShinyPath, IconMode.Shiny, token, stepOutput);
-            Task<Image>? secondaryTask = HasSecondary ? ProcessIconAsync(Job.SecondaryPath, IconMode.NormalSecondary, token, stepOutput) : null;
-            Task<Image>? shinySecondaryTask = HasSecondary ? ProcessIconAsync(Job.ShinySecondaryPath, IconMode.ShinySecondary, token, stepOutput) : null;
+            List<Task<Image>> faceTasks = new();
+            List<Task<Image>> boxTasks = new();
+            if (Target.HasFlag(RenderTarget.Face))
+            {
+                faceTasks.Add(ProcessIconAsync(Job.FaceMainPath, Icon.FaceNormal, token, stepOutput));
+                faceTasks.Add(ProcessIconAsync(Job.FaceShinyPath, Icon.FaceShiny, token, stepOutput));
 
-            Image[] mainImages = await Task.WhenAll(mainTask, shinyTask);
-            using Image main = mainImages[0];
-            using Image shiny = mainImages[1];
+                if (HasSecondary)
+                {
+                    faceTasks.Add(ProcessIconAsync(Job.FaceSecondaryPath, Icon.FaceNormalSecondary, token, stepOutput));
+                    faceTasks.Add(ProcessIconAsync(Job.FaceShinySecondaryPath, Icon.FaceShinySecondary, token, stepOutput));
+                }
+            }
+            
+            if (Target.HasFlag(RenderTarget.Box))
+            {
+                boxTasks.Add(ProcessIconAsync(Job.BoxFirstMainPath, Icon.BoxFirst, token, stepOutput));
+                boxTasks.Add(ProcessIconAsync(Job.BoxFirstShinyPath, Icon.BoxFirstShiny, token, stepOutput));
+                if (Game == Game.PokemonXDGaleOfDarkness)
+                {
+                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondMainPath, Icon.BoxSecond, token, stepOutput));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondShinyPath, Icon.BoxSecondShiny, token, stepOutput));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdMainPath, Icon.BoxThird, token, stepOutput));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdShinyPath, Icon.BoxThirdShiny, token, stepOutput));
+                }
+            }
+
+            Task faceProcessing = Task.CompletedTask;
+            if (faceTasks.Count > 0)
+            {
+                faceProcessing = ProcessFaceAsync(faceTasks);
+            }
+            
+            Task boxProcessing = Task.CompletedTask;
+            if (boxTasks.Count > 0)
+            {
+                boxProcessing = ProcessBoxAsync(boxTasks);
+            }
+
+            await Task.WhenAll(faceProcessing, boxProcessing);
+        }
+
+        private async Task ProcessFaceAsync(IReadOnlyList<Task<Image>> faceTasks, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
+        {
+            Image[] mainImages = await Task.WhenAll(faceTasks[0], faceTasks[1]);
+            Image main = mainImages[0];
+            Image shiny = mainImages[1];
             
             token?.ThrowIfCancellationRequested();
-            stepOutput?.Invoke($"Combining images for {Job.Data.Name}...".AsMemory());
-            CoreManager.Logger.Information("Combining images for {Output} ({Name})...", Job.Data.Output, Job.Data.Name);
+            stepOutput?.Invoke($"Combining face images for {Job.Data.Name}...".AsMemory());
+            CoreManager.Logger.Information("Combining face images for {Output} ({Name})...", Job.Data.FaceOutput, Job.Data.Name);
             main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
-            if (secondaryTask != null && shinySecondaryTask != null)
+            if (HasSecondary)
             {
-                Image[] secondaryImages = await Task.WhenAll(secondaryTask, shinySecondaryTask);
-                using Image secondary = secondaryImages[0];
-                using Image shinySecondary = secondaryImages[1];
+                token?.ThrowIfCancellationRequested();
+                
+                Image[] secondaryImages = await Task.WhenAll(faceTasks[3], faceTasks[4]);
+                Image secondary = secondaryImages[0];
+                Image shinySecondary = secondaryImages[1];
                 secondary.Mutate(ctx => ctx.AddImageBottom(shinySecondary));
 
                 main.Mutate(ctx => ctx.AddImageRight(secondary));
             }
-            CoreManager.Logger.Information("Combining images for {Output} ({Name})...Done!", Job.Data.Output, Job.Data.Name);
+            CoreManager.Logger.Information("Combining face images for {Output} ({Name})...Done!", Job.Data.FaceOutput, Job.Data.Name);
 
-            await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.Output + ".png"));
-            stepOutput?.Invoke($"Finished rendering {Job.Data.Name}!".AsMemory());
-            CoreManager.Logger.Information("Finished rendering {Output} ({Name})!", Job.Data.Output, Job.Data.Name);
+            await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.FaceOutput + ".png"));
+            stepOutput?.Invoke($"Finished rendering face {Job.Data.Name}!".AsMemory());
+            CoreManager.Logger.Information("Finished rendering face {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
+        }
+        
+        private async Task ProcessBoxAsync(IReadOnlyList<Task<Image>> boxImages, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
+        {
+            Image[] firstBoxImages = await Task.WhenAll(boxImages[0], boxImages[1]);
+            Image bodyFirst = firstBoxImages[0];
+            Image bodyFirstShiny = firstBoxImages[1];
+            
+            if (Game == Game.PokemonXDGaleOfDarkness)
+            {
+                token?.ThrowIfCancellationRequested();
+                
+                Image[] otherBoxImages = await Task.WhenAll(boxImages[2], boxImages[3], boxImages[4], boxImages[5]);
+                Image second = otherBoxImages[0];
+                Image secondShiny = otherBoxImages[1];
+                Image third = otherBoxImages[2];
+                Image thirdShiny = otherBoxImages[3];
+                
+                stepOutput?.Invoke($"Combining box images for {Job.Data.Name}...".AsMemory());
+                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
+                Image danceFirst = bodyFirst.Clone(ctx => ctx.AddImageBottom(second).AddImageBottom(third));
+                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...Done!", Job.Data.FaceOutput, Job.Data.Name);
+                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceShinyOutput, Job.Data.Name);
+                Image danceFirstShiny = bodyFirstShiny.Clone(ctx => ctx.AddImageBottom(secondShiny).AddImageBottom(thirdShiny));
+                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...Done!", Job.Data.DanceShinyOutput, Job.Data.Name);
+                
+                await danceFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceOutput + ".png"));
+                await danceFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceShinyOutput + ".png"));
+            }
+            
+            await bodyFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyOutput + ".png"));
+            await bodyFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyShinyOutput + ".png"));
+            stepOutput?.Invoke($"Finished rendering box {Job.Data.Name}!".AsMemory());
+            CoreManager.Logger.Information("Finished rendering box {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
         }
 
-        private async Task<Image> ProcessIconAsync(string path, IconMode mode, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
+        private async Task<Image> ProcessIconAsync(string path, Icon mode, CancellationToken? token = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
         {
             Image img = await Image.LoadAsync(path);
             if (SaturationBoost)
@@ -99,87 +203,57 @@ namespace PKXIconGen.Core.ImageProcessing
             }
             
             byte scale = (byte)Job.Scale;
-            float glowIntensity = (float)Math.Round(Math.Pow(scale * 2, 0.80));
+            float glowIntensity = (float)Math.Round(Math.Pow(scale * 2, Icon.AnyBox.HasFlag(mode) ? 0.4 : 0.80));
+            int expandByPixels = Icon.AnyBox.HasFlag(mode) ? scale : 0;
             token?.ThrowIfCancellationRequested();
-            
-            switch (mode)
-            {
-                case IconMode.Normal or IconMode.NormalSecondary:
-                    img.Mutate(ctx =>
-                    {
-                        if (Job.Data.FaceRender.Glow.Alpha != 0)
-                        {
-                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            ctx.ApplyEdgeGlow(Job.Data.FaceRender.Glow.ToPixel<RgbaVector>(), glowIntensity);
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
-                        }
-                        token?.ThrowIfCancellationRequested();
-                        if (Job.Data.FaceRender.Background.Alpha != 0)
-                        {
-                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.FaceRender.Background.ToPixel<Rgba32>());
-                            ctx.AddImageBehind(background);
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
-                        }
-                    });
-                    break;
 
-                case IconMode.Shiny or IconMode.ShinySecondary:
-                    img.Mutate(ctx =>
-                    {
-                        if (Job.Data.FaceShiny.FaceRender.Glow.Alpha != 0)
-                        {
-                            stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            ctx.ApplyEdgeGlow(Job.Data.FaceShiny.FaceRender.Glow.ToPixel<RgbaVector>(), glowIntensity);
-                            CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
-                        }
-                        token?.ThrowIfCancellationRequested();
-                        if (Job.Data.FaceShiny.FaceRender.Background.Alpha != 0)
-                        {
-                            stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
-                            using Image background = new Image<Rgba32>(img.Width, img.Height, Job.Data.FaceShiny.FaceRender.Background.ToPixel<Rgba32>());
-                            ctx.AddImageBehind(background);
-                            CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
-                        }
-                    });
-                    break;
-                
-                default:
-                    throw new InvalidOperationException("Selected mode was somehow not a value of the enum.");
-            }
-            token?.ThrowIfCancellationRequested();
-            
-            return await GameProcess(img, stepOutput);
-        }
-
-        private Task<Image> GameProcess(Image img, Action<ReadOnlyMemory<char>>? stepOutput = null)
-        {
-            return Task.Run(() =>
+            RenderData renderData = mode.GetIconRenderData(Job.Data);
+            img.Mutate(ctx =>
             {
-                stepOutput?.Invoke($"Applying style for game {Game} for {Job.Data.Name}...".AsMemory());
-                CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...", Game, Job.Data.Output, Job.Data.Name);
-                switch (Game)
+                if (renderData.Glow.Alpha != 0)
                 {
-                    case Game.PokemonColosseum:
-                        break;
-
-                    case Game.PokemonXDGaleOfDarkness:
-                        img.Mutate(ctx => ctx.PokemonXDCrop());
-                        break;
-
-                    case Game.PokemonBattleRevolution:
-                        throw new NotImplementedException("Pokemon Battle Revolution is not yet implemented.");
-
-                    case Game.Undefined or _:
-                        throw new InvalidOperationException("Selected style was 'Undefined'.");
+                    stepOutput?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
+                    CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
+                    ctx.ApplyEdgeGlow(renderData.Glow.ToPixel<RgbaVector>(), glowIntensity, expandByPixels);
+                    CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                 }
-                CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...Done!", Game, Job.Data.Output, Job.Data.Name);
-                return img;
+                token?.ThrowIfCancellationRequested();
+                if (renderData.Background.Alpha != 0)
+                {
+                    stepOutput?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
+                    CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
+                    using Image background = new Image<Rgba32>(img.Width, img.Height, renderData.Background.ToPixel<Rgba32>());
+                    ctx.AddImageBehind(background);
+                    CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
+                }
             });
+            
+            stepOutput?.Invoke($"Applying style for game {Game} for {Job.Data.Name}...".AsMemory());
+            CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...", Game, Job.Data.Output, Job.Data.Name);
+            switch (Game)
+            {
+                case Game.PokemonColosseum:
+                    if (Icon.AnyBox.HasFlag(mode))
+                    {
+                        img.Mutate(ctx => ctx.Contrast(0.9f));
+                    }
+                    break;
+
+                case Game.PokemonXDGaleOfDarkness:
+                    if (Icon.AnyFace.HasFlag(mode))
+                    {
+                        img.Mutate(ctx => ctx.PokemonXDCrop());
+                    }
+                    break;
+
+                case Game.PokemonBattleRevolution:
+                    throw new NotImplementedException("Pokemon Battle Revolution is not yet implemented.");
+
+                case Game.Undefined or _:
+                    throw new InvalidOperationException("Selected style was 'Undefined'.");
+            }
+            CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...Done!", Game, Job.Data.Output, Job.Data.Name);
+            return img;
         }
 
         /*public void Dispose()

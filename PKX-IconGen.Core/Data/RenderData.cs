@@ -27,33 +27,16 @@ namespace PKXIconGen.Core.Data
 {
     public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     {
-
+        [Obsolete("Used for old JSON compatibility. Use PRD.Model or PRD.Shiny.Model instead.")]
         private string? model;
         /// <summary>
         /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
         /// </summary>
-        [JsonPropertyName("model")]
+        [JsonPropertyName("model"), Obsolete("Used for old JSON compatibility. Use PRD.Model or PRD.Shiny.Model instead.")]
         public string? Model
         {
             get => model;
-            set
-            {
-                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract False during init
-                if (Textures is not null && Textures.Count != 0)
-                {
-                    Textures.Clear();
-                    CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
-                }
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract False during init
-                if (RemovedObjects is not null && RemovedObjects.Count != 0)
-                {
-                    RemovedObjects.Clear();
-                    CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
-                }
-                
-                model = value;
-            }
+            set => model = value;
         }
 
         [JsonPropertyName("animation_pose")]
@@ -67,7 +50,7 @@ namespace PKXIconGen.Core.Data
         public Camera? SecondaryCamera { get; init; }
 
         [JsonPropertyName("removed_objects")]
-        public SortedSet<string> RemovedObjects { get; init; }
+        public HashSet<string> RemovedObjects { get; init; }
         
         [JsonPropertyName("textures")]
         public List<Texture> Textures { get; init; }
@@ -90,40 +73,35 @@ namespace PKXIconGen.Core.Data
          */
         [JsonPropertyName("glow")]
         public Color Glow { get; set; }
-
-        public RenderData() {
-            Model = null;
-
+        
+        public RenderData(RenderTarget target = RenderTarget.Face) {
             AnimationPose = 0;
             AnimationFrame = 0;
 
-            MainCamera = Camera.GetDefaultCamera();
+            MainCamera = Camera.GetDefaultCamera(target);
             SecondaryCamera = null;
 
-            RemovedObjects = new SortedSet<string>();
+            RemovedObjects = new HashSet<string>();
             Textures = new List<Texture>();
 
             ObjectShading = ObjectShading.Flat;
             
-            Background = new Color(0,0,0,1);
-            Glow = new Color(1, 1, 1, 0);
+            Background = target == RenderTarget.Face ? new Color(0,0,0,1) : new Color(0,0,0,0);
+            Glow = target == RenderTarget.Face ? new Color(1, 1, 1, 0) : new Color(0, 0, 0, 1);
         }
 
         [JsonConstructor]
         public RenderData(
-            string? model, 
             ushort animationPose, 
             ushort animationFrame, 
             Camera mainCamera, 
             Camera? secondaryCamera, 
-            SortedSet<string> removedObjects, 
+            HashSet<string> removedObjects, 
             List<Texture>? textures, 
             ObjectShading objectShading,
             Color background,
             Color glow)
         {
-            Model = model;
-
             AnimationPose = animationPose;
             AnimationFrame = animationFrame;
 
@@ -142,7 +120,6 @@ namespace PKXIconGen.Core.Data
         public bool Equals(RenderData? other)
         {
             return other is not null &&
-                Model == other.Model &&
                 AnimationPose == other.AnimationPose &&
                 AnimationFrame == other.AnimationFrame &&
                 MainCamera.Equals(other.MainCamera) &&
@@ -168,13 +145,7 @@ namespace PKXIconGen.Core.Data
             return !(left == right);
         }
 
-        public string? GetTrueModelPath(string? assetsPath)
-        {
-            return Utils.GetTrueModelPath(Model, assetsPath);
-        }
-
         public override int GetHashCode() => (
-            Model, 
             AnimationPose, 
             AnimationFrame, 
             MainCamera, 
@@ -189,12 +160,11 @@ namespace PKXIconGen.Core.Data
         public object Clone()
         {
             return new RenderData(
-                Model,
                 AnimationPose,
                 AnimationFrame,
                 MainCamera,
                 SecondaryCamera,
-                new SortedSet<string>(RemovedObjects),
+                new HashSet<string>(RemovedObjects),
                 new List<Texture>(Textures),
                 ObjectShading,
                 Background,

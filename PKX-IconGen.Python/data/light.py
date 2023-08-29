@@ -20,6 +20,7 @@ from enum import IntEnum
 from typing import Optional
 
 from .color import Color
+from .render_target import RenderTarget
 
 
 class LightType(IntEnum):
@@ -49,9 +50,23 @@ class Light(object):
             obj.distance)
 
     @staticmethod
-    def default() -> 'Light':
-        return Light(
-            LightType.POINT,
-            250,
-            Color.default(),
-            5)
+    def default(target: RenderTarget) -> 'Light':
+        light: Light
+        if target is RenderTarget.FACE:
+            light = Light(
+                LightType.POINT,
+                250,
+                Color.default(),
+                5
+            )
+        elif target is RenderTarget.BOX:
+            light = Light(
+                LightType.AREA,
+                650,
+                Color.default(),
+                13
+            )
+        else:
+            raise Exception(f"Unknown RenderTarget: {target.name}")
+
+        return light

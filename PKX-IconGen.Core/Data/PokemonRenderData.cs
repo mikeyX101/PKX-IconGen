@@ -21,17 +21,19 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using PKXIconGen.Core.Data.Compatibility;
 using PKXIconGen.Core.Services;
 
 namespace PKXIconGen.Core.Data
 {
-    [Table("PokemonRenderData"), Microsoft.EntityFrameworkCore.Index(nameof(Id), IsUnique = true, Name = "IDX_ID")]
+    [Table("PokemonRenderData"), Microsoft.EntityFrameworkCore.Index(nameof(Id), IsUnique = true, Name = "IDX_ID"), JsonConverter(typeof(PokemonRenderDataJsonConverter))]
     public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData>, ICloneable, INotifyPropertyChanged
     {
         [Column("ID"), Key, Required, JsonIgnore]
@@ -63,9 +65,48 @@ namespace PKXIconGen.Core.Data
         
         [JsonIgnore]
         public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
+        [JsonIgnore]
+        public string FaceOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_face" : Name + "_face";
+        [JsonIgnore]
+        public string BodyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_body" : Name + "_box_body";
+        [JsonIgnore]
+        public string BodyShinyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_body_shiny" : Name + "_box_body_shiny";
+        [JsonIgnore]
+        public string DanceOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_dance" : Name + "_box_dance";
+        [JsonIgnore]
+        public string DanceShinyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_dance_shiny" : Name + "_box_dance_shiny";
 
-        [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceRender instead.")]
-        protected RenderData Render
+        private string model;
+        /// <summary>
+        /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
+        /// </summary>
+        [Column, JsonPropertyName("model"), JsonRequired]
+        [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "False during init")]
+        public string Model
+        {
+            get => Utils.CleanModelPathString(model);
+            set
+            {
+                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
+                if (FaceRender?.Textures != null && FaceRender.Textures.Count != 0)
+                {
+                    FaceRender.Textures.Clear();
+                    CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+                }
+                if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
+                {
+                    FaceRender.RemovedObjects.Clear();
+                    CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
+                }
+                
+                BoxRender?.ResetTexturesAndRemovedObjects();
+                
+                model = Utils.CleanModelPathString(value);
+            }
+        }
+        
+        [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON compatibility. Use FaceRender instead.")]
+        public RenderData Render
         {
             set => faceRender = value;
         }
@@ -93,19 +134,14 @@ namespace PKXIconGen.Core.Data
             }
         }
         
-        [JsonPropertyName("shiny"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceShiny instead.")]
-        protected ShinyInfo Shiny
+        private ShinyInfo shiny;
+        [Column("Shiny"), JsonPropertyName("shiny")]
+        public ShinyInfo Shiny 
         {
-            set => faceShiny = value;
-        }
-        private ShinyInfo faceShiny;
-        [Column("Shiny"), JsonPropertyName("face_shiny")]
-        public ShinyInfo FaceShiny 
-        {
-            get => faceShiny;
+            get => shiny;
             set
             {
-                faceShiny = value;
+                shiny = value;
                 OnPropertyChanged();
             }
         }
@@ -115,8 +151,8 @@ namespace PKXIconGen.Core.Data
         {
             get
             {
-                string shinyModel = faceShiny.FaceRender.Model is not null ? $"_{Path.GetFileNameWithoutExtension(faceShiny.FaceRender.Model)}" : "";
-                return $"{Id}_{Output}_{Path.GetFileNameWithoutExtension(faceRender.Model!)}{shinyModel}";
+                string shinyModel = !string.IsNullOrWhiteSpace(shiny.Model) ? $"_{Path.GetFileNameWithoutExtension(shiny.Model)}" : "";
+                return $"{Id}_{Output}_{Path.GetFileNameWithoutExtension(Model)}{shinyModel}";
             }
         }
 
@@ -127,24 +163,30 @@ namespace PKXIconGen.Core.Data
             name = "";
             OutputName = "";
 
+            model = "";
+
             faceRender = new RenderData();
-            faceShiny = new ShinyInfo();
+            boxRender = new BoxInfo();
+            shiny = new ShinyInfo();
         }
         
-        public PokemonRenderData(uint id, string name, string? outputName, RenderData faceRender, ShinyInfo faceShiny)
+        public PokemonRenderData(uint id, string name, string? outputName, string model, RenderData faceRender, BoxInfo? boxRender, ShinyInfo shiny)
         {
             Id = id;
 
             this.name = name;
             OutputName = !string.IsNullOrEmpty(outputName) ? outputName : null;
 
+            this.model = model;
+            
             this.faceRender = faceRender;
-            this.faceShiny = faceShiny;
+            this.boxRender = boxRender ?? new BoxInfo();
+            this.shiny = shiny;
         }
 
         [JsonConstructor]
-        public PokemonRenderData(string name, string? outputName, RenderData render, ShinyInfo shiny) 
-            : this(0, name, outputName, render, shiny)
+        public PokemonRenderData(string name, string? outputName, string model, RenderData render, BoxInfo? boxRender, ShinyInfo shiny) 
+            : this(0, name, outputName, model, render, boxRender, shiny)
         {
 
         }
@@ -162,7 +204,8 @@ namespace PKXIconGen.Core.Data
                 if (newData is null) return;
                 
                 FaceRender = newData.FaceRender;
-                FaceShiny = newData.FaceShiny;
+                BoxRender = newData.BoxRender;
+                Shiny = newData.Shiny;
             };
             await runner.RunAsync(token);
             onFinish?.Invoke();
@@ -173,8 +216,9 @@ namespace PKXIconGen.Core.Data
             return other is not null &&
                 Id == other.Id &&
                 Name == other.Name &&
+                Model == other.Model &&
                 FaceRender.Equals(other.FaceRender) &&
-                FaceShiny.Equals(other.FaceShiny);
+                Shiny.Equals(other.Shiny);
         }
         public override bool Equals(object? obj)
         {
@@ -196,13 +240,14 @@ namespace PKXIconGen.Core.Data
                 Id, 
                 Name,
                 OutputName,
+                Model,
                 FaceRender,
-                FaceShiny
+                Shiny
             ).GetHashCode();
 
         public object Clone()
         {
-            return new PokemonRenderData(Id, Name, OutputName, (RenderData)FaceRender.Clone(), (ShinyInfo)FaceShiny.Clone());
+            return new PokemonRenderData(Id, Name, OutputName, Model, (RenderData)FaceRender.Clone(), (BoxInfo)BoxRender.Clone(), (ShinyInfo)Shiny.Clone());
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

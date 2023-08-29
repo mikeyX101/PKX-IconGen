@@ -57,17 +57,4 @@
   <Style Selector="ToggleButton:checked TextBlock.tbunchecked">
     <Setter Property="IsVisible" Value="false"/>
   </Style>
-  
-  <Style Selector="ToggleSplitButton TextBlock.tbchecked">
-    <Setter Property="IsVisible" Value="false"/>
-  </Style>
-  <Style Selector="ToggleSplitButton:checked TextBlock.tbchecked">
-    <Setter Property="IsVisible" Value="true"/>
-  </Style>
-  <Style Selector="ToggleSplitButton TextBlock.tbunchecked">
-    <Setter Property="IsVisible" Value="true"/>
-  </Style>
-  <Style Selector="ToggleSplitButton:checked TextBlock.tbunchecked">
-    <Setter Property="IsVisible" Value="false"/>
-  </Style>
 </Styles>

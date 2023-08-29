@@ -23,7 +23,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace PKXIconGen.Core.Migrations
 {
-    public partial class temp : Migration
+    public partial class JsonShinyInfoOutputName : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

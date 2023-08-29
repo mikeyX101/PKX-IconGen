@@ -122,9 +122,9 @@ def import_models(prd: PokemonRenderData):
 
     if objs.find("Armature0") == -1:
         if assets_path is not None:
-            true_path = get_absolute_asset_path(prd.render.model)
+            true_path = get_absolute_asset_path(prd.model)
         else:
-            true_path = prd.render.model
+            true_path = prd.model
 
         print(f"Importing: {true_path}")
         import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
@@ -133,15 +133,15 @@ def import_models(prd: PokemonRenderData):
         armature.hide_viewport = True
         normal_imported = True
 
-    if objs.find("Armature1") == -1 and shiny_info.render.model is not None:
+    if objs.find("Armature1") == -1 and shiny_info.model is not None:
         if assets_path is not None:
-            shiny_true_path = get_absolute_asset_path(shiny_info.render.model)
+            shiny_true_path = get_absolute_asset_path(shiny_info.model)
         else:
-            shiny_true_path = shiny_info.render.model
+            shiny_true_path = shiny_info.model
 
         print(f"Importing: {shiny_true_path}")
         import_hsd.load(None, bpy.context, shiny_true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
-        switch_model(shiny_info, EditMode.NORMAL)  # Hide shiny model on load
+        switch_model(shiny_info, EditMode.FACE_NORMAL)  # Hide shiny model on load
         shiny_armature = objs["Armature1"]
         shiny_armature.hide_select = True
         shiny_armature.hide_viewport = True
@@ -152,8 +152,8 @@ def import_models(prd: PokemonRenderData):
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(bpy.data.filepath), "edit.blend"))
 
     # Run patches
-    apply_patches_by_model_name(prd.render.model)
-    apply_patches_by_model_name(prd.shiny.render.model)
+    apply_patches_by_model_name(prd.model)
+    apply_patches_by_model_name(prd.shiny.model)
 
     mats = bpy.data.materials
     for mat in mats:
@@ -283,14 +283,14 @@ def show_message_box(message, title, icon='INFO'):
 
 def switch_model(shiny_info: ShinyInfo, mode: EditMode):
     if shiny_info.color1 is not None and shiny_info.color2 is not None:
-        if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+        if mode in EditMode.ANY_SHINY:
             show_shiny_mats()
         else:
             hide_shiny_mats()
-    elif shiny_info.render.model is not None:
+    elif shiny_info.model is not None:
         objs = bpy.data.objects
 
-        if mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY:
+        if mode in EditMode.ANY_SHINY:
             show_armature(objs["Armature0"], False)
             show_armature(objs["Armature1"], True)
         else:
@@ -396,8 +396,8 @@ def reset_materials_maps():
 
 def get_armature(prd: PokemonRenderData, mode: EditMode):
     objs = bpy.data.objects
-    shiny_model = prd.shiny.render.model
-    if shiny_model is not None and shiny_model != "" and (mode == EditMode.SHINY or mode == EditMode.SHINY_SECONDARY):
+    shiny_model = prd.shiny.model
+    if shiny_model is not None and shiny_model != "" and mode in EditMode.ANY_SHINY:
         armature = objs["Armature1"]
     else:
         armature = objs["Armature0"]

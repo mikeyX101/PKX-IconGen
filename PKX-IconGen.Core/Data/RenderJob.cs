@@ -37,6 +37,9 @@ namespace PKXIconGen.Core.Data
 
         [JsonPropertyName("game")] 
         public Game Game => Settings.CurrentGame;
+        
+        [JsonPropertyName("target")] 
+        public RenderTarget Target { get; init; }
 
         [JsonIgnore]
         private Settings Settings { get; init; }
@@ -44,19 +47,33 @@ namespace PKXIconGen.Core.Data
         [JsonIgnore]
         private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
 
-        [JsonPropertyName("main_path")]
-        public string MainPath => BlenderOutputPath + "_main.png";
-        [JsonPropertyName("shiny_path")]
-        public string ShinyPath => BlenderOutputPath + "_shiny.png";
-        [JsonPropertyName("secondary_path")]
-        public string SecondaryPath => BlenderOutputPath + "_secondary.png";
-        [JsonPropertyName("shiny_secondary_path")]
-        public string ShinySecondaryPath => BlenderOutputPath + "_shiny_secondary.png";
-
-        public RenderJob(PokemonRenderData data, Settings settings)
+        [JsonPropertyName("face_main_path")]
+        public string FaceMainPath => BlenderOutputPath + "_face_main.png";
+        [JsonPropertyName("face_shiny_path")]
+        public string FaceShinyPath => BlenderOutputPath + "_face_shiny.png";
+        [JsonPropertyName("face_secondary_path")]
+        public string FaceSecondaryPath => BlenderOutputPath + "_face_secondary.png";
+        [JsonPropertyName("face_shiny_secondary_path")]
+        public string FaceShinySecondaryPath => BlenderOutputPath + "_face_shiny_secondary.png";
+        
+        [JsonPropertyName("box_first_main_path")]
+        public string BoxFirstMainPath => BlenderOutputPath + "_box_first_main.png";
+        [JsonPropertyName("box_first_shiny_path")]
+        public string BoxFirstShinyPath => BlenderOutputPath + "_box_first_shiny.png";
+        [JsonPropertyName("box_second_main_path")]
+        public string BoxSecondMainPath => BlenderOutputPath + "_box_second_main.png";
+        [JsonPropertyName("box_second_shiny_path")]
+        public string BoxSecondShinyPath => BlenderOutputPath + "_box_second_shiny.png";
+        [JsonPropertyName("box_third_main_path")]
+        public string BoxThirdMainPath => BlenderOutputPath + "_box_third_main.png";
+        [JsonPropertyName("box_third_shiny_path")]
+        public string BoxThirdShinyPath => BlenderOutputPath + "_box_third_shiny.png";
+        
+        public RenderJob(PokemonRenderData data, Settings settings, RenderTarget target)
         {
             Data = data;
             Settings = settings;
+            Target = target;
         }
         
         public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
@@ -73,11 +90,11 @@ namespace PKXIconGen.Core.Data
 
             stepOutput?.Invoke($"Rendering {Data.Name}...".AsMemory());
             CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
-            await runner.RunAsync(token);
+            await Task.Run(async() => await runner.RunAsync(token));
             CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
 
             IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost);
-            await iconProcessor.ProcessJobAsync(token, stepOutput);
+            await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutput));
         }
     }
 }

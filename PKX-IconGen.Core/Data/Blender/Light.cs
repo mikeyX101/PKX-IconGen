@@ -71,6 +71,11 @@ namespace PKXIconGen.Core.Data.Blender
 
         public readonly override int GetHashCode() => (Type, Strength, Color, Distance).GetHashCode();
 
-        public static Light GetDefaultLight() => new(LightType.Point, 250f, Color.GetDefaultColor(), 5f);
+        public static Light GetDefaultLight(RenderTarget target) => target switch
+        {
+            RenderTarget.Face => new Light(LightType.Point, 250f, Color.GetDefaultColor(), 5f),
+            RenderTarget.Box => new Light(LightType.Area, 650f, Color.GetDefaultColor(), 13f),
+            _ => throw new ArgumentException("Unknown RenderTarget.", nameof(target))
+        };
     }
 }

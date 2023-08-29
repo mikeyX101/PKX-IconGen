@@ -19,6 +19,7 @@
 from typing import Optional
 
 from .light import Light
+from .render_target import RenderTarget
 from .vector3 import Vector3
 
 
@@ -60,11 +61,27 @@ class Camera(object):
             Light.parse_obj(obj.light))
 
     @staticmethod
-    def default() -> 'Camera':
-        return Camera(
-            Vector3(14, -13.5, 5.5),
-            Vector3(0, 0, 0),
-            True,
-            40,
-            7.31429,
-            Light.default())
+    def default(target: RenderTarget) -> 'Camera':
+        camera: Camera
+        if target is RenderTarget.FACE:
+            camera = Camera(
+                Vector3(14, -13.5, 5.5),
+                Vector3(0, 0, 0),
+                True,
+                40,
+                7.31429,
+                Light.default(target)
+            )
+        elif target is RenderTarget.BOX:
+            camera = Camera(
+                Vector3(31.51, -37.49, 33.89),
+                Vector3(0, -1.75, 6.80),
+                True,
+                36,
+                36.86,
+                Light.default(target)
+            )
+        else:
+            raise Exception(f"Unknown RenderTarget: {target.name}")
+
+        return camera

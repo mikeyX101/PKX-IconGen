@@ -9,20 +9,20 @@
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.2.8</AssemblyVersion>
+    <AssemblyVersion>0.3.0</AssemblyVersion>
     <FileVersion>$(PackageVersion)</FileVersion>
-    <Version>0.4.0</Version>
+    <Version>0.3.0</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
 
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.2.8</PackageVersion>
-
-    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    <PackageVersion>0.3.0</PackageVersion>
 
     <LangVersion>11</LangVersion>
+
+    <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

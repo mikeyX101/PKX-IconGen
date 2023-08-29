@@ -17,15 +17,18 @@
 """
 
 __all__ = [
+    "box_info",
     "camera", 
     "color",
     "edit_mode",
+    "game",
     "light",
     "material",
     "object_shading",
     "pokemon_render_data",
     "render_data",
     "render_job",
+    "render_target",
     "shiny_color",
     "shiny_info",
     "texture",

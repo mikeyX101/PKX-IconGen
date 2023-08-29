@@ -21,26 +21,23 @@ from typing import List
 
 from .camera import Camera
 from .color import Color
+from .edit_mode import EditMode
 from .object_shading import ObjectShading
 from .texture import Texture
 
 
 class RenderData(object):
-    
-    def __init__(self, 
-                 model: Optional[str],
-                 animation_pose: int, 
-                 animation_frame: int, 
-                 main_camera: Camera, 
+
+    def __init__(self,
+                 animation_pose: int,
+                 animation_frame: int,
+                 main_camera: Camera,
                  secondary_camera: Optional[Camera],
                  removed_objects: List[str],
                  textures: Optional[List[Texture]],
                  shading: Optional[ObjectShading],
                  bg: Optional[Color],
-                 glow: Optional[Color]
-    ):
-        self.model = model
-
+                 glow: Optional[Color]):
         self.animation_pose = animation_pose
         self.animation_frame = animation_frame
 
@@ -58,10 +55,6 @@ class RenderData(object):
     def parse_obj(obj: Optional[any]) -> Optional['RenderData']:
         if obj is None:
             return obj
-
-        model: Optional[str] = None
-        if "model" in obj.__dict__.keys():
-            model = obj.model
 
         secondary_camera: Optional[Camera] = None
         if "secondary_camera" in obj.__dict__.keys():
@@ -86,7 +79,6 @@ class RenderData(object):
             glow = Color.parse_obj(obj.glow)
 
         return RenderData(
-            model,
             obj.animation_pose,
             obj.animation_frame,
             Camera.parse_obj(obj.main_camera),

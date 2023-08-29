@@ -11,7 +11,7 @@ namespace PKXIconGen.Core.Migrations
 {
     [DbContext(typeof(Database))]
     [Migration("20220413235853_temp")]
-    partial class temp
+    partial class JsonShinyInfoOutputName
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

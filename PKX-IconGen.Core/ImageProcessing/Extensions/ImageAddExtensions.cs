@@ -32,7 +32,7 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
             return ctx
                 .Resize(new ResizeOptions
                 {
-                    Size = new Size(size.Width, size.Height * 2),
+                    Size = new Size(size.Width, size.Height + img.Height),
                     Mode = ResizeMode.BoxPad,
                     Position = AnchorPositionMode.TopLeft
                 })
@@ -46,7 +46,7 @@ namespace PKXIconGen.Core.ImageProcessing.Extensions
             return ctx
                 .Resize(new ResizeOptions
                 {
-                    Size = new Size(size.Width * 2, size.Height),
+                    Size = new Size(size.Width + img.Width, size.Height),
                     Mode = ResizeMode.BoxPad,
                     Position = AnchorPositionMode.TopLeft
                 })

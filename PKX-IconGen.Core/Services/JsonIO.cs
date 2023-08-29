@@ -38,7 +38,7 @@ namespace PKXIconGen.Core.Services
         public static readonly JsonSerializerOptions DefaultOptions = new()
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Converters = { new ShinyInfoJsonConverter() }
+            WriteIndented = false
         };
 
         public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable

@@ -18,6 +18,8 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace PKXIconGen.Core.Data
@@ -27,6 +29,40 @@ namespace PKXIconGen.Core.Data
         First = 0,
         Second = 1,
         Third = 2
+    }
+    
+    public static class BoxAnimationFrameExtensions
+    {
+        public static BoxAnimation GetBoxAnimation(this BoxAnimationFrame frame)
+        {
+            BoxAnimation[] boxAnimations = BoxAnimation.GetBoxAnimations();
+            return boxAnimations.First(a => a.Frame == frame);
+        }
+        
+        public static string GetName(this BoxAnimationFrame frame) => frame switch
+        {
+            BoxAnimationFrame.First => "First",
+            BoxAnimationFrame.Second => "Second",
+            BoxAnimationFrame.Third => "Third",
+            _ => ""
+        };
+    }
+    
+    public class BoxAnimation
+    {
+        public static BoxAnimation[] GetBoxAnimations()
+        {
+            BoxAnimationFrame[] frames = Enum.GetValues<BoxAnimationFrame>();
+            return frames.Select(frame => new BoxAnimation(frame)).ToArray();
+        }
+
+        public BoxAnimationFrame Frame { get; }
+        public string DisplayName => Frame.GetName();
+
+        private BoxAnimation(BoxAnimationFrame frame)
+        {
+            Frame = frame;
+        }
     }
     
     public class BoxInfo : IJsonSerializable, IEquatable<BoxInfo>, ICloneable
@@ -43,9 +79,9 @@ namespace PKXIconGen.Core.Data
 
         public BoxInfo()
         {
-            First = new RenderData();
-            Second = new RenderData();
-            Third = new RenderData();
+            First = new RenderData(RenderTarget.Box);
+            Second = new RenderData(RenderTarget.Box);
+            Third = new RenderData(RenderTarget.Box);
         }
 
         [JsonConstructor]
@@ -59,6 +95,50 @@ namespace PKXIconGen.Core.Data
             Third = third;
         }
 
+        public RenderData GetBoxRenderData(BoxAnimationFrame frame) => frame switch
+        {
+            BoxAnimationFrame.First => First,
+            BoxAnimationFrame.Second => Second,
+            BoxAnimationFrame.Third => Third,
+            _ => throw new ArgumentOutOfRangeException(nameof(frame), frame, "Somehow got an unknown BoxAnimationFrame")
+        };
+        
+        [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "False on init")]
+        public void ResetTexturesAndRemovedObjects()
+        {
+            if (First?.Textures is not null && First.Textures.Count != 0)
+            {
+                First.Textures.Clear();
+                CoreManager.Logger.Information("First Box Model changed while having textures set up, removing to avoid conflicts");
+            }
+            if (Second?.Textures is not null && Second.Textures.Count != 0)
+            {
+                Second.Textures.Clear();
+                CoreManager.Logger.Information("Second Box Model changed while having textures set up, removing to avoid conflicts");
+            }
+            if (Third?.Textures is not null && Third.Textures.Count != 0)
+            {
+                Third.Textures.Clear();
+                CoreManager.Logger.Information("Third Box Model changed while having textures set up, removing to avoid conflicts");
+            }
+            
+            if (First?.RemovedObjects is not null && First.RemovedObjects.Count != 0)
+            {
+                First.RemovedObjects.Clear();
+                CoreManager.Logger.Information("First Box Model changed while having removed objects, resetting to avoid conflicts");
+            }
+            if (Second?.RemovedObjects is not null && Second.RemovedObjects.Count != 0)
+            {
+                Second.RemovedObjects.Clear();
+                CoreManager.Logger.Information("Second Box Model changed while having removed objects, resetting to avoid conflicts");
+            }
+            if (Third?.RemovedObjects is not null && Third.RemovedObjects.Count != 0)
+            {
+                Third.RemovedObjects.Clear();
+                CoreManager.Logger.Information("Third Box Model changed while having removed objects, resetting to avoid conflicts");
+            }
+        }
+        
         public bool Equals(BoxInfo? other)
         {
             return other is not null &&

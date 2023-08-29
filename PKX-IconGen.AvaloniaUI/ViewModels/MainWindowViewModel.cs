@@ -34,6 +34,7 @@ using DynamicData;
 using DynamicData.Binding;
 using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Services;
+using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
@@ -293,15 +294,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     (
                         !string.IsNullOrWhiteSpace(assets) || // Good if we have an assets path
                         selectedPRDs.All(prd =>  // otherwise check selected PRDs for model paths containing {{AssetsPath}}
-                            (!prd?.FaceRender.Model?.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
+                            (!prd?.Model.Contains("{{AssetsPath}}") ?? false) && // Normal model doesn't contain {{AssetsPath}}
                             (
-                                string.IsNullOrWhiteSpace(prd!.FaceShiny.FaceRender.Model) || // No Shiny model or
-                                !prd.FaceShiny.FaceRender.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
+                                string.IsNullOrWhiteSpace(prd!.Shiny.Model) || // No Shiny model or
+                                !prd.Shiny.Model.Contains("{{AssetsPath}}") // Shiny model doesn't contain {{AssetsPath}}
                             )
                         )
                     )
             );
-            RenderCommand = ReactiveCommand.Create(Render, renderEnabled);
+            RenderCommand = ReactiveCommand.CreateFromTask<RenderTarget>(Render, renderEnabled);
 
             IObservable<bool> renderDataOperationsEnabled = this.WhenAnyValue(
                     vm => vm.IsBlenderValid, 
@@ -444,8 +445,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
         #region Render
         private CancellationTokenSource? renderCancelTokenSource;
-        public ReactiveCommand<Unit, Unit> RenderCommand { get; }
-        private async void Render()
+        public ReactiveCommand<RenderTarget, Unit> RenderCommand { get; }
+        private async Task Render(RenderTarget renderTarget)
         {
             DisposeCancelToken();
             renderCancelTokenSource = new CancellationTokenSource();
@@ -453,7 +454,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             CurrentlyRendering = true;
 
             Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
-            IEnumerable<RenderJob> renderJobs = PokemonRenderDataSelection.SelectedItems.Where(prd => prd is not null).Select(prd => new RenderJob(prd!, settings));
+            IEnumerable<RenderJob> renderJobs = PokemonRenderDataSelection.SelectedItems.Where(prd => prd is not null).Select(prd => new RenderJob(prd!, settings, renderTarget));
             foreach (RenderJob job in renderJobs)
             {
                 if (renderCancelTokenSource.IsCancellationRequested)
@@ -469,13 +470,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 catch (OperationCanceledException)
                 {
                     LogVM.WriteLine("Rendering cancelled.".AsMemory());
-
+                    CoreManager.Logger.Information("Rendering cancelled");
                     break;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     LogVM.WriteLine("An error occured while rendering: Enable Blender logging, try to render again and see logs for details.".AsMemory());
-
+                    CoreManager.Logger.Error(e, "An error occured while rendering");
                     break;
                 }
             }
