@@ -177,13 +177,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             await DialogHelper.ShowDialog("/Assets/gen-icon-rounded-x512.png",
                 DialogButtons.Ok,
-@$"PKX-IconGen by mikeyX
-Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"} 
-UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}
-Blender Addon: {Versions.AddonVersion}
-Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
+                $"""
+                 PKX-IconGen by mikeyX
+                 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"}
+                 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}
+                 Blender Addon: {Versions.AddonVersion}
+                 Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
 
-Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"} ",
+                 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"} 
+                 """,
                 height: 250, title: "About");
         }
 

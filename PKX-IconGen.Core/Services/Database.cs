@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -78,7 +79,7 @@ namespace PKXIconGen.Core.Services
                 {
                     Directory.CreateDirectory(Paths.DataFolder);
                 }
-                optionsBuilder.UseSqlite($"Data Source={Paths.DataFolder}/DB.db;");
+                optionsBuilder.UseSqlite($"Data Source={Paths.DatabaseFile};");
             }
         }
 
@@ -116,6 +117,12 @@ namespace PKXIconGen.Core.Services
             {
                 try
                 {
+                    if (File.Exists(Paths.DatabaseFile) && (await Database.GetPendingMigrationsAsync()).Any())
+                    {
+                        CoreManager.Logger.Information("New migrations, making backup of Database before applying...");
+                        string assemblyVer = Assembly.GetExecutingAssembly().GetName().Version?.ToString().Replace('.', '-') ?? "unknown-ver";
+                        File.Copy(Paths.DatabaseFile, Path.Combine(Paths.DataFolder, $"DB_before_{assemblyVer}.db.bak"));
+                    }
                     CoreManager.Logger.Information("Running Database migrations...");
                     await Database.MigrateAsync();
                     CoreManager.Logger.Information("Database migration successful");

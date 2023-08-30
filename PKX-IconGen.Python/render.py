@@ -85,7 +85,7 @@ def get_mode_base_resolution(mode: EditMode) -> int:
     base_resolution: int
     if mode in EditMode.ANY_FACE:
         base_resolution = 48 if job.game == Game.POKEMONBATTLEREVOLUTION else 42
-    elif mode in EditMode.ANY_BOX:  # Box
+    elif mode in EditMode.ANY_BOX:
         base_resolution = 54 if job.game == Game.POKEMONBATTLEREVOLUTION else 64
     else:
         raise Exception(f"Invalid EditMode provided: {mode.name}")
