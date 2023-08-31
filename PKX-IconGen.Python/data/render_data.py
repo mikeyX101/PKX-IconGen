@@ -21,7 +21,6 @@ from typing import List
 
 from .camera import Camera
 from .color import Color
-from .edit_mode import EditMode
 from .object_shading import ObjectShading
 from .texture import Texture
 

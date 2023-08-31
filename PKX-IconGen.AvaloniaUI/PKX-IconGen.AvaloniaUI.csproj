@@ -12,9 +12,9 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.3.0</AssemblyVersion>
-    <FileVersion>$(PackageVersion)</FileVersion>
-    <Version>0.3.0</Version>
+    <AssemblyVersion>0.3.2</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <Version>$(AssemblyVersion)</Version>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
 
@@ -24,7 +24,7 @@
 
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 
-    <PackageVersion>0.3.0</PackageVersion>
+    <PackageVersion>$(AssemblyVersion)</PackageVersion>
 
     <IsPackable>false</IsPackable>
 

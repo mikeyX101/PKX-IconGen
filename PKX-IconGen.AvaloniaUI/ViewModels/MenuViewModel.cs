@@ -140,6 +140,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
         
         [UsedImplicitly]
+        public void ToggleSaveDanceGIF()
+        {
+            MainWindow.SaveDanceGIF = !MainWindow.SaveDanceGIF;
+        }
+        
+        [UsedImplicitly]
         public async void CleanTempFolders()
         {
             bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder and the downloaded HD textures. The HD textures will remain installed.\nThis operation is irreversible.");
@@ -177,13 +183,15 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             await DialogHelper.ShowDialog("/Assets/gen-icon-rounded-x512.png",
                 DialogButtons.Ok,
-@$"PKX-IconGen by mikeyX
-Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown"} 
-UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown"}
-Blender Addon: {Versions.AddonVersion}
-Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
+                $"""
+                 PKX-IconGen by mikeyX
+                 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown Version"}
+                 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown Version"}
+                 Blender Addon: {Versions.AddonVersion}
+                 Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
 
-Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown"} ",
+                 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown Version"} 
+                 """,
                 height: 250, title: "About");
         }
 

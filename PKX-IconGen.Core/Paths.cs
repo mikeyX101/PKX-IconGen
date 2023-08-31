@@ -26,6 +26,7 @@ namespace PKXIconGen.Core
     {
         // Data Folder
         internal static string DataFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+        internal static string DatabaseFile => Path.Combine(DataFolder, "DB.db");
         
         // Logs
         internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
