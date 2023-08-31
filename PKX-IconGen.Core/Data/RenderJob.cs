@@ -76,7 +76,7 @@ namespace PKXIconGen.Core.Data
             Target = target;
         }
         
-        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Action<ReadOnlyMemory<char>>? stepOutput = null)
+        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
         {
             IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(blenderRunnerInfo, this);
             if (onOutput != null)
@@ -88,13 +88,13 @@ namespace PKXIconGen.Core.Data
                 runner.OnFinish += onFinish;
             }
 
-            stepOutput?.Invoke($"Rendering {Data.Name}...".AsMemory());
+            stepOutputAsync?.Invoke($"Rendering {Data.Name}...".AsMemory());
             CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
             await Task.Run(async() => await runner.RunAsync(token));
             CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
 
-            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost);
-            await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutput));
+            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF);
+            await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutputAsync));
         }
     }
 }

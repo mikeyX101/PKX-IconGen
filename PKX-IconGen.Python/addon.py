@@ -41,7 +41,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 1),
+    "version": (0, 3, 2),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -77,7 +77,7 @@ class ShowRegionUiOperator(bpy.types.Operator):
 
 
 class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
-    """Replaces the full AssetsPath with {{AssetsPath}}, path and image needs to be valid. If path is empty, adds the full AssetsPath."""
+    """Replaces the full AssetsPath with {{AssetsPath}}, path and image needs to be valid. If path is empty, adds the full AssetsPath"""
     bl_idname = "wm.pkx_assets_path"
     bl_label = "{{AssetsPath}}"
 
@@ -132,7 +132,7 @@ class PKXResetDeletedOperator(bpy.types.Operator):
 
 
 class PKXCopyToOperator(bpy.types.Operator):
-    """Copy current data (animation, camera, light, removed objects, textures, shading) to another mode. Note that Face Normal and Face Secondary only have different cameras and lights. Some data like textures and removed objects cannot be copied if there's a shiny model."""
+    """Copy current data (animation, camera, light, removed objects, textures, shading) to another mode. Note that Face Normal and Face Secondary only have different cameras and lights. Some data like textures and removed objects cannot be copied if there's a shiny model"""
     bl_idname = "wm.pkx_copy_to"
     bl_label = "Copy"
 
@@ -142,6 +142,10 @@ class PKXCopyToOperator(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
+
+        if scene.advanced_camera_editing:
+            sync_camera_to_props(context)
+        sync_props_to_prd(context)
 
         copy_from: EditMode = get_edit_mode(scene)
         copy_to: EditMode = EditMode[scene.copy_to]
@@ -278,6 +282,7 @@ class PKXSaveQuitOperator(bpy.types.Operator):
     bl_label = "Save and quit"
 
     def execute(self, context):
+        # noinspection PyBroadException
         try:
             bpy.ops.wm.pkx_save()
         except:
@@ -628,7 +633,7 @@ def sync_camera_to_props(context):
 
     scene.pos = camera.location
     scene.focus = camera_focus.location
-    scene.fov = degrees(camera.data.angle)
+    scene.fov = round(degrees(camera.data.angle))
     scene.ortho_scale = camera.data.ortho_scale
 
 

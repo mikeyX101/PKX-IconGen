@@ -68,6 +68,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 this.RaiseAndSetIfChanged(ref saturationBoost, value); 
             }
         }
+        
+        private bool saveDanceGIF;
+        public bool SaveDanceGIF
+        {
+            get => saveDanceGIF;
+            set { 
+                DoDBQuery(db => db.SaveSettingsProperty(s => s.SaveDanceGIF, value));
+                this.RaiseAndSetIfChanged(ref saveDanceGIF, value); 
+            }
+        }
         #endregion
 
         #region Blender Path
@@ -200,11 +210,10 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         #region Progress
 
         private bool initialLoadingFinished = false;
-
         public bool InitialLoadingFinished
         {
             get => initialLoadingFinished;
-            set => this.RaiseAndSetIfChanged(ref initialLoadingFinished, value);
+            private set => this.RaiseAndSetIfChanged(ref initialLoadingFinished, value);
         }
         
         private bool currentlyRendering;
@@ -332,6 +341,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 // Fields
                 LogBlender = settings.LogBlender;
                 SaturationBoost = settings.SaturationBoost;
+                SaveDanceGIF = settings.SaveDanceGIF;
 
                 BlenderPath = settings.BlenderPath;
                 VerifyBlenderExecutable();
@@ -464,7 +474,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
                 try
                 {
-                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutput: LogVM.WriteLine);
+                    async Task OnOutput(ReadOnlyMemory<char> output) => await Dispatcher.UIThread.InvokeAsync(() => LogVM.WriteLine(output));
+                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutputAsync: OnOutput);
                     NbOfPokemonRendered++;
                 }
                 catch (OperationCanceledException)

@@ -81,12 +81,12 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     common.update_shading(prd.get_mode_shading(mode))
 
 
-def get_mode_base_resolution(mode: EditMode) -> int:
+def get_mode_base_resolution(mode: EditMode, game: Game) -> int:
     base_resolution: int
     if mode in EditMode.ANY_FACE:
-        base_resolution = 48 if job.game == Game.POKEMONBATTLEREVOLUTION else 42
+        base_resolution = 48 if game == Game.POKEMONBATTLEREVOLUTION else 42
     elif mode in EditMode.ANY_BOX:
-        base_resolution = 54 if job.game == Game.POKEMONBATTLEREVOLUTION else 64
+        base_resolution = 54 if game == Game.POKEMONBATTLEREVOLUTION else 64
     else:
         raise Exception(f"Invalid EditMode provided: {mode.name}")
     return base_resolution
@@ -97,7 +97,7 @@ def render_job_mode(job: RenderJob, path: str, mode: EditMode):
 
     blender_render = bpy.data.scenes["Scene"].render
 
-    base_resolution = get_mode_base_resolution(mode)
+    base_resolution = get_mode_base_resolution(mode, job.game)
 
     blender_render.resolution_x = base_resolution * job.scale
     blender_render.resolution_y = base_resolution * job.scale

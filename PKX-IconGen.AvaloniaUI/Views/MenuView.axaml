@@ -60,6 +60,11 @@
           <i:Icon IsVisible="{Binding MainWindow.SaturationBoost}" Value="mdi-check" />
         </MenuItem.Icon>
       </MenuItem>
+      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Save preview GIF for XD Dance sprites" Command="{ReflectionBinding ToggleSaveDanceGIF}">
+        <MenuItem.Icon>
+          <i:Icon IsVisible="{Binding MainWindow.SaveDanceGIF}" Value="mdi-check" />
+        </MenuItem.Icon>
+      </MenuItem>
     </MenuItem>
     <MenuItem Header="_Tools">
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Clean temporary folders" Command="{ReflectionBinding CleanTempFolders}">

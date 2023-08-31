@@ -149,6 +149,13 @@
                         <MultiBinding Mode="OneWay" Converter="{x:Static BoolConverters.Or}">
                           <Binding Path="FaceRender.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                           <Binding Path="Shiny.FaceRender.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          
+                          <Binding Path="BoxRender.First.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="Shiny.BoxRender.First.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="BoxRender.Second.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="Shiny.BoxRender.Second.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="BoxRender.Third.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
+                          <Binding Path="Shiny.BoxRender.Third.Textures" Converter="{StaticResource TextureEnumerableHasCustomTextureConverter}"/>
                         </MultiBinding>
                       </i:Icon.IsVisible>
                     </i:Icon>

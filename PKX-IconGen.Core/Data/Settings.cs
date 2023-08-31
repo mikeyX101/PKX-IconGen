@@ -48,6 +48,9 @@ namespace PKXIconGen.Core.Data
         
         [Column, DefaultValue(true)]
         public bool SaturationBoost { get; set; }
+        
+        [Column, DefaultValue(false)]
+        public bool SaveDanceGIF { get; set; }
 
         public Settings()
         {
@@ -61,6 +64,7 @@ namespace PKXIconGen.Core.Data
             
             LogBlender = false;
             SaturationBoost = true;
+            SaveDanceGIF = false;
         }
     }
 }
