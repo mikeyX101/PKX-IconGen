@@ -21,11 +21,7 @@
     
     <data name="TooltipBlenderPath" xml:space="preserve">
         <value>Path to the Blender executable. No need to have the import addon installed, it is included with PKX-IconGen.
-Tested versions:
-    2.83.18: Crashes on import
-    2.93.4: Works properly
-    3.0.0: Works properly
-    3.6.1: Works properly
+It's recommended to use Blender 3.6.X LTS. Blender 2.9.3 LTS or higher should also work, but is not tested anymore.
             
 On Windows: Path to the Blender executable.
             
@@ -45,11 +41,15 @@ USE ONLY IF YOU KNOW WHAT YOU'RE DOING.</value>
     <data name="TooltipIconStyle" xml:space="preserve">
         <value>Styles based on Pokémon Colosseum, Pokémon XD: Gale of Darkness or Pokémon Battle Revolution.
 
+Face Icons:
 Pokémon Colosseum has no cropping.
-
 Pokémon XD uses the same rendering as Colosseum, but rounded corners are used for each icon.
+Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline. NOT AVAILABLE YET.
 
-Pokémon Battle Revolution uses different rendering as the Gamecube games, have a circle crop and a white outline. NOT AVAILABLE YET.</value>
+Face Icons:
+Pokémon Colosseum only uses the first box frame.
+Pokémon XD uses all 3 box frames to animate in the Purification Chamber. Otherwise, only the first frame is used.
+Pokémon Battle Revolution. NOT AVAILABLE YET.</value>
     </data>
     <data name="TooltipRenderScale" xml:space="preserve">
         <value>Integer scale used to know at what resolution the icons are going to be rendered.
@@ -57,8 +57,11 @@ Pokémon Battle Revolution uses different rendering as the Gamecube games, have 
 Use x1 for making new pokemon icons to be imported.
 Use the others for texture packs or any higher resolution needs.
 
-Base icon resolution for Colo/XD: 42px X 42px
-Base icon resolution for PBR: 48px X 48px
+Base face icon resolution for Colo/XD: 42px X 42px
+Base face icon resolution for PBR: 48px X 48px
+
+Base box icon resolution for Colo/XD: 64px X 64px
+Base box icon resolution for PBR: 54px X 54px
 
 Please note that this can drastically increase the rendering and processing time depending on your computer.</value>
     </data>
@@ -74,7 +77,7 @@ Filter with "pkx"
 Enter "export"</value>
     </data>
     <data name="TooltipShinyToggle" xml:space="preserve">
-        <value>Toggle between Normal and Shiny data. Purple areas means that data switches between Normal and Shiny there.</value>
+        <value>Toggle between Normal and Shiny data. Purple areas means that data switches between Normal and Shiny.</value>
     </data>
     <data name="TooltipPokemonName" xml:space="preserve">
         <value>Name of the Pokemon</value>
@@ -102,16 +105,16 @@ Example: {{AssetsPath}}/pkx_lugia/pkx_lugia.pkx.dat
 NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET THEM DUE TO LIMITATIONS</value>
     </data>
     <data name="TooltipBackgroundColor" xml:space="preserve">
-        <value>Background color for this icon</value>
+        <value>Background color for this icon. Box icons are usually transparent, otherwise color boxes appear in-game.</value>
     </data>
     <data name="TooltipGlowColor" xml:space="preserve">
-        <value>Glow color for this icon. Setting it to fully transparent will disable the effect.</value>
+        <value>Glow/Outline color for this icon. Setting it to fully transparent will disable the effect.</value>
     </data>
     <data name="TooltipInsertAssetsPath" xml:space="preserve">
         <value>Insert "{{AssetsPath}}" to the current caret location. You cannot have more than 1 "{{AssetsPath}}" in your path.</value>
     </data>
     <data name="TooltipBoxToggle" xml:space="preserve">
-        <value>Toggle between Face and Box data. Purple areas means that data switches between Normal and Shiny there.</value>
+        <value>Toggle between Face and Box data. Purple areas means that data switches between Normal and Shiny.</value>
     </data>
     <data name="TooltipBoxAnimationFrame" xml:space="preserve">
         <value>Choose the animation frame to preview.
