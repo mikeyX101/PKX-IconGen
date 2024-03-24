@@ -34,7 +34,7 @@ namespace PKXIconGen.Core.Tests
             int value = 50;
             int expectedResult = 125;
 
-            Assert.AreEqual(expectedResult, Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
+            Assert.That(Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value), Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace PKXIconGen.Core.Tests
             uint value = 50;
             uint expectedResult = 125;
 
-            Assert.AreEqual(expectedResult, Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
+            Assert.That(Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value), Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace PKXIconGen.Core.Tests
             float value = 0.50f;
             float expectedResult = 50;
 
-            Assert.AreEqual(expectedResult, Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value));
+            Assert.That(Utils.ConvertRange(rangeStart, rangeEnd, newRangeStart, newRangeEnd, value), Is.EqualTo(expectedResult));
         }
     }
 }

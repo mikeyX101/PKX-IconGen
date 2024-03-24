@@ -26,10 +26,10 @@ namespace PKXIconGen.Core.Tests.Data
     {
         private static void ColorShouldEqualValues(ref Color color, float expectedR, float expectedG, float expectedB, float expectedA, string assertMessage)
         {
-            Assert.AreEqual(expectedR, color.Red, assertMessage + ", Red");
-            Assert.AreEqual(expectedG, color.Green, assertMessage + ", Green");
-            Assert.AreEqual(expectedB, color.Blue, assertMessage + ", Blue");
-            Assert.AreEqual(expectedA, color.Alpha, assertMessage + ", Alpha");
+            Assert.That(color.Red, Is.EqualTo(expectedR), assertMessage + ", Red");
+            Assert.That(color.Green, Is.EqualTo(expectedG), assertMessage + ", Green");
+            Assert.That(color.Blue, Is.EqualTo(expectedB), assertMessage + ", Blue");
+            Assert.That(color.Alpha, Is.EqualTo(expectedA), assertMessage + ", Alpha");
         }
 
         [Test, Order(1)]
@@ -137,44 +137,44 @@ namespace PKXIconGen.Core.Tests.Data
         public void ColorToRgbaUInt()
         {
             Color white = new(0, 0, 0, 1);
-            Assert.AreEqual(0x000000FF, white.ToRgbaUInt());
+            Assert.That(white.ToRgbaUInt(), Is.EqualTo(0x000000FF));
             Color black = new(1, 1, 1, 1);
-            Assert.AreEqual(0xFFFFFFFF, black.ToRgbaUInt());
+            Assert.That(black.ToRgbaUInt(), Is.EqualTo(0xFFFFFFFF));
             Color red = new(1, 0, 0, 1);
-            Assert.AreEqual(0xFF0000FF, red.ToRgbaUInt());
+            Assert.That(red.ToRgbaUInt(), Is.EqualTo(0xFF0000FF));
             Color green = new(0, 1, 0, 1);
-            Assert.AreEqual(0x00FF00FF, green.ToRgbaUInt());
+            Assert.That(green.ToRgbaUInt(), Is.EqualTo(0x00FF00FF));
             Color blue = new(0, 0, 1, 1);
-            Assert.AreEqual(0x0000FFFF, blue.ToRgbaUInt());
+            Assert.That(blue.ToRgbaUInt(), Is.EqualTo(0x0000FFFF));
 
             Color teal = new(0.40000004f, 1, 0.8000001f, 1);
-            Assert.AreEqual(0x66FFCCFF, teal.ToRgbaUInt());
+            Assert.That(teal.ToRgbaUInt(), Is.EqualTo(0x66FFCCFF));
             Color tealAlpha = new(0.40000004f, 1, 0.8000001f, 0);
-            Assert.AreEqual(0x66FFCC00, tealAlpha.ToRgbaUInt());
+            Assert.That(tealAlpha.ToRgbaUInt(), Is.EqualTo(0x66FFCC00));
             Color tealSemiAlpha = new(0.40000004f, 1, 0.8000001f, 0.509803951f);
-            Assert.AreEqual(0x66FFCC82, tealSemiAlpha.ToRgbaUInt());
+            Assert.That(tealSemiAlpha.ToRgbaUInt(), Is.EqualTo(0x66FFCC82));
         }
         
         [Test, Order(6)]
         public void ColorToArgbUInt()
         {
             Color white = new(0, 0, 0, 1);
-            Assert.AreEqual(0xFF000000, white.ToArgbUInt());
+            Assert.That(white.ToArgbUInt(), Is.EqualTo(0xFF000000));
             Color black = new(1, 1, 1, 1);
-            Assert.AreEqual(0xFFFFFFFF, black.ToArgbUInt());
+            Assert.That(black.ToArgbUInt(), Is.EqualTo(0xFFFFFFFF));
             Color red = new(1, 0, 0, 1);
-            Assert.AreEqual(0xFFFF0000, red.ToArgbUInt());
+            Assert.That(red.ToArgbUInt(), Is.EqualTo(0xFFFF0000));
             Color green = new(0, 1, 0, 1);
-            Assert.AreEqual(0xFF00FF00, green.ToArgbUInt());
+            Assert.That(green.ToArgbUInt(), Is.EqualTo(0xFF00FF00));
             Color blue = new(0, 0, 1, 1);
-            Assert.AreEqual(0xFF0000FF, blue.ToArgbUInt());
+            Assert.That(blue.ToArgbUInt(), Is.EqualTo(0xFF0000FF));
 
             Color teal = new(0.40000004f, 1, 0.8000001f, 1);
-            Assert.AreEqual(0xFF66FFCC, teal.ToArgbUInt());
+            Assert.That(teal.ToArgbUInt(), Is.EqualTo(0xFF66FFCC));
             Color tealAlpha = new(0.40000004f, 1, 0.8000001f, 0);
-            Assert.AreEqual(0x0066FFCC, tealAlpha.ToArgbUInt());
+            Assert.That(tealAlpha.ToArgbUInt(), Is.EqualTo(0x0066FFCC));
             Color tealSemiAlpha = new(0.40000004f, 1, 0.8000001f, 0.509803951f);
-            Assert.AreEqual(0x8266FFCC, tealSemiAlpha.ToArgbUInt());
+            Assert.That(tealSemiAlpha.ToArgbUInt(), Is.EqualTo(0x8266FFCC));
         }
     }
 }
