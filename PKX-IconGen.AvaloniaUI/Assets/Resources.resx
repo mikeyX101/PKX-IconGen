@@ -120,4 +120,10 @@ NOTE: CHANGING THE MODEL AFTER SETTING UP TEXTURES OR REMOVED OBJECTS WILL RESET
         <value>Choose the animation frame to preview.
 Pokemon Colosseum only uses the first frame.</value>
     </data>
+    <data name="TextureDownloaderInfo" xml:space="preserve">
+        <value>This will download the HD textures for Pokemon from my texture pack.
+The download is around 200MB. It is required for the HD built-ins.
+The textures will be installed in "{{AssetsPath}}/icon-gen/hd-mikeyx/".
+The download is "latest.zip" from the folder from the link below.</value>
+    </data>
 </root>

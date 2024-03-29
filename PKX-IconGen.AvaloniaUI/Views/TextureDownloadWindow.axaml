@@ -20,6 +20,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
+        xmlns:assets="clr-namespace:PKXIconGen.AvaloniaUI.Assets"
         xmlns:core_serv="using:PKXIconGen.Core.Services"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="285"
         x:Class="PKXIconGen.AvaloniaUI.Views.TextureDownloadWindow"
@@ -27,7 +28,7 @@
         Title="Texture Download"
         Icon="/Assets/gen-icon-bright.png"
         
-        Width="500" Height="285" CanResize="False">
+        MinWidth="500" MinHeight="285" Width="500" Height="285" CanResize="False">
   <Panel>
     <ExperimentalAcrylicBorder IsHitTestVisible="False">
       <ExperimentalAcrylicBorder.Material>
@@ -40,12 +41,7 @@
     </ExperimentalAcrylicBorder>
     <Panel Margin="16">
       <StackPanel Orientation="Vertical">
-        <TextBlock LineHeight="25">
-This will download the HD textures for Pokemon from my texture pack.
-The download is around 200MB. It is required for the HD built-ins.
-The textures will be installed in "{{AssetsPath}}/icon-gen/hd-mikeyx/".
-The download is "latest.zip" from the folder from the link below.
-        </TextBlock>
+        <TextBlock LineHeight="25" Text="{x:Static assets:Resources.TextureDownloaderInfo}" />
         <TextBox Margin="8" IsReadOnly="True" Text="{x:Static core_serv:TexturesInstaller.MEGA_FOLDER_URL}"></TextBox>
         <TextBlock Margin="0,8,8,8" HorizontalAlignment="Center" Text="{Binding StatusText}" />
         <ProgressBar Margin="8" Height="20" VerticalAlignment="Bottom" Minimum="0" Maximum="100" Value="{Binding Progress}" Width="400" />

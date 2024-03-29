@@ -12,7 +12,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.3.4</AssemblyVersion>
+    <AssemblyVersion>0.3.5</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <Version>$(AssemblyVersion)</Version>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
@@ -44,6 +44,8 @@
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaResource Remove="Assets\*.psd" />
     <AvaloniaResource Remove="Assets\*.xcf" />
+    <AvaloniaResource Remove="Assets\*.resx" />
+    <AvaloniaResource Remove="Assets\*.Designer.cs" />
     <AvaloniaXaml Remove="Data\**" />
     <Compile Remove="Data\**" />
     <Compile Remove="PKX-IconGen.Core\**" />
@@ -72,9 +74,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <AvaloniaResource Update="Assets\Resources.resx">
-      <Generator>PublicResxFileCodeGenerator</Generator>
-    </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.0.10" />

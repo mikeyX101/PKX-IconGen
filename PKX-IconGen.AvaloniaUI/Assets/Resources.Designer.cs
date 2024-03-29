@@ -146,5 +146,11 @@ namespace PKXIconGen.AvaloniaUI.Assets {
                 return ResourceManager.GetString("TooltipBoxAnimationFrame", resourceCulture);
             }
         }
+        
+        public static string TextureDownloaderInfo {
+            get {
+                return ResourceManager.GetString("TextureDownloaderInfo", resourceCulture);
+            }
+        }
     }
 }
