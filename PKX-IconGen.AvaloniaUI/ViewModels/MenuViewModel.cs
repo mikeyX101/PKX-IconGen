@@ -181,7 +181,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             Assembly uiAssembly = Assembly.GetExecutingAssembly();
             Assembly avaloniaAssembly = Assembly.Load("Avalonia");
 
-            await DialogHelper.ShowDialog("/Assets/gen-icon-rounded-x512.png",
+            await DialogHelper.ShowDialog("/Assets/gen-icon.png",
                 DialogButtons.Ok,
                 $"""
                  PKX-IconGen by mikeyX

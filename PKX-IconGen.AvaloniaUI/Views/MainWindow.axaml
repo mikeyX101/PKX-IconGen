@@ -31,7 +31,7 @@
         x:Class="PKXIconGen.AvaloniaUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel" x:CompileBindings="True"
         
-        Icon="/Assets/gen-icon.ico"
+        Icon="/Assets/gen-icon-bright.png"
         Title="PKX-IconGen"
         
         TransparencyLevelHint="AcrylicBlur"
@@ -65,7 +65,7 @@
     
     <DockPanel>
       <StackPanel IsVisible="{Binding IsWindows, Mode=OneTime}" Orientation="Horizontal" HorizontalAlignment="Left" Height="32" Margin="8,0,0,0" DockPanel.Dock="Top">
-        <Image Source="/Assets/gen-icon.ico" Width="16" Margin="0,0,8,0" />
+        <Image Source="/Assets/gen-icon-bright.png" Width="16" Margin="0,0,8,0" />
         <TextBlock VerticalAlignment="Center">PKX-IconGen</TextBlock>
       </StackPanel>
       <views:MenuView DataContext="{Binding MenuVM}" DockPanel.Dock="Top" />

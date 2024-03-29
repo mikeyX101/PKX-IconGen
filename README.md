@@ -1,5 +1,5 @@
 <div style="text-align: center">
-    <img src="https://user-images.githubusercontent.com/67592217/171957222-fc664c5a-d3ba-4e9c-b6d6-cbffc1149ca4.png" style="text-align: center" alt="Banner" width="300" height="150">
+    <img src="https://repository-images.githubusercontent.com/442831354/787e7cc0-9251-4e7a-ac1a-98c325931aa2" style="text-align: center" alt="Banner" width="300" height="150">
     <br />
     <img src="https://github.com/mikeyX101/PKX-IconGen/assets/67592217/a6b6b709-33c8-4a70-bc94-abfcf502ac4d" alt="PKX-IconGen" width="800">
 </div>
@@ -18,7 +18,7 @@ If you want to use the Blender scenes outside of PKX-IconGen, you can still save
 ## Download
 #### Requirements
 - Blender 3.6.X LTS or higher ([found here](https://www.blender.org/download/)) (**Blender 2.93 LTS and up should work, but has not been tested in a while**)
-- .NET 7 Runtime ([found here](https://dotnet.microsoft.com/en-us/download))
+- .NET 8 Runtime ([found here](https://dotnet.microsoft.com/en-us/download))
 
 See the [release](https://github.com/mikeyX101/PKX-IconGen/releases) section for downloads. **(No MacOS builds are available for the time being)**
 

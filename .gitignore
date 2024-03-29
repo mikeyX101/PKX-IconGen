@@ -453,6 +453,8 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 
+[Pp]ublish/
+
 # Blender autosaves and debuging .blend files, we need .blend files though
 *.blend1
 

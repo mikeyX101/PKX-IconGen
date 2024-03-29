@@ -26,7 +26,7 @@
         x:Class="PKXIconGen.AvaloniaUI.Views.DialogWindow"
         x:DataType="vm:DialogWindowViewModel" x:CompileBindings="True"
         Title="{Binding DialogTitle}"
-        Icon="/Assets/gen-icon.ico"
+        Icon="/Assets/gen-icon-bright.png"
         
         Width="500" Height="{Binding Height}" CanResize="False" >
   <Window.Resources>

@@ -12,3 +12,6 @@ cp "$project"../PKX-IconGen.Python/data/*.py "${output}Python/data";
 cp "$project"../PKX-IconGen.Python/*.py "${output}Python";
 cp "$project"../PKX-IconGen.Python/template.blend "${output}Python";
 cp "$project"../PKX-IconGen.Python/importer/* "${output}Python/importer";
+
+cp "$project"../PKX-IconGen.AvaloniaUI/Assets/gen-icon.png "${output}";
+cp "$project"../PKX-IconGen.AvaloniaUI/Assets/gen-icon-bright.png "${output}";

@@ -25,7 +25,7 @@
         x:Class="PKXIconGen.AvaloniaUI.Views.TextureDownloadWindow"
         x:DataType="vm:TextureDownloadWindowViewModel" x:CompileBindings="True"
         Title="Texture Download"
-        Icon="/Assets/gen-icon.ico"
+        Icon="/Assets/gen-icon-bright.png"
         
         Width="500" Height="285" CanResize="False">
   <Panel>

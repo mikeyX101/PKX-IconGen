@@ -30,7 +30,7 @@
         x:Class="PKXIconGen.AvaloniaUI.Views.PokemonRenderDataWindow"
         x:DataType="vm:PokemonRenderDataWindowViewModel" x:CompileBindings="True"
         
-        Icon="/Assets/gen-icon.ico"
+        Icon="/Assets/gen-icon-bright.png"
         Title="{Binding Title, Mode=OneTime}"
         
         TransparencyLevelHint="AcrylicBlur"
