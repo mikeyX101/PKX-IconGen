@@ -24,6 +24,7 @@ import bpy_extras.view3d_utils
 
 import common
 from data.color import Color
+from data.data_type import DataType
 from data.light import Light, LightType
 from data.material import Material
 from data.object_shading import ObjectShading
@@ -41,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 2),
+    "version": (0, 3, 3),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -132,13 +133,13 @@ class PKXResetDeletedOperator(bpy.types.Operator):
 
 
 class PKXCopyToOperator(bpy.types.Operator):
-    """Copy current data (animation, camera, light, removed objects, textures, shading) to another mode. Note that Face Normal and Face Secondary only have different cameras and lights. Some data like textures and removed objects cannot be copied if there's a shiny model"""
+    """Copy selected data from the current mode to another mode."""
     bl_idname = "wm.pkx_copy_to"
-    bl_label = "Copy"
+    bl_label = "Copy to"
 
     @classmethod
     def poll(cls, context):
-        return context.scene.copy_to is not None
+        return context.scene.copy_mode != "" and len(context.scene.items_to_copy) != 0
 
     def execute(self, context):
         scene = context.scene
@@ -147,28 +148,67 @@ class PKXCopyToOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
+        items_to_copy = DataType.from_blender_flags(scene.items_to_copy)
         copy_from: EditMode = get_edit_mode(scene)
-        copy_to: EditMode = EditMode[scene.copy_to]
+        copy_to: EditMode = EditMode[scene.copy_mode]
 
-        source: RenderData = prd.get_mode_render(copy_from)
-        target: RenderData = prd.get_mode_render(copy_to)
+        copy_prd_data(copy_from, copy_to, items_to_copy)
 
+        return {'FINISHED'}
+
+
+class PKXCopyFromOperator(bpy.types.Operator):
+    """Copy selected data from another mode to the current mode."""
+    bl_idname = "wm.pkx_copy_from"
+    bl_label = "Copy from"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.copy_mode != "" and len(context.scene.items_to_copy) != 0
+
+    def execute(self, context):
+        scene = context.scene
+
+        if scene.advanced_camera_editing:
+            sync_camera_to_props(context)
+        sync_props_to_prd(context)
+
+        items_to_copy = DataType.from_blender_flags(scene.items_to_copy)
+        copy_from: EditMode = EditMode[scene.copy_mode]
+        copy_to: EditMode = get_edit_mode(scene)
+
+        copy_prd_data(copy_from, copy_to, items_to_copy)
+
+        # Current mode gets changed, so we need to sync up the props and the scene
+        sync_prd_to_props(context)
+        sync_props_to_scene(context)
+
+        return {'FINISHED'}
+
+
+def copy_prd_data(copy_from: EditMode, copy_to: EditMode, data_flags: DataType):
+    source: RenderData = prd.get_mode_render(copy_from)
+    target: RenderData = prd.get_mode_render(copy_to)
+
+    if DataType.ANIMATION in data_flags:
         target.animation_pose = source.animation_pose
         target.animation_frame = source.animation_frame
 
+    if DataType.CAMERA_LIGHT in data_flags:
         source_camera: Camera = source.secondary_camera if copy_from in EditMode.ANY_FACE_SECONDARY else source.main_camera
         if copy_to in EditMode.ANY_FACE_MAIN or copy_to in EditMode.ANY_BOX:
             target.main_camera = copy.deepcopy(source_camera)
         elif copy_to in EditMode.ANY_FACE_SECONDARY:
             target.secondary_camera = copy.deepcopy(source_camera)
 
-        if prd.shiny.model is None:
+    if prd.shiny.model is None:
+        if DataType.REMOVED_OBJECTS in data_flags:
             target.removed_objects = source.removed_objects.copy()
+        if DataType.TEXTURES in data_flags:
             target.textures = source.textures.copy()
 
+    if DataType.SHADING in data_flags:
         target.shading = source.shading
-
-        return {'FINISHED'}
 
 
 # From operator_modal_view3d_raycast.py
@@ -330,8 +370,10 @@ def get_edit_mode_str(scene) -> str:
     else:
         raise Exception(f"Unknown main mode: {scene.main_mode}")
 
+
 def get_edit_mode(scene) -> EditMode:
     return EditMode[get_edit_mode_str(scene)]
+
 
 def get_camera():
     return bpy.data.objects["PKXIconGen_Camera"]
@@ -775,6 +817,14 @@ def sync_props_to_prd(context):
 
 
 # Props
+data_type_defs = {
+    'REMOVED_OBJECTS': ('REMOVED_OBJECTS', "Removed Objects", "Copy Removed Objects.", DataType.REMOVED_OBJECTS.value),
+    'ANIMATION': ('ANIMATION', "Animation", "Copy Animation Pose and Frame.", DataType.ANIMATION.value),
+    'CAMERA_LIGHT': ('CAMERA_LIGHT', "Camera/Light", "Copy Camera, Focus Point and Light.", DataType.CAMERA_LIGHT.value),
+    'TEXTURES': ('TEXTURES', "Textures", "Copy Textures.", DataType.TEXTURES.value),
+    'SHADING': ('SHADING', "Shading", "Copy Shading.", DataType.SHADING.value)
+}
+
 edit_mode_defs = {
     'FACE_NORMAL': ('FACE_NORMAL', "Normal", "Regular face icon"),
     'FACE_NORMAL_SECONDARY': ('FACE_NORMAL_SECONDARY', "Normal Secondary", "Regular secondary side for asymmetric Pokemon like Zangoose"),
@@ -798,7 +848,7 @@ MAINPROPS = [
              ('FACE', "Face", "Change Face icons"),
              ('BOX', "Box", "Change Box Icons")
          ],
-         options={'ANIMATABLE'},
+         
          update=update_main_mode
      )),
     ('face_mode',
@@ -811,7 +861,7 @@ MAINPROPS = [
             edit_mode_defs["FACE_SHINY"],
             edit_mode_defs["FACE_SHINY_SECONDARY"]
          ],
-         options={'ANIMATABLE'},
+         
          update=update_mode
      )),
     ('box_mode',
@@ -826,7 +876,7 @@ MAINPROPS = [
             edit_mode_defs["BOX_THIRD"],
             edit_mode_defs["BOX_THIRD_SHINY"]
          ],
-         options={'ANIMATABLE'},
+         
          update=update_mode
      )),
     ('secondary_enabled',
@@ -844,7 +894,7 @@ ANIMATIONPROPS = [
          description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
          min=0,
          max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
-         options={'ANIMATABLE'},
+         
          update=update_animation_pose
      )),
     ('animation_frame',
@@ -855,7 +905,7 @@ ANIMATIONPROPS = [
          max=1000,
          soft_min=0,
          soft_max=500,
-         options={'ANIMATABLE'},
+         
          update=update_animation_frame
      ))
 ]
@@ -868,7 +918,7 @@ CAMERAPROPS = [
          subtype="XYZ",
          unit="NONE",
          default=(14, -13.5, 5.5),
-         options={'ANIMATABLE'},
+         
          update=update_camera_pos
      )),
     ('focus',
@@ -878,7 +928,7 @@ CAMERAPROPS = [
          subtype="XYZ",
          unit="NONE",
          default=(0, 0, 0),
-         options={'ANIMATABLE'},
+         
          update=update_focus
      )),
     ('is_ortho',
@@ -886,7 +936,7 @@ CAMERAPROPS = [
          name='Use Orthographic Camera',
          description="Use an orthographic camera instead of a perspective camera",
          default=True,
-         options={'ANIMATABLE'},
+         
          update=update_camera_is_ortho
      )),
     ('fov',
@@ -896,7 +946,7 @@ CAMERAPROPS = [
          subtype="ANGLE",
          min=0,
          default=40,
-         options={'ANIMATABLE'},
+         
          update=update_camera_fov
      )),
     ('ortho_scale',
@@ -905,7 +955,7 @@ CAMERAPROPS = [
          description="\"Zoom\" of an orthographic camera",
          min=0,
          default=7.31429,
-         options={'ANIMATABLE'},
+         
          update=update_camera_ortho_scale
      )),
     ('advanced_camera_editing',
@@ -913,7 +963,7 @@ CAMERAPROPS = [
          name="Advanced Camera Editing",
          description="Allows editing the camera within the 3D view. This will disable the ability to remove objects, go back to the normal mode to do so",
          default=False,
-         options={'ANIMATABLE'},
+         
          update=update_advanced_camera_editing
      ))
 ]
@@ -930,7 +980,7 @@ LIGHTPROPS = [
              ('AREA', "Area", "Area light"),
          ],
          default=3,  # Area
-         options={'ANIMATABLE'},
+         
          update=update_light_type
      )),
     ('light_strength',
@@ -941,7 +991,7 @@ LIGHTPROPS = [
          step=125,
          default=125,
          min=0,
-         options={'ANIMATABLE'},
+         
          update=update_light_strength
      )),
     ('light_color',
@@ -952,7 +1002,7 @@ LIGHTPROPS = [
          default=(1, 1, 1),
          min=0,
          max=1,
-         options={'ANIMATABLE'},
+         
          update=update_light_color
      )),
     ('light_distance',
@@ -962,7 +1012,7 @@ LIGHTPROPS = [
          unit="NONE",
          default=5,
          min=0,
-         options={'ANIMATABLE'},
+         
          update=update_light_distance
      ))
 ]
@@ -998,7 +1048,7 @@ TEXTURESPROPS = [
          description="Texture search",
          type=bpy.types.Image,
          poll=poll_current_texture_image,
-         options={'ANIMATABLE'},
+         
          update=update_current_texture_image,
      )),
     ('custom_texture_path',
@@ -1007,7 +1057,7 @@ TEXTURESPROPS = [
          description="Path to texture used to replace the original one, must be on the same integer scale as the original texture: 1x, 2x, 3x, etc. {{AssetsPath}} can be used here",
          default="",
          subtype="FILE_PATH",
-         options={'ANIMATABLE'},
+         
          update=update_custom_texture_path,
      )),
     ('texture_material',
@@ -1016,7 +1066,7 @@ TEXTURESPROPS = [
          description="Material that uses the texture. Used for mapping",
          type=bpy.types.Material,
          poll=poll_texture_materials,
-         options={'ANIMATABLE'},
+         
          update=update_texture_material,
      )),
     ('texture_mapping',
@@ -1029,7 +1079,7 @@ TEXTURESPROPS = [
          default=(0, 0),
          min=-50,
          max=50,
-         options={'ANIMATABLE'},
+         
          update=update_texture_mapping
      ))
 ]
@@ -1101,7 +1151,7 @@ SHINYPROPS = [
     ('color2_a',
      bpy.props.IntProperty(
          name="A",
-         description="Alpha Color2, changing this is not recommanded",
+         description="Alpha Color2, changing this is not recommended",
          min=0,
          max=255,
          default=127,
@@ -1110,7 +1160,20 @@ SHINYPROPS = [
 ]
 
 
-def get_copy_to_items(self, context) -> list[Optional[tuple]]:
+def get_data_type_items(self, context) -> set[Optional[tuple]]:
+    items: set[Optional[tuple]] = set()
+    if prd.shiny.model is None:
+        items.add(data_type_defs['REMOVED_OBJECTS'])
+    items.add(data_type_defs['ANIMATION'])
+    items.add(data_type_defs['CAMERA_LIGHT'])
+    if prd.shiny.model is None:
+        items.add(data_type_defs['TEXTURES'])
+    items.add(data_type_defs['SHADING'])
+
+    return items
+
+
+def get_copy_mode_items(self, context) -> list[Optional[tuple]]:
     items: list[Optional[tuple]] = [
         edit_mode_defs['FACE_NORMAL']
     ]
@@ -1144,16 +1207,23 @@ ADVANCEDPROPS = [
              ('SMOOTH', "Smooth", "Smooth shading, can give better results for more round Pokemon, can cause visual \"weirdness\".")
          ],
          default=0,  # Flat
-         options={'ANIMATABLE'},
+         
          update=update_shading
      )),
 
-    ('copy_to',
+    ('items_to_copy',
      bpy.props.EnumProperty(
-         name="Copy to",
-         description="Copy data to, see button tooltip for info",
-         items=get_copy_to_items,
-         options={'ANIMATABLE'}
+         name="Copy items",
+         description="Item to copy to target, hold shift to multi-select",
+         items=get_data_type_items,
+         options={'ENUM_FLAG'},
+         default=DataType.ALL.value
+     )),
+    ('copy_mode',
+     bpy.props.EnumProperty(
+         name="Copy to/from",
+         description="Copy data to or from, see button tooltips for info",
+         items=get_copy_mode_items
      ))
 ]
 
@@ -1319,7 +1389,7 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
     bl_parent_id = 'VIEW3D_PT_PKX_MAIN_PANEL'
     bl_idname = 'VIEW3D_PT_PKX_SHINY_PANEL'
     bl_label = 'Shiny'
-    bl_options = {'HEADER_LAYOUT_EXPAND'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -1361,8 +1431,13 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
 
         col.separator()
 
-        col.prop(context.scene, "copy_to")
-        col.operator(PKXCopyToOperator.bl_idname)
+        col.label(text="Copy Tool")
+        row = col.row()
+        row.prop(context.scene, "items_to_copy", expand=True)
+        col.prop(context.scene, "copy_mode")
+        row = col.row()
+        row.operator(PKXCopyToOperator.bl_idname)
+        row.operator(PKXCopyFromOperator.bl_idname)
 
 
 def init_simple_subpanel(self, context, props):
@@ -1393,6 +1468,7 @@ CLASSES = [
     PKXResetDeletedOperator,
     PKXReplaceByAssetsPathOperator,
     PKXCopyToOperator,
+    PKXCopyFromOperator,
     PKXCameraFocusOperator,
     PKXSelectCamera,
     PKXSelectFocusPoint
