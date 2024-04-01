@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 3),
+    "version": (0, 3, 4),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -133,7 +133,7 @@ class PKXResetDeletedOperator(bpy.types.Operator):
 
 
 class PKXCopyToOperator(bpy.types.Operator):
-    """Copy selected data from the current mode to another mode."""
+    """Copy selected data from the current mode to another mode"""
     bl_idname = "wm.pkx_copy_to"
     bl_label = "Copy to"
 
@@ -158,7 +158,7 @@ class PKXCopyToOperator(bpy.types.Operator):
 
 
 class PKXCopyFromOperator(bpy.types.Operator):
-    """Copy selected data from another mode to the current mode."""
+    """Copy selected data from another mode to the current mode"""
     bl_idname = "wm.pkx_copy_from"
     bl_label = "Copy from"
 
@@ -818,11 +818,11 @@ def sync_props_to_prd(context):
 
 # Props
 data_type_defs = {
-    'REMOVED_OBJECTS': ('REMOVED_OBJECTS', "Removed Objects", "Copy Removed Objects.", DataType.REMOVED_OBJECTS.value),
-    'ANIMATION': ('ANIMATION', "Animation", "Copy Animation Pose and Frame.", DataType.ANIMATION.value),
-    'CAMERA_LIGHT': ('CAMERA_LIGHT', "Camera/Light", "Copy Camera, Focus Point and Light.", DataType.CAMERA_LIGHT.value),
-    'TEXTURES': ('TEXTURES', "Textures", "Copy Textures.", DataType.TEXTURES.value),
-    'SHADING': ('SHADING', "Shading", "Copy Shading.", DataType.SHADING.value)
+    'REMOVED_OBJECTS': ('REMOVED_OBJECTS', "Removed Objects", "Copy Removed Objects", DataType.REMOVED_OBJECTS.value),
+    'ANIMATION': ('ANIMATION', "Animation", "Copy Animation Pose and Frame", DataType.ANIMATION.value),
+    'CAMERA_LIGHT': ('CAMERA_LIGHT', "Camera/Light", "Copy Camera, Focus Point and Light", DataType.CAMERA_LIGHT.value),
+    'TEXTURES': ('TEXTURES', "Textures", "Copy Textures", DataType.TEXTURES.value),
+    'SHADING': ('SHADING', "Shading", "Copy Shading", DataType.SHADING.value)
 }
 
 edit_mode_defs = {
@@ -831,8 +831,8 @@ edit_mode_defs = {
     'FACE_SHINY': ('FACE_SHINY', "Shiny", "Shiny face icon"),
     'FACE_SHINY_SECONDARY': ('FACE_SHINY_SECONDARY', "Shiny Secondary", "Shiny secondary side for asymmetric Pokemon like Zangoose"),
 
-    'BOX_FIRST': ('BOX_FIRST', "First", "First box icon. Colosseum uses only this frame"),
-    'BOX_FIRST_SHINY': ('BOX_FIRST_SHINY', "First Shiny", "First shiny box icon. Colosseum uses only this frame"),
+    'BOX_FIRST': ('BOX_FIRST', "First", "First box icon. Colosseum only uses this frame"),
+    'BOX_FIRST_SHINY': ('BOX_FIRST_SHINY', "First Shiny", "First shiny box icon. Colosseum only uses this frame"),
     'BOX_SECOND': ('BOX_SECOND', "Second", "Second box icon"),
     'BOX_SECOND_SHINY': ('BOX_SECOND_SHINY', "Second Shiny", "Second shiny box icon"),
     'BOX_THIRD': ('BOX_THIRD', "Third", "Third box icon"),
@@ -882,8 +882,7 @@ MAINPROPS = [
     ('secondary_enabled',
      bpy.props.BoolProperty(
          name="Enable secondary cameras",
-         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose",
-         options={'ANIMATABLE'}
+         description="Enable the secondary cameras for asymmetric Pokemon like Zangoose"
      ))
 ]
 
@@ -1192,7 +1191,9 @@ def get_copy_mode_items(self, context) -> list[Optional[tuple]]:
     items.append(edit_mode_defs['BOX_THIRD'])
     items.append(edit_mode_defs['BOX_THIRD_SHINY'])
 
-    items.remove(edit_mode_defs[get_edit_mode_str(context.scene)])
+    edit_mode_str = get_edit_mode_str(context.scene)
+    if edit_mode_defs[edit_mode_str] in items:
+        items.remove(edit_mode_defs[edit_mode_str])
 
     return items
 
