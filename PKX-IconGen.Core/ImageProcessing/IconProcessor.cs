@@ -150,7 +150,7 @@ namespace PKXIconGen.Core.ImageProcessing
             {
                 token?.ThrowIfCancellationRequested();
                 
-                Image[] secondaryImages = await Task.WhenAll(faceTasks[3], faceTasks[4]);
+                Image[] secondaryImages = await Task.WhenAll(faceTasks[2], faceTasks[3]);
                 using Image secondary = secondaryImages[0];
                 using Image shinySecondary = secondaryImages[1];
                 secondary.Mutate(ctx => ctx.AddImageBottom(shinySecondary));

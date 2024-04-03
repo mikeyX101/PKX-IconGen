@@ -166,7 +166,7 @@ namespace PKXIconGen.Core.Services
 
                     if (!string.IsNullOrWhiteSpace(OptionalArguments))
                     {
-                        args.Add(OptionalArguments);
+                        args.Add(OptionalArguments.Split(' '));
                     }
 
                     args
