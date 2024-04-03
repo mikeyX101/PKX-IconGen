@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 4),
+    "version": (0, 3, 5),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -205,7 +205,7 @@ def copy_prd_data(copy_from: EditMode, copy_to: EditMode, data_flags: DataType):
         if DataType.REMOVED_OBJECTS in data_flags:
             target.removed_objects = source.removed_objects.copy()
         if DataType.TEXTURES in data_flags:
-            target.textures = source.textures.copy()
+            target.textures = copy.deepcopy(source.textures)
 
     if DataType.SHADING in data_flags:
         target.shading = source.shading
