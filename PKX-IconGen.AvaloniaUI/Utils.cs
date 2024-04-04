@@ -46,11 +46,11 @@ namespace PKXIconGen.AvaloniaUI
                 url = url.Replace("&", "^&");
                 Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
             }
-            else if (OperatingSystem.IsMacOS())
+            else if (OperatingSystem.IsLinux())
             {
                 Process.Start("xdg-open", url);
             }
-            else if (OperatingSystem.IsLinux())
+            else if (OperatingSystem.IsMacOS())
             {
                 Process.Start("open", url);
             }

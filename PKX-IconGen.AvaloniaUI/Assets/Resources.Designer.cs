@@ -51,9 +51,9 @@ namespace PKXIconGen.AvaloniaUI.Assets {
             }
         }
         
-        public static string TooltipOptionnalArguments {
+        public static string TooltipOptionalArguments {
             get {
-                return ResourceManager.GetString("TooltipOptionnalArguments", resourceCulture);
+                return ResourceManager.GetString("TooltipOptionalArguments", resourceCulture);
             }
         }
         

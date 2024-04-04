@@ -81,7 +81,7 @@
 
         <!--Blender Optional Arguments-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Blender Args:</TextBlock>
-        <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3" ToolTip.Tip="{x:Static assets:Resources.TooltipOptionnalArguments}" />
+        <TextBox IsEnabled="{Binding !CurrentlyRendering}" Text="{Binding BlenderOptionalArguments, Mode=TwoWay}" Height="32" Grid.Column="1" Grid.Row="3" ToolTip.Tip="{x:Static assets:Resources.TooltipOptionalArguments}" />
 
         <!--Output Path-->
         <TextBlock Margin="8" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="0" Grid.Row="4">Output Path:</TextBlock>

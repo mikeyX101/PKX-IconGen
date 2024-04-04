@@ -30,8 +30,8 @@ On MacOS: The default path is included, if any aliases have been made for Blende
 On Linux: Path to the Blender executable. It is possible to specify a link or an application name accessible from PATH like "blender" or "blender_293".
         </value>
     </data>
-    <data name="TooltipOptionnalArguments" xml:space="preserve">
-        <value>Additionnal optional arguments to pass to Blender. You normally do not need to input anything here.
+    <data name="TooltipOptionalArguments" xml:space="preserve">
+        <value>Additional optional arguments to pass to Blender. You normally do not need to input anything here.
 
 USE ONLY IF YOU KNOW WHAT YOU'RE DOING.</value>
     </data>
