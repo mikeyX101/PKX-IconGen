@@ -50,11 +50,11 @@ def apply_patches_by_model_name(model_path: Optional[str]):
     elif "dumbber" in model_name:  # Beldum, eye appears desaturated
         _set_mat_mix_factor_to("Material.001", "TEX_COLORMAP_BLEND 0.8999999761581421", 1)
         print("Patched Beldum")
-    elif "kagebouzu" in model_name: # !!Shuppet, fix body colors
+    elif "kagebouzu" in model_name:  # !!Shuppet, fix body colors
         from patches import shuppet
         shuppet.patch()
         print("Patched !!Shuppet")
-    elif "ghos.pkx" in model_name: # Ghastly, make aura track camera like a sprite
+    elif "ghos.pkx" in model_name:  # Ghastly, make aura track camera like a sprite
         from patches import ghastly
         ghastly.patch()
         print("Patched Ghastly")
