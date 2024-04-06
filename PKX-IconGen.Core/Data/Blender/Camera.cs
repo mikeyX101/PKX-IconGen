@@ -86,7 +86,7 @@ namespace PKXIconGen.Core.Data.Blender
         public static Camera GetDefaultCamera(RenderTarget target) => target switch
         {
             RenderTarget.Face => new Camera(new Vector3(14f, -13.5f, 5.5f), new Vector3(0f, 0f, 0f), 40f, true, 7.31429f, Light.GetDefaultLight(target)),
-            RenderTarget.Box => new Camera(new Vector3(31.51f, -37.49f, 33.89f), new Vector3(0f, -1.75f, 6.80f), 36f, true, 36.86f, Light.GetDefaultLight(target)),
+            RenderTarget.Box => new Camera(new Vector3(31.51f, -37.49f, 33.89f), new Vector3(0f, -1.75f, 6.80f), 24f, false, 36.86f, Light.GetDefaultLight(target)),
             _ => throw new ArgumentException("Unknown RenderTarget.", nameof(target))
         };
             

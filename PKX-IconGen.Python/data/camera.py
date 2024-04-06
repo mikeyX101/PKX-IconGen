@@ -76,8 +76,8 @@ class Camera(object):
             camera = Camera(
                 Vector3(31.51, -37.49, 33.89),
                 Vector3(0, -1.75, 6.80),
-                True,
-                36,
+                False,
+                24,
                 36.86,
                 Light.default(target)
             )
