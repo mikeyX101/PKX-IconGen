@@ -25,7 +25,7 @@ import bpy
 from typing import List, Optional, Final
 
 import blender_compat
-from patches import apply_patches_by_model_name
+from patcher import apply_patches_by_model_name
 from data.edit_mode import EditMode
 from data.object_shading import ObjectShading
 from data.pokemon_render_data import PokemonRenderData

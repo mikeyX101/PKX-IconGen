@@ -18,6 +18,9 @@
 from typing import Optional
 
 import blender_compat
+import bpy
+import bmesh
+import os
 
 """
 This file contains manual patches made for individual Pokemon to fix important broken features from models like mapping 
@@ -26,10 +29,6 @@ issues or tweaking values in shader nodes.
 To gradually remove after improvements are made to the importer
 Patches with a !! means the patch fixes issues, otherwise it's just specific improvements
 """
-
-import bmesh
-import bpy
-import os
 
 
 def apply_patches_by_model_name(model_path: Optional[str]):
@@ -42,12 +41,19 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _flip_outside_uv_x("Object.013")
         _set_mat_map_input_to("Material.005", "Mapping", blender_compat.mapping_in.scale, 1)
         print("Patched !!Meditite")
+    elif "donmel" in model_name:  # !!Numel, fix volcano map
+        _set_mat_map_loc_to("Material.007", "Mapping", 0.23, 0.13)
+        print("Patched !!Numel")
     elif "taneboh" in model_name:  # Seedot, put more strength in bump
         _set_mat_bump_strength_to("Material.003", "Bump", 0.2)
         print("Patched Seedot")
     elif "dumbber" in model_name:  # Beldum, eye appears desaturated
         _set_mat_mix_factor_to("Material.001", "TEX_COLORMAP_BLEND 0.8999999761581421", 1)
         print("Patched Beldum")
+    elif "kagebouzu" in model_name: # !!Shuppet, fix body colors
+        from patches import shuppet
+        shuppet.patch()
+        print("Patched !!Shuppet")
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -91,3 +97,11 @@ def _set_mat_mix_factor_to(mat_name: str, mixnode_name: str, fac: float):
     if tree is not None:
         tree.nodes[mixnode_name].inputs[blender_compat.mix_in.factor].default_value = fac
 
+
+def _set_mat_map_loc_to(mat_name: str, mapnode_name: str, x: float, y: float):
+    mat = bpy.data.materials[mat_name]
+    tree = mat.node_tree
+    if tree is not None:
+        xyz = tree.nodes[mapnode_name].inputs[blender_compat.mapping_in.location].default_value
+        xyz[0] = x
+        xyz[1] = y

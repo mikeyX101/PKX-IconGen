@@ -9,7 +9,9 @@ rmdir /Q /S "%output%\Python"
 
 mkdir "%output%\Python\data"
 mkdir "%output%\Python\importer"
+mkdir "%output%\Python\patches"
 
+xcopy "%project%\..\PKX-IconGen.Python\patches\*.py" "%output%\Python\patches" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\data\*.py" "%output%\Python\data" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\*.py" "%output%\Python" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\template.blend" "%output%\Python" /Y /E

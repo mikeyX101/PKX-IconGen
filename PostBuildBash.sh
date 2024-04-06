@@ -7,7 +7,9 @@ rm -r "${output}Python"
 
 mkdir -p "${output}Python/data";
 mkdir -p "${output}Python/importer";
+mkdir -p "${output}Python/patches";
 
+cp "$project"../PKX-IconGen.Python/data/*.py "${output}Python/patches";
 cp "$project"../PKX-IconGen.Python/data/*.py "${output}Python/data";
 cp "$project"../PKX-IconGen.Python/*.py "${output}Python";
 cp "$project"../PKX-IconGen.Python/template.blend "${output}Python";
