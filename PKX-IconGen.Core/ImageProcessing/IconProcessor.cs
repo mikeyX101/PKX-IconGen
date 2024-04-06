@@ -29,6 +29,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Quantization;
 
 namespace PKXIconGen.Core.ImageProcessing
 {
@@ -225,6 +226,12 @@ namespace PKXIconGen.Core.ImageProcessing
             using Image thirdBg = third.Clone(ctx => ctx.AddImageBehind(background));
             GifMetadata gifMetaData = danceGif.Metadata.GetGifMetadata();
             gifMetaData.RepeatCount = repeatCount;
+            gifMetaData.ColorTableMode = GifColorTableMode.Local;
+            gifMetaData.Comments = new List<string>
+            {
+                "Created in PKX-IconGen",
+                "https://www.github.com/mikeyX101/PKX-IconGen"
+            };
 
             danceGif.Frames.AddFrame(secondBg.Frames.RootFrame);
             danceGif.Frames.AddFrame(thirdBg.Frames.RootFrame);
@@ -234,9 +241,10 @@ namespace PKXIconGen.Core.ImageProcessing
             {
                 GifFrameMetadata metadata = frame.Metadata.GetGifMetadata();
                 metadata.FrameDelay = frameDelay;
+                metadata.ColorTableMode = GifColorTableMode.Local;
             }
             
-            await danceGif.SaveAsGifAsync(Path.Combine(FinalOutput, gifName));
+            await danceGif.SaveAsGifAsync(Path.Combine(FinalOutput, gifName), new GifEncoder { Quantizer = KnownQuantizers.Wu, ColorTableMode = GifColorTableMode.Local, PixelSamplingStrategy = new ExtensivePixelSamplingStrategy() }, token ?? CancellationToken.None);
         }
         
         private async Task<Image> ProcessIconAsync(string path, Icon mode, CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
