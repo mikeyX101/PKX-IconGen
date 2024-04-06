@@ -54,6 +54,10 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         from patches import shuppet
         shuppet.patch()
         print("Patched !!Shuppet")
+    elif "ghos.pkx" in model_name: # Ghastly, make aura track camera like a sprite
+        from patches import ghastly
+        ghastly.patch()
+        print("Patched Ghastly")
 
 
 def _flip_outside_uv_x(obj_name: str):
