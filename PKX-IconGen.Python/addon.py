@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 8),
+    "version": (0, 3, 9),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -668,8 +668,8 @@ def reset_texture_props(scene):
 
 
 # State sync functions
-def sync_camera_to_props(context):
-    scene = context.scene
+def sync_camera_to_props(context=None):
+    scene = context.scene if context is not None else bpy.context.scene
     camera = get_camera()
     camera_focus = get_camera_focus()
 
@@ -679,8 +679,8 @@ def sync_camera_to_props(context):
     scene.ortho_scale = camera.data.ortho_scale
 
 
-def sync_props_to_scene(context):
-    scene = context.scene
+def sync_props_to_scene(context=None):
+    scene = context.scene if context is not None else bpy.context.scene
     armature = get_armature()
     camera = get_camera()
     camera_focus = get_camera_focus()
@@ -971,10 +971,10 @@ LIGHTPROPS = [
     ('light_type',
      bpy.props.EnumProperty(
          name="Light type",
-         description="Type of light, Point lights should usually do the trick",
+         description="Type of light, Area lights should usually do the trick",
          items=[
              ('POINT', "Point", "Point light"),
-             ('SUN', "Sun", "Sun"),
+             ('SUN', "Sun", "Sun. I wouldn't use that one if I were you"),
              ('SPOT', "Spot", "Spot light"),
              ('AREA', "Area", "Area light"),
          ],
@@ -1492,12 +1492,7 @@ def register(data: PokemonRenderData):
     scene.secondary_enabled = data.face.secondary_camera is not None
 
     sync_prd_to_props()
-    common.remove_objects(removed_objects)
-
-    textures: List[Texture] = list(render_textures.values())
-    common.set_textures(textures)
-
-    common.update_shading(ObjectShading[scene.shading])
+    sync_props_to_scene()
 
     # Unselect on start
     for obj in bpy.context.selected_objects:

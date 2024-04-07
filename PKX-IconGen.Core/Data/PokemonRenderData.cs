@@ -87,7 +87,7 @@ namespace PKXIconGen.Core.Data
             get => Utils.CleanModelPathString(model);
             set
             {
-                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
+                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed in case the model is actually different
                 if (FaceRender?.Textures != null && FaceRender.Textures.Count != 0)
                 {
                     FaceRender.Textures.Clear();

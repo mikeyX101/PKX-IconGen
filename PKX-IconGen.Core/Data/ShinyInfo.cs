@@ -45,7 +45,7 @@ namespace PKXIconGen.Core.Data
             get => model is not null ? Utils.CleanModelPathString(model) : model;
             set
             {
-                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed (also in case the model is actually different)
+                // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed in case the model is actually different
                 if (FaceRender?.Textures is not null && FaceRender.Textures.Count != 0)
                 {
                     FaceRender.Textures.Clear();
@@ -91,17 +91,20 @@ namespace PKXIconGen.Core.Data
             {
                 this.model = model;
             }
-            if (!color1.HasValue || !color2.HasValue)
-            {
-                Color1 = ShinyColor.GetDefaultShinyColor1();
-                Color2 = ShinyColor.GetDefaultShinyColor2();
-            }
             else
             {
-                Color1 = color1;
-                Color2 = color2;
+                if (!color1.HasValue || !color2.HasValue)
+                {
+                    Color1 = ShinyColor.GetDefaultShinyColor1();
+                    Color2 = ShinyColor.GetDefaultShinyColor2();
+                }
+                else
+                {
+                    Color1 = color1;
+                    Color2 = color2;
+                }
             }
-            
+
             FaceRender = faceRender;
             BoxRender = boxRender ?? new BoxInfo();
         }
@@ -109,10 +112,11 @@ namespace PKXIconGen.Core.Data
         public bool Equals(ShinyInfo? other)
         {
             return other is not null &&
-                (Color1 is null && other.Color1 is null || Color1 is not null && Color1.Equals(other.Color1)) &&
-                (Color2 is null && other.Color2 is null || Color2 is not null && Color2.Equals(other.Color2)) &&
-                (Model is null && other.Model is null || Model is not null && Model.Equals(other.Model)) &&
-                FaceRender.Equals(other.FaceRender);
+                   (Color1 is null && other.Color1 is null || Color1 is not null && Color1.Equals(other.Color1)) &&
+                   (Color2 is null && other.Color2 is null || Color2 is not null && Color2.Equals(other.Color2)) &&
+                   (Model is null && other.Model is null || Model is not null && Model.Equals(other.Model)) &&
+                   FaceRender.Equals(other.FaceRender) &&
+                   BoxRender.Equals(other.BoxRender);
         }
         public override bool Equals(object? obj)
         {

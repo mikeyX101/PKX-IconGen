@@ -37,20 +37,20 @@ def apply_patches_by_model_name(model_path: Optional[str]):
 
     model_name: str = os.path.basename(model_path)
 
-    if "asanan" in model_name:  # !!Meditite, fix eyes map and set scale X to 1
+    if "asanan.pkx" in model_name:  # !!Meditite, fix eyes map and set scale X to 1
         _flip_outside_uv_x("Object.013")
         _set_mat_map_input_to("Material.005", "Mapping", blender_compat.mapping_in.scale, 1)
         print("Patched !!Meditite")
-    elif "donmel" in model_name:  # !!Numel, fix volcano map
+    elif "donmel.pkx" in model_name:  # !!Numel, fix volcano map
         _set_mat_map_loc_to("Material.007", "Mapping", 0.23, 0.13)
         print("Patched !!Numel")
-    elif "taneboh" in model_name:  # Seedot, put more strength in bump
+    elif "taneboh.pkx" in model_name:  # Seedot, put more strength in bump
         _set_mat_bump_strength_to("Material.003", "Bump", 0.2)
         print("Patched Seedot")
-    elif "dumbber" in model_name:  # Beldum, eye appears desaturated
+    elif "dumbber.pkx" in model_name:  # Beldum, eye appears desaturated
         _set_mat_mix_factor_to("Material.001", "TEX_COLORMAP_BLEND 0.8999999761581421", 1)
         print("Patched Beldum")
-    elif "kagebouzu" in model_name:  # !!Shuppet, fix body colors
+    elif "kagebouzu.pkx" in model_name:  # !!Shuppet, fix body colors
         from patches import shuppet
         shuppet.patch()
         print("Patched !!Shuppet")
@@ -58,6 +58,9 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         from patches import ghastly
         ghastly.patch()
         print("Patched Ghastly")
+    elif "achamo.pkx" == model_name or "achamo.pkx.dat" == model_name:  # !!Torchic, fix eyes map
+        _set_mat_map_loc_to("Material.007", "Mapping", 0, -9)
+        print("Patched Torchic")
 
 
 def _flip_outside_uv_x(obj_name: str):

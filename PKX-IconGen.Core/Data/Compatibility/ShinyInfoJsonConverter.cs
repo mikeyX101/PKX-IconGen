@@ -61,6 +61,12 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
                     model = faceRender.Model;
 #pragma warning restore CS0618 // Type or member is obsolete
                 }
+
+                // Discard color1 and color2 if we have a model, model has the priority
+                if (model is not null)
+                {
+                    color1 = color2 = null;
+                }
                 
                 return new ShinyInfo(color1, color2, model, faceRender, boxRender);
             }
@@ -115,12 +121,18 @@ public sealed class ShinyInfoJsonConverter : JsonConverter<ShinyInfo>
     public override void Write(Utf8JsonWriter writer, ShinyInfo value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color1)]);
-        writer.WriteRawValue(JsonSerializer.Serialize(value.Color1, options), true);
-        
-        writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color2)]);
-        writer.WriteRawValue(JsonSerializer.Serialize(value.Color2, options), true);
+
+        if (value.Color1 is not null)
+        {
+            writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color1)]);
+            writer.WriteRawValue(JsonSerializer.Serialize(value.Color1, options), true);
+        }
+
+        if (value.Color2 is not null)
+        {
+            writer.WritePropertyName(JsonPropNames[nameof(ShinyInfo.Color2)]);
+            writer.WriteRawValue(JsonSerializer.Serialize(value.Color2, options), true);
+        }
 
         if (value.Model is not null)
         {
