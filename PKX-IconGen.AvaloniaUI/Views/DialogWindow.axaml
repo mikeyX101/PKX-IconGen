@@ -28,7 +28,12 @@
         Title="{Binding DialogTitle}"
         Icon="/Assets/gen-icon-bright.png"
         
-        Width="500" Height="{Binding Height}" CanResize="False" >
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaToDecorationsHint="False"
+        
+        MinWidth="500" MinHeight="200" Width="500" Height="{Binding Height}" CanResize="True" >
   <Window.Resources>
     <conv:BitmapAssetValueConverter x:Key="StringToBitmap"/>
   </Window.Resources>
@@ -61,7 +66,9 @@
       <Grid Name="IconPanel" ColumnDefinitions="150, *">
         <i:Icon IsVisible="{Binding IconVisible}" Margin="32" FontSize="64" Value="{Binding Icon}" Foreground="{Binding IconColor}" Grid.Column="0" />
         <Image Width="75" Height="75" IsVisible="{Binding ImageVisible}" Source="{Binding ImageAsset, Converter={StaticResource StringToBitmap}}" Margin="32" Grid.Column="0" />
-        <TextBlock Margin="32" TextWrapping="Wrap" Text="{Binding DialogText}" Grid.Column="1" />
+        <ScrollViewer AllowAutoHide="False" HorizontalScrollBarVisibility="Disabled" Grid.Column="1">
+          <TextBlock Margin="32" TextWrapping="WrapWithOverflow"  Text="{Binding DialogText}" />
+        </ScrollViewer>
       </Grid>
     </DockPanel>
   </Panel>

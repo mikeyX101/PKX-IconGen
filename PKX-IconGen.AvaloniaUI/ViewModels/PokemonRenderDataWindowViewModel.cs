@@ -210,9 +210,9 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             );
             
             IObservable<bool> canSync = this.WhenAnyValue(
-                vm => vm.Color1, vm => vm.Color2, vm => vm.Model,
-                (color1, color2, model) => 
-                    color1.HasValue && color2.HasValue &&
+                vm => vm.Model, vm => vm.ShinyModel,
+                (model, shinyModel) => 
+                    shinyModel is null &&
                     !string.IsNullOrWhiteSpace(model) && 
                     model.EndsWith(".pkx") && 
                     File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath))

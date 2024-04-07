@@ -19,7 +19,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:PKXIconGen.AvaloniaUI"
              x:Class="PKXIconGen.AvaloniaUI.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>

@@ -148,7 +148,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         [UsedImplicitly]
         public async void CleanTempFolders()
         {
-            bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder and the downloaded HD textures. The HD textures will remain installed.\nThis operation is irreversible.");
+            bool delete = await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.YesNo, "Are you sure you want to clean the temporary folders? This includes the Logs folder and the downloaded HD textures. The HD textures will remain installed.\nThis operation is irreversible.", 220);
             if (delete)
             {
                 await Core.Utils.CleanTempFolders();
@@ -192,7 +192,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
                  Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown Version"} 
                  """,
-                height: 250, title: "About");
+                height: 275, title: "About");
         }
 
         [UsedImplicitly]

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 output=$1;
 project=$2;
 
