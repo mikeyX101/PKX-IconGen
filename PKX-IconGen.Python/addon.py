@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 9),
+    "version": (0, 3, 10),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -818,11 +818,11 @@ def sync_props_to_prd(context):
 
 # Props
 data_type_defs = {
-    'REMOVED_OBJECTS': ('REMOVED_OBJECTS', "Removed Objects", "Copy Removed Objects", DataType.REMOVED_OBJECTS.value),
     'ANIMATION': ('ANIMATION', "Animation", "Copy Animation Pose and Frame", DataType.ANIMATION.value),
     'CAMERA_LIGHT': ('CAMERA_LIGHT', "Camera/Light", "Copy Camera, Focus Point and Light", DataType.CAMERA_LIGHT.value),
-    'TEXTURES': ('TEXTURES', "Textures", "Copy Textures", DataType.TEXTURES.value),
-    'SHADING': ('SHADING', "Shading", "Copy Shading", DataType.SHADING.value)
+    'SHADING': ('SHADING', "Shading", "Copy Shading", DataType.SHADING.value),
+    'REMOVED_OBJECTS': ('REMOVED_OBJECTS', "Removed Objects", "Copy Removed Objects", DataType.REMOVED_OBJECTS.value),
+    'TEXTURES': ('TEXTURES', "Textures", "Copy Textures", DataType.TEXTURES.value)
 }
 
 edit_mode_defs = {
@@ -892,7 +892,7 @@ ANIMATIONPROPS = [
          name="Animation Pose",
          description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
          min=0,
-         max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,
+         max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,  # TODO Fix
          
          update=update_animation_pose
      )),
@@ -1159,37 +1159,30 @@ SHINYPROPS = [
 ]
 
 
-def get_data_type_items(self, context) -> set[Optional[tuple]]:
-    items: set[Optional[tuple]] = set()
+def set_items_to_copy_defaults() -> None:
+    defaults: set[str] = {'ANIMATION', 'CAMERA_LIGHT', 'SHADING'}
     if prd.shiny.model is None:
-        items.add(data_type_defs['REMOVED_OBJECTS'])
-    items.add(data_type_defs['ANIMATION'])
-    items.add(data_type_defs['CAMERA_LIGHT'])
-    if prd.shiny.model is None:
-        items.add(data_type_defs['TEXTURES'])
-    items.add(data_type_defs['SHADING'])
+        defaults.add('REMOVED_OBJECTS')
+        defaults.add('TEXTURES')
 
-    return items
+    ADVANCEDPROPS[1][1].keywords["default"] = defaults
 
 
 def get_copy_mode_items(self, context) -> list[Optional[tuple]]:
     items: list[Optional[tuple]] = [
-        edit_mode_defs['FACE_NORMAL']
+        edit_mode_defs['BOX_THIRD_SHINY'],
+        edit_mode_defs['BOX_THIRD'],
+        edit_mode_defs['BOX_SECOND_SHINY'],
+        edit_mode_defs['BOX_SECOND'],
+        edit_mode_defs['BOX_FIRST_SHINY'],
+        edit_mode_defs['BOX_FIRST'],
+        None
     ]
     if self.secondary_enabled:
+        items.append(edit_mode_defs['FACE_SHINY_SECONDARY'])
         items.append(edit_mode_defs['FACE_NORMAL_SECONDARY'])
     items.append(edit_mode_defs['FACE_SHINY'])
-    if self.secondary_enabled:
-        items.append(edit_mode_defs['FACE_SHINY_SECONDARY'])
-
-    items.append(None)
-
-    items.append(edit_mode_defs['BOX_FIRST'])
-    items.append(edit_mode_defs['BOX_FIRST_SHINY'])
-    items.append(edit_mode_defs['BOX_SECOND'])
-    items.append(edit_mode_defs['BOX_SECOND_SHINY'])
-    items.append(edit_mode_defs['BOX_THIRD'])
-    items.append(edit_mode_defs['BOX_THIRD_SHINY'])
+    items.append(edit_mode_defs['FACE_NORMAL'])
 
     edit_mode_str = get_edit_mode_str(context.scene)
     if edit_mode_defs[edit_mode_str] in items:
@@ -1198,11 +1191,15 @@ def get_copy_mode_items(self, context) -> list[Optional[tuple]]:
     return items
 
 
+def set_copy_mode_default(secondary_enabled: bool) -> None:
+    ADVANCEDPROPS[2][1].keywords["default"] = 9 if secondary_enabled else 7
+
+
 ADVANCEDPROPS = [
     ('shading',
      bpy.props.EnumProperty(
          name="Object Shading:",
-         description="Determines how the objects are shaded, sometimes Smooth shading can give better results, but can break or look weird in other cases",
+         description="Determines how the objects are shaded, sometimes Smooth shading can give better results, but can break and look weird in other cases",
          items=[
              ('FLAT', "Flat", "Flat Shading, default and the most stable"),
              ('SMOOTH', "Smooth", "Smooth shading, can give better results for more round Pokemon, can cause visual \"weirdness\".")
@@ -1216,15 +1213,23 @@ ADVANCEDPROPS = [
      bpy.props.EnumProperty(
          name="Copy items",
          description="Item to copy to target, hold shift to multi-select",
-         items=get_data_type_items,
+         items=[
+            data_type_defs['ANIMATION'],
+            data_type_defs['CAMERA_LIGHT'],
+            data_type_defs['SHADING'],
+            data_type_defs['REMOVED_OBJECTS'],
+            data_type_defs['TEXTURES']
+         ],
          options={'ENUM_FLAG'},
-         default=DataType.ALL.value
+         default={'ANIMATION', 'CAMERA_LIGHT', 'SHADING'}
      )),
     ('copy_mode',
      bpy.props.EnumProperty(
          name="Copy to/from",
          description="Copy data to or from, see button tooltips for info",
-         items=get_copy_mode_items
+         items=get_copy_mode_items,
+         options=set(),
+         default=99  # 'FACE_SHINY'
      ))
 ]
 
@@ -1433,8 +1438,13 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         col.separator()
 
         col.label(text="Copy Tool")
-        row = col.row()
-        row.prop(context.scene, "items_to_copy", expand=True)
+        #  https://blender.stackexchange.com/questions/250876/disable-options-on-enumproperty/250922#250922
+        row = col.row(align=True)
+        for item in data_type_defs.values():
+            iden = item[0]
+            item_layout = row.row(align=True)
+            item_layout.prop_enum(context.scene, "items_to_copy", iden)
+            item_layout.enabled = (iden != "REMOVED_OBJECTS" and iden != "TEXTURES") or prd.shiny.model is None
         col.prop(context.scene, "copy_mode")
         row = col.row()
         row.operator(PKXCopyToOperator.bl_idname)
@@ -1480,7 +1490,10 @@ CLASSES = [
 def register(data: PokemonRenderData):
     global prd
     prd = data
+    secondary_enabled = prd.face.secondary_camera is not None
 
+    set_items_to_copy_defaults()
+    set_copy_mode_default(secondary_enabled)
     for prop_list in ALLPROPS:
         for (prop_name, prop_value) in prop_list:
             setattr(bpy.types.Scene, prop_name, prop_value)
@@ -1489,7 +1502,7 @@ def register(data: PokemonRenderData):
         bpy.utils.register_class(c)
 
     scene = bpy.data.scenes["Scene"]
-    scene.secondary_enabled = data.face.secondary_camera is not None
+    scene.secondary_enabled = secondary_enabled
 
     sync_prd_to_props()
     sync_props_to_scene()

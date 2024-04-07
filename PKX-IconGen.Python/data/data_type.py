@@ -21,13 +21,11 @@ from enum import Flag
 
 class DataType(Flag):
     NONE = 0
-    REMOVED_OBJECTS = 1
-    ANIMATION = 2
-    CAMERA_LIGHT = 4
-    TEXTURES = 8
-    SHADING = 16
-
-    ALL = REMOVED_OBJECTS & ANIMATION & CAMERA_LIGHT & TEXTURES & SHADING
+    ANIMATION = 1
+    CAMERA_LIGHT = 2
+    SHADING = 4
+    REMOVED_OBJECTS = 8
+    TEXTURES = 16
 
     @staticmethod
     def from_blender_flags(blender_flags: set[str]) -> 'DataType':
