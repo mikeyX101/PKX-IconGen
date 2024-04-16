@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 10),
+    "version": (0, 3, 11),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -148,11 +148,10 @@ class PKXCopyToOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
-        items_to_copy = DataType.from_blender_flags(scene.items_to_copy)
         copy_from: EditMode = get_edit_mode(scene)
         copy_to: EditMode = EditMode[scene.copy_mode]
 
-        copy_prd_data(copy_from, copy_to, items_to_copy)
+        copy_prd_data(copy_from, copy_to, scene)
 
         return {'FINISHED'}
 
@@ -173,11 +172,10 @@ class PKXCopyFromOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
-        items_to_copy = DataType.from_blender_flags(scene.items_to_copy)
         copy_from: EditMode = EditMode[scene.copy_mode]
         copy_to: EditMode = get_edit_mode(scene)
 
-        copy_prd_data(copy_from, copy_to, items_to_copy)
+        copy_prd_data(copy_from, copy_to, scene)
 
         # Current mode gets changed, so we need to sync up the props and the scene
         sync_prd_to_props(context)
@@ -186,7 +184,15 @@ class PKXCopyFromOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def copy_prd_data(copy_from: EditMode, copy_to: EditMode, data_flags: DataType):
+def copy_prd_data(copy_from: EditMode, copy_to: EditMode, items_to_copy: set[str]):
+    data_flags = DataType.from_blender_flags(items_to_copy)
+    for data_type in DataType:
+        data_type_name: str = data_type.name
+        allowed = is_data_type_allowed_copy(data_type_name, copy_from, copy_to)
+        if not allowed and data_type in data_flags:
+            data_flags ^= data_type
+            print(f"Copy of {data_type_name} is not allowed in this context ({copy_from} -> {copy_to}), ignoring data type.")
+
     source: RenderData = prd.get_mode_render(copy_from)
     target: RenderData = prd.get_mode_render(copy_to)
 
@@ -209,6 +215,15 @@ def copy_prd_data(copy_from: EditMode, copy_to: EditMode, data_flags: DataType):
 
     if DataType.SHADING in data_flags:
         target.shading = source.shading
+
+
+def is_data_type_allowed_copy(data_type_str: str, copy_from: EditMode, copy_to: EditMode) -> bool:
+    return (
+        (data_type_str != "REMOVED_OBJECTS" and data_type_str != "TEXTURES") or
+        prd.shiny.model is None or
+        (copy_from in EditMode.ANY_NORMAL and copy_to in EditMode.ANY_NORMAL) or
+        (copy_from in EditMode.ANY_SHINY and copy_to in EditMode.ANY_SHINY)
+    )
 
 
 # From operator_modal_view3d_raycast.py
@@ -398,8 +413,12 @@ def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
 # Update Functions
 def update_main_mode(self, context):
     if self.main_mode == "FACE":
+        if self.copy_mode == "FACE_NORMAL" or self.copy_mode == "":
+            self.copy_mode = "BOX_FIRST"
         self.face_mode = "FACE_NORMAL"
     elif self.main_mode == "BOX":
+        if self.copy_mode == "BOX_FIRST" or self.copy_mode == "":
+            self.copy_mode = "FACE_NORMAL"
         self.box_mode = "BOX_FIRST"
 
 
@@ -1438,13 +1457,16 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         col.separator()
 
         col.label(text="Copy Tool")
+        copy_from: EditMode = get_edit_mode(context.scene)
+        copy_to: EditMode = EditMode[context.scene.copy_mode]
         #  https://blender.stackexchange.com/questions/250876/disable-options-on-enumproperty/250922#250922
         row = col.row(align=True)
-        for item in data_type_defs.values():
-            iden = item[0]
+        for iden in data_type_defs.keys():
             item_layout = row.row(align=True)
+            allowed = is_data_type_allowed_copy(iden, copy_from, copy_to)
+            item_layout.enabled = allowed
             item_layout.prop_enum(context.scene, "items_to_copy", iden)
-            item_layout.enabled = (iden != "REMOVED_OBJECTS" and iden != "TEXTURES") or prd.shiny.model is None
+
         col.prop(context.scene, "copy_mode")
         row = col.row()
         row.operator(PKXCopyToOperator.bl_idname)

@@ -142,7 +142,7 @@ def import_models(prd: PokemonRenderData):
         print(f"Importing: {shiny_true_path}")
         import_hsd.load(None, bpy.context, shiny_true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
         switch_model(shiny_info, EditMode.FACE_NORMAL)  # Hide shiny model on load
-        shiny_armature = objs["Armature1"]
+        shiny_armature = objs["Armature1"]  # While debugging, if an error occurs here, make sure to clear cache between different JSON files
         shiny_armature.hide_select = True
         shiny_armature.hide_viewport = True
         shiny_imported = True

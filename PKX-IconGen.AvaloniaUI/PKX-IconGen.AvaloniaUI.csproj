@@ -12,7 +12,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.3.7</AssemblyVersion>
+    <AssemblyVersion>0.3.8</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <Version>$(AssemblyVersion)</Version>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
@@ -83,13 +83,13 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.10.1" />
-    <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.0.10.1" />
-    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.0.10.1" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.10.5" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.0.10.5" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.0.10.5" />
     <PackageReference Include="AvaloniaColorPicker" Version="1.4.0" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.1.2" />
-    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.1.2" />
+    <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.3.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PKX-IconGen.Core\PKX-IconGen.Core.csproj" />
