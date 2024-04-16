@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (2, 93, 0),
-    "version": (0, 3, 11),
+    "version": (0, 3, 12),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyx",
@@ -148,10 +148,11 @@ class PKXCopyToOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
+        items_to_copy: set[str] = scene.items_to_copy
         copy_from: EditMode = get_edit_mode(scene)
         copy_to: EditMode = EditMode[scene.copy_mode]
 
-        copy_prd_data(copy_from, copy_to, scene)
+        copy_prd_data(copy_from, copy_to, items_to_copy)
 
         return {'FINISHED'}
 
@@ -172,10 +173,11 @@ class PKXCopyFromOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
+        items_to_copy: set[str] = scene.items_to_copy
         copy_from: EditMode = EditMode[scene.copy_mode]
         copy_to: EditMode = get_edit_mode(scene)
 
-        copy_prd_data(copy_from, copy_to, scene)
+        copy_prd_data(copy_from, copy_to, items_to_copy)
 
         # Current mode gets changed, so we need to sync up the props and the scene
         sync_prd_to_props(context)
@@ -207,11 +209,10 @@ def copy_prd_data(copy_from: EditMode, copy_to: EditMode, items_to_copy: set[str
         elif copy_to in EditMode.ANY_FACE_SECONDARY:
             target.secondary_camera = copy.deepcopy(source_camera)
 
-    if prd.shiny.model is None:
-        if DataType.REMOVED_OBJECTS in data_flags:
-            target.removed_objects = source.removed_objects.copy()
-        if DataType.TEXTURES in data_flags:
-            target.textures = copy.deepcopy(source.textures)
+    if DataType.REMOVED_OBJECTS in data_flags:
+        target.removed_objects = source.removed_objects.copy()
+    if DataType.TEXTURES in data_flags:
+        target.textures = copy.deepcopy(source.textures)
 
     if DataType.SHADING in data_flags:
         target.shading = source.shading
