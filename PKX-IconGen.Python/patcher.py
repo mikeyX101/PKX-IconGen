@@ -66,10 +66,11 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _set_mat_map_data("Material.005", "Mapping", blender_compat.mapping_in.scale, 0.55, 1.5)
         _set_mat_texture_ext_mode("Material.005", "0x2D50 flag: 30010 image: 0x2FC60  tlut: 0x3CE00", "MIRROR")
         print("Patched Phanpy")
-    elif "anopth.pkx" in model_name:  # Anorith, make eyes track camera like a sprite
+    elif "anopth.pkx" in model_name:  # Anorith, make eyes track camera like a sprite and fix alpha blending
         _make_obj_track_camera("Object.002")
         _make_obj_track_camera("Object.004")
-        print("Patched Anorith")
+        _set_mat_blend_mode("Material.006", "BLEND")
+        _set_mat_blend_mode("Material", "BLEND")
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -140,3 +141,7 @@ def _make_obj_track_camera(obj_name: str):
     track_constraint = aura_obj.constraints['Track To']
     track_constraint.target = camera
     track_constraint.track_axis = 'TRACK_Z'
+
+
+def _set_mat_blend_mode(mat_name: str, blend_mode: str):
+    bpy.data.materials[mat_name].blend_method = blend_mode
