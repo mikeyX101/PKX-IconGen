@@ -39,10 +39,10 @@ def apply_patches_by_model_name(model_path: Optional[str]):
 
     if "asanan.pkx" in model_name:  # !!Meditite, fix eyes map and set scale X to 1
         _flip_outside_uv_x("Object.013")
-        _set_mat_map_input_to("Material.005", "Mapping", blender_compat.mapping_in.scale, 1)
+        _set_mat_map_data("Material.005", "Mapping", blender_compat.mapping_in.scale, 1)
         print("Patched !!Meditite")
     elif "donmel.pkx" in model_name:  # !!Numel, fix volcano map
-        _set_mat_map_loc_to("Material.007", "Mapping", 0.23, 0.13)
+        _set_mat_map_data("Material.007", "Mapping", blender_compat.mapping_in.location, 0.23, 0.13)
         print("Patched !!Numel")
     elif "taneboh.pkx" in model_name:  # Seedot, put more strength in bump
         _set_mat_bump_strength_to("Material.003", "Bump", 0.2)
@@ -55,12 +55,21 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         shuppet.patch()
         print("Patched !!Shuppet")
     elif "ghos.pkx" in model_name:  # Ghastly, make aura track camera like a sprite
-        from patches import ghastly
-        ghastly.patch()
+        _make_obj_track_camera("Object.002")
+        _make_obj_track_camera("Object.003")
         print("Patched Ghastly")
     elif "achamo.pkx" == model_name or "achamo.pkx.dat" == model_name:  # !!Torchic, fix eyes map
-        _set_mat_map_loc_to("Material.007", "Mapping", 0, -9)
+        _set_mat_map_data("Material.007", "Mapping", blender_compat.mapping_in.location, 0, -9)
         print("Patched Torchic")
+    elif "gomazou.pkx" in model_name:  # !!Phanpy, fix nose map
+        _set_mat_map_data("Material.005", "Mapping", blender_compat.mapping_in.location, 0, -0.11)
+        _set_mat_map_data("Material.005", "Mapping", blender_compat.mapping_in.scale, 0.55, 1.5)
+        _set_mat_texture_ext_mode("Material.005", "0x2D50 flag: 30010 image: 0x2FC60  tlut: 0x3CE00", "MIRROR")
+        print("Patched Phanpy")
+    elif "anopth.pkx" in model_name:  # Anorith, make eyes track camera like a sprite
+        _make_obj_track_camera("Object.002")
+        _make_obj_track_camera("Object.004")
+        print("Patched Anorith")
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -83,14 +92,6 @@ def _flip_outside_uv_x(obj_name: str):
     obj.select_set(False)
 
 
-def _set_mat_map_input_to(mat_name: str, mapnode_name: str, input_index: int, value: float):
-    mat = bpy.data.materials[mat_name]
-    tree = mat.node_tree
-    if tree is not None:
-        xyz = tree.nodes[mapnode_name].inputs[input_index].default_value
-        xyz[0] = xyz[1] = xyz[2] = value
-
-
 def _set_mat_bump_strength_to(mat_name: str, bumpnode_name: str, strength: float):
     mat = bpy.data.materials[mat_name]
     tree = mat.node_tree
@@ -105,10 +106,37 @@ def _set_mat_mix_factor_to(mat_name: str, mixnode_name: str, fac: float):
         tree.nodes[mixnode_name].inputs[blender_compat.mix_in.factor].default_value = fac
 
 
-def _set_mat_map_loc_to(mat_name: str, mapnode_name: str, x: float, y: float):
+def _set_mat_map_data(mat_name: str, mapnode_name: str, data_idx: int, x: Optional[float] = None, y: Optional[float] = None, z: Optional[float] = None):
     mat = bpy.data.materials[mat_name]
     tree = mat.node_tree
     if tree is not None:
-        xyz = tree.nodes[mapnode_name].inputs[blender_compat.mapping_in.location].default_value
-        xyz[0] = x
-        xyz[1] = y
+        xyz = tree.nodes[mapnode_name].inputs[data_idx].default_value
+        if x is not None:
+            xyz[0] = x
+        if y is not None:
+            xyz[1] = y
+        if z is not None:
+            xyz[2] = z
+
+
+def _set_mat_texture_ext_mode(mat_name: str, tex_node: str, ext_mode: str):
+    mat = bpy.data.materials[mat_name]
+    tree = mat.node_tree
+    if tree is not None:
+        tree.nodes[tex_node].extension = ext_mode
+
+
+def _make_obj_track_camera(obj_name: str):
+    view_layer = bpy.context.view_layer
+    camera = bpy.data.objects['PKXIconGen_Camera']
+
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+
+    aura_obj = bpy.data.objects[obj_name]
+    aura_obj.select_set(True)
+    view_layer.objects.active = aura_obj
+    bpy.ops.object.constraint_add(type='TRACK_TO')
+    track_constraint = aura_obj.constraints['Track To']
+    track_constraint.target = camera
+    track_constraint.track_axis = 'TRACK_Z'
