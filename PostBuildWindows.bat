@@ -18,8 +18,8 @@ xcopy "%project%\..\PKX-IconGen.Python\*.py" "%output%\Python" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\template.blend" "%output%\Python" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\importer\*" "%output%\Python\importer" /Y /E
 
-xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon.png" "%output%" /Y /E
-xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon-bright.png" "%output%" /Y /E
+xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon.png" "%output%\" /Y /E
+xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon-bright.png" "%output%\" /Y /E
 
 xcopy "%project%\..\PKX-IconGen.Core\NameMaps\coloNameMap.json" "%output%\Data\NameMaps" /Y /E
 xcopy "%project%\..\PKX-IconGen.Core\NameMaps\xdNameMap.json" "%output%\Data\NameMaps" /Y /E
