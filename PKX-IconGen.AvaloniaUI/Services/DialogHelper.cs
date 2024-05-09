@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
@@ -53,6 +54,11 @@ namespace PKXIconGen.AvaloniaUI.Services
             }.ShowDialog<bool>(parent);
         }
 
+        public static async Task ShowWindowDialog<TViewModel>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
+        {
+            await ShowWindowDialog<TViewModel, Unit>(vm, parent);
+        }
+        
         public static async Task<TResult> ShowWindowDialog<TViewModel, TResult>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
         {
             Type vmType = typeof(TViewModel);

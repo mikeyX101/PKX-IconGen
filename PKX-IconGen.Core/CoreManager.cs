@@ -22,6 +22,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using LinqToDB.EntityFrameworkCore;
+using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Logging;
 using PKXIconGen.Core.Services;
 using Serilog;
@@ -109,6 +110,7 @@ namespace PKXIconGen.Core
         public static void OnClose()
         {
             Logger.Information("PKX-IconGen Core shutting down gracefully...");
+            NameMap.CleanUp();
             Database.OnClose();
             DisposeLogger();
             

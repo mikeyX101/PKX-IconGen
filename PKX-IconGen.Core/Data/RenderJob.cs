@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,9 +77,9 @@ namespace PKXIconGen.Core.Data
             Target = target;
         }
         
-        public async Task RenderAsync(IBlenderRunnerInfo blenderRunnerInfo, CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
+        public async Task RenderAsync(CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
         {
-            IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(blenderRunnerInfo, this);
+            IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(Settings, this);
             if (onOutput != null)
             {
                 runner.OnOutput += onOutput;
@@ -93,7 +94,7 @@ namespace PKXIconGen.Core.Data
             await Task.Run(async() => await runner.RunAsync(token));
             CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
 
-            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF);
+            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF, Settings.OutputNameForGame, Settings.OutputNameForTarget);
             await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutputAsync));
         }
     }

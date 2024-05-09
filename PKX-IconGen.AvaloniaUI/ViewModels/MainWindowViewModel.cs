@@ -41,43 +41,11 @@ using ReactiveUI;
 
 namespace PKXIconGen.AvaloniaUI.ViewModels
 {
-    public sealed class MainWindowViewModel : WindowViewModelBase, IBlenderRunnerInfo, IDisposable
+    public sealed class MainWindowViewModel : WindowViewModelBase, IDisposable
     {
         #region ViewModels
         public MenuViewModel MenuVM { get; init; }
         public LogViewModel LogVM { get; init; }
-        #endregion
-
-        #region Other Settings
-        private bool logBlender;
-        public bool LogBlender
-        {
-            get => logBlender;
-            set { 
-                DoDBQuery(db => db.SaveSettingsProperty(s => s.LogBlender, value));
-                this.RaiseAndSetIfChanged(ref logBlender, value); 
-            }
-        }
-        
-        private bool saturationBoost;
-        public bool SaturationBoost
-        {
-            get => saturationBoost;
-            set { 
-                DoDBQuery(db => db.SaveSettingsProperty(s => s.SaturationBoost, value));
-                this.RaiseAndSetIfChanged(ref saturationBoost, value); 
-            }
-        }
-        
-        private bool saveDanceGIF;
-        public bool SaveDanceGIF
-        {
-            get => saveDanceGIF;
-            set { 
-                DoDBQuery(db => db.SaveSettingsProperty(s => s.SaveDanceGIF, value));
-                this.RaiseAndSetIfChanged(ref saveDanceGIF, value); 
-            }
-        }
         #endregion
 
         #region Blender Path
@@ -339,12 +307,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 PokemonRenderDataItemsSource.AddOrUpdate(renderData);
             
                 // Fields
-                LogBlender = settings.LogBlender;
-                SaturationBoost = settings.SaturationBoost;
-                SaveDanceGIF = settings.SaveDanceGIF;
-
                 BlenderPath = settings.BlenderPath;
-                VerifyBlenderExecutable();
 
                 BlenderOptionalArguments = settings.BlenderOptionalArguments;
 
@@ -411,7 +374,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private async Task NewRenderData()
         {
             PokemonRenderData newData = new();
-            using PokemonRenderDataWindowViewModel dialogVm = new("Add a new Pokemon...", this, newData);
+            Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
+            using PokemonRenderDataWindowViewModel dialogVm = new("Add a new Pokemon...", settings, newData);
             bool toSave = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, bool>(dialogVm);
             if (toSave)
             {
@@ -423,7 +387,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         private async Task EditRenderData(PokemonRenderData prd)
         {
             PokemonRenderData copy = (PokemonRenderData)prd.Clone();
-            using PokemonRenderDataWindowViewModel dialogVm = new("Edit", this, copy);
+            Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
+            using PokemonRenderDataWindowViewModel dialogVm = new("Edit", settings, copy);
             bool toSave = await DialogHelper.ShowWindowDialog<PokemonRenderDataWindowViewModel, bool>(dialogVm);
             if (toSave && await DoDBQueryAsync(db => db.UpdatePokemonRenderDataAsync(copy)) > 0)
             {
@@ -475,7 +440,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 try
                 {
                     async Task OnOutput(ReadOnlyMemory<char> output) => await Dispatcher.UIThread.InvokeAsync(() => LogVM.WriteLine(output));
-                    await job.RenderAsync(this, renderCancelTokenSource.Token, stepOutputAsync: OnOutput);
+                    await job.RenderAsync(renderCancelTokenSource.Token, stepOutputAsync: OnOutput);
                     NbOfPokemonRendered++;
                 }
                 catch (OperationCanceledException)
@@ -501,6 +466,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             DisposeCancelToken();
             CurrentlyRendering = false;
             LogVM.WriteLine("Rendering ended.".AsMemory());
+            NameMap.CleanUp(); // Disposes handlers on the name map files
         }
 
         private void DisposeCancelToken()

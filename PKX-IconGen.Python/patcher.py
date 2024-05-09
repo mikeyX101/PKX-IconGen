@@ -27,7 +27,7 @@ This file contains manual patches made for individual Pokemon to fix important b
 issues or tweaking values in shader nodes.
 
 To gradually remove after improvements are made to the importer
-Patches with a !! means the patch fixes issues, otherwise it's just specific improvements
+Patches with a !! means the patch fixes issues, otherwise it's just specific visual improvements
 """
 
 
@@ -71,6 +71,8 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _make_obj_track_camera("Object.004")
         _set_mat_blend_mode("Material.006", "BLEND")
         _set_mat_blend_mode("Material", "BLEND")
+        print("Patched Anorith")
+
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -145,3 +147,7 @@ def _make_obj_track_camera(obj_name: str):
 
 def _set_mat_blend_mode(mat_name: str, blend_mode: str):
     bpy.data.materials[mat_name].blend_method = blend_mode
+
+
+def _set_bsdf_roughness(mat_name: str, bsdf_roughness: float):
+    bpy.data.materials[mat_name].node_tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.roughness].default_value = bsdf_roughness

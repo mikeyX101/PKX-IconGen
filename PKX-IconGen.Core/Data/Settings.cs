@@ -25,22 +25,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace PKXIconGen.Core.Data
 {
     [Table("Settings")]
-    public class Settings
+    public class Settings : IBlenderRunnerInfo
     {
         [Column("ID"), Key, DefaultValue(1)]
         public uint InternalID { get; private set; } = 1;
 
-        [Column]
+        [Column, MaxLength(int.MaxValue)]
         public string BlenderPath { get; set; }
-        [Column]
+        [Column, MaxLength(int.MaxValue)]
         public string BlenderOptionalArguments { get; set; }
-        [Column]
+        [Column, MaxLength(int.MaxValue)]
         public string OutputPath { get; set; }
         [Column]
         public Game CurrentGame { get; set; }
         [Column]
         public RenderScale RenderScale { get; set; }
-        [Column]
+        [Column, MaxLength(int.MaxValue)]
         public string AssetsPath { get; set; }
         
         [Column]
@@ -51,6 +51,12 @@ namespace PKXIconGen.Core.Data
         
         [Column, DefaultValue(false)]
         public bool SaveDanceGIF { get; set; }
+        
+        [Column]
+        public Game OutputNameForGame { get; set; }
+        
+        [Column]
+        public TextureTargetChoice OutputNameForTarget { get; set; }
 
         public Settings()
         {
@@ -65,6 +71,8 @@ namespace PKXIconGen.Core.Data
             LogBlender = false;
             SaturationBoost = true;
             SaveDanceGIF = false;
+            OutputNameForGame = Game.Undefined;
+            OutputNameForTarget = TextureTargetChoice.Dolphin;
         }
     }
 }

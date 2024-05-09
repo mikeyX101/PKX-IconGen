@@ -74,13 +74,13 @@ namespace PKXIconGen.Core.Services
         {
             TemplateName = templateName;
             LogBlender = blenderRunnerInfo.LogBlender;
-            BlenderPath = blenderRunnerInfo.Path;
+            BlenderPath = blenderRunnerInfo.BlenderPath;
             AssetsPath = blenderRunnerInfo.AssetsPath;
             Arguments = arguments;
-            OptionalArguments = blenderRunnerInfo.OptionalArguments;
+            OptionalArguments = blenderRunnerInfo.BlenderOptionalArguments;
             Input = Encoding.UTF8.GetBytes(input);
             ExpectedJsonName = expectedJsonName;
-            ExecutableName = Path.GetFileName(blenderRunnerInfo.Path);
+            ExecutableName = Path.GetFileName(blenderRunnerInfo.BlenderPath);
 
             if (LogBlender)
             {

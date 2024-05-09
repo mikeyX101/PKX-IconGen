@@ -7,6 +7,7 @@ set project=%project:"=%
 
 rmdir /Q /S "%output%\Python"
 
+mkdir "%output%\Data\NameMaps"
 mkdir "%output%\Python\data"
 mkdir "%output%\Python\importer"
 mkdir "%output%\Python\patches"
@@ -19,3 +20,6 @@ xcopy "%project%\..\PKX-IconGen.Python\importer\*" "%output%\Python\importer" /Y
 
 xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon.png" "%output%" /Y /E
 xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon-bright.png" "%output%" /Y /E
+
+xcopy "%project%\..\PKX-IconGen.Core\NameMaps\coloNameMap.json" "%output%\Data\NameMaps" /Y /E
+xcopy "%project%\..\PKX-IconGen.Core\NameMaps\xdNameMap.json" "%output%\Data\NameMaps" /Y /E

@@ -1,0 +1,96 @@
+<!--
+    PKX-IconGen.AvaloniaUI - Avalonia user interface for PKX-IconGen.Core
+    Copyright (C) 2021-2023 Samuel Caron/mikeyX#4697
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+-->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+        xmlns:data="using:PKXIconGen.Core.Data"
+        xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="PKXIconGen.AvaloniaUI.Views.SettingsWindow"
+        x:DataType="vm:SettingsWindowViewModel" x:CompileBindings="True"
+        Title="Settings"
+        Icon="/Assets/gen-icon-bright.png"
+        
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaToDecorationsHint="False"
+        
+        MinWidth="640" Width="640" MinHeight="600" Height="600" CanResize="False">
+    
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="0.75"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <DockPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Vertical" DockPanel.Dock="Bottom">
+                <Button Width="50" Margin="8" HorizontalContentAlignment="Center" Click="Close">OK</Button>
+            </StackPanel>
+            <StackPanel Margin="16" Orientation="Vertical" DockPanel.Dock="Top">
+                <TextBlock FontSize="24">Settings</TextBlock>
+                <CheckBox Margin="4" IsChecked="{Binding LogBlender, Mode=TwoWay}" >Log Blender to Logs folder</CheckBox>
+                <CheckBox Margin="4" IsChecked="{Binding SaturationBoost, Mode=TwoWay}" >10% Saturation Boost</CheckBox>
+                <CheckBox Margin="4" IsChecked="{Binding SaveDanceGIF, Mode=TwoWay}" >Save preview GIF for XD Dance sprites</CheckBox>
+                <Separator Margin="0 8"></Separator>
+                <TextBlock Margin="0 8" FontSize="14">Output textures with useful names (Detection based on the exact model name)</TextBlock>
+                <TextBlock>For game:</TextBlock>
+                <StackPanel Orientation="Vertical" Margin="4">
+                    <RadioButton GroupName="OutputGame"
+                        IsChecked="{Binding IsGameUndefined, Mode=OneTime}"
+                        Command="{Binding ChangeOutputForGameCommand}" 
+                        CommandParameter="{x:Static data:Game.Undefined}"
+                        >None (use pokemon output name)</RadioButton>
+                    <RadioButton GroupName="OutputGame"
+                        IsChecked="{Binding IsGameColo, Mode=OneTime}"
+                        Command="{Binding ChangeOutputForGameCommand}" 
+                        CommandParameter="{x:Static data:Game.PokemonColosseum}"
+                        >Pokemon Colosseum</RadioButton>
+                    <RadioButton GroupName="OutputGame"
+                        IsChecked="{Binding IsGameXD, Mode=OneTime}"
+                        Command="{Binding ChangeOutputForGameCommand}" 
+                        CommandParameter="{x:Static data:Game.PokemonXDGaleOfDarkness}"
+                        >Pokemon XD: Gale of Darkness</RadioButton>
+                </StackPanel>
+                <TextBlock>What are these files used for?</TextBlock>
+                <StackPanel Orientation="Vertical" Margin="4" IsEnabled="{Binding OutputForTargetEnabled}">
+                    <RadioButton GroupName="OutputTarget"
+                        IsChecked="{Binding IsTargetOriginal, Mode=OneTime}"
+                        Command="{Binding ChangeOutputForTargetCommand}" 
+                        CommandParameter="{x:Static data:TextureTargetChoice.Original}"
+                        >Original Game Files (for mods)</RadioButton>
+                    <RadioButton GroupName="OutputTarget"
+                        IsChecked="{Binding IsTargetDolphin, Mode=OneTime}"
+                        Command="{Binding ChangeOutputForTargetCommand}" 
+                        CommandParameter="{x:Static data:TextureTargetChoice.Dolphin}"
+                        >Dolphin Texture Files</RadioButton>
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+        
+    </Panel>
+</Window>

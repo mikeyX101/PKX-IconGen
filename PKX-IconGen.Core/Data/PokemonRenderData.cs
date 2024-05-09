@@ -64,17 +64,17 @@ namespace PKXIconGen.Core.Data
         }
         
         [JsonIgnore]
-        public string Output => !string.IsNullOrWhiteSpace(OutputName) ? OutputName : Name;
+        public string Output => string.IsNullOrWhiteSpace(OutputName) ? Name : OutputName;
         [JsonIgnore]
-        public string FaceOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_face" : Name + "_face";
+        public string FaceOutput => Output + "_face";
         [JsonIgnore]
-        public string BodyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_body" : Name + "_box_body";
+        public string BodyOutput => Output + "_box_body";
         [JsonIgnore]
-        public string BodyShinyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_body_shiny" : Name + "_box_body_shiny";
+        public string BodyShinyOutput => Output + "_box_body_shiny";
         [JsonIgnore]
-        public string DanceOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_dance" : Name + "_box_dance";
+        public string DanceOutput => Output + "_box_dance";
         [JsonIgnore]
-        public string DanceShinyOutput => !string.IsNullOrWhiteSpace(OutputName) ? OutputName + "_box_dance_shiny" : Name + "_box_dance_shiny";
+        public string DanceShinyOutput => Output + "_box_dance_shiny";
 
         private string model;
         /// <summary>
@@ -100,7 +100,8 @@ namespace PKXIconGen.Core.Data
                 }
                 
                 BoxRender?.ResetTexturesAndRemovedObjects();
-                
+                CachedNames = null;
+                NamesCached = false;
                 model = Utils.CleanModelPathString(value);
             }
         }
@@ -209,6 +210,29 @@ namespace PKXIconGen.Core.Data
             };
             await runner.RunAsync(token);
             onFinish?.Invoke();
+        }
+
+        [JsonIgnore]
+        private bool NamesCached { get; set; } = false;
+        [JsonIgnore]
+        private TextureNames? CachedNames { get; set; }
+        public string? GetTextureNames(Game forGame, TextureTargetChoice texture, OutputChoice output)
+        {
+            string modelName = Path.GetFileNameWithoutExtension(Model);
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                return null;
+            }
+
+            if (!NamesCached)
+            {
+                NameMap.LoadNamesMap(forGame);
+
+                CachedNames = NameMap.GetTextureNames(modelName);
+                NamesCached = true;
+            }
+
+            return CachedNames?.GetName(texture, output);
         }
 
         public bool Equals(PokemonRenderData? other)

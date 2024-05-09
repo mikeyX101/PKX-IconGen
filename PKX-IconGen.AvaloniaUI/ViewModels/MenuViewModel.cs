@@ -51,6 +51,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
 
             ExportCommand = ReactiveCommand.CreateFromTask(Export, exportEnabled);
             ExportBlenderCommand = ReactiveCommand.CreateFromTask(ExportBlender, exportEnabled);
+            OpenSettingsCommand = ReactiveCommand.CreateFromTask(OpenSettings);
         }
 
         [UsedImplicitly]
@@ -127,24 +128,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             //throw new NotImplementedException();
         }
 
-        [UsedImplicitly]
-        public void ToggleLogBlender()
+        public ReactiveCommand<Unit,Unit> OpenSettingsCommand { get; }
+        public async Task OpenSettings()
         {
-            MainWindow.LogBlender = !MainWindow.LogBlender;
+            Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
+            SettingsWindowViewModel dialogVm = new(settings);
+            await DialogHelper.ShowWindowDialog<SettingsWindowViewModel>(dialogVm);
         }
-        
-        [UsedImplicitly]
-        public void ToggleSaturationBoost()
-        {
-            MainWindow.SaturationBoost = !MainWindow.SaturationBoost;
-        }
-        
-        [UsedImplicitly]
-        public void ToggleSaveDanceGIF()
-        {
-            MainWindow.SaveDanceGIF = !MainWindow.SaveDanceGIF;
-        }
-        
+
         [UsedImplicitly]
         public async void CleanTempFolders()
         {

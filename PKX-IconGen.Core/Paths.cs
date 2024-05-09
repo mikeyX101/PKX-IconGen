@@ -26,7 +26,10 @@ namespace PKXIconGen.Core
     {
         // Data Folder
         internal static string DataFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+        internal static string NameMapsFolder => Path.Combine(DataFolder, "NameMaps");
         internal static string DatabaseFile => Path.Combine(DataFolder, "DB.db");
+        internal static string ColoNameMapFile => Path.Combine(NameMapsFolder, "coloNameMap.json");
+        internal static string XDNameMapFile => Path.Combine(NameMapsFolder, "xdNameMap.json");
         
         // Logs
         internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");

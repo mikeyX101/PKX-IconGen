@@ -51,16 +51,10 @@
     <DockPanel>
 
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Bottom">
-        <Button IsVisible="{Binding OkButtonVisible}" Width="50" Margin="8" Click="CloseTrue">
-          <TextBlock TextAlignment="Center">OK</TextBlock>
-        </Button>
+        <Button IsVisible="{Binding OkButtonVisible}" HorizontalContentAlignment="Center" Width="50" Margin="8" Click="CloseTrue">OK</Button>
 
-        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="CloseTrue">
-          <TextBlock TextAlignment="Center">Yes</TextBlock>
-        </Button>
-        <Button IsVisible="{Binding YesNoButtonsVisible}" Width="50" Margin="8" Click="CloseFalse">
-          <TextBlock TextAlignment="Center">No</TextBlock>
-        </Button>
+        <Button IsVisible="{Binding YesNoButtonsVisible}" HorizontalContentAlignment="Center" Width="50" Margin="8" Click="CloseTrue">Yes</Button>
+        <Button IsVisible="{Binding YesNoButtonsVisible}" HorizontalContentAlignment="Center" Width="50" Margin="8" Click="CloseFalse">No</Button>
       </StackPanel>
 
       <Grid Name="IconPanel" ColumnDefinitions="150, *">

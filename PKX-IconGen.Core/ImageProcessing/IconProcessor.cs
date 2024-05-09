@@ -74,22 +74,27 @@ namespace PKXIconGen.Core.ImageProcessing
         private RenderJob Job { get; set; }
         private bool HasSecondary => Job.Data.FaceRender.SecondaryCamera.HasValue;
 
-        private string FinalOutput { get; init; }
+        private string OutputPath { get; init; }
         
         private bool SaturationBoost { get; init; }
         
         private bool SaveDanceGIF { get; init; }
+        
+        private Game NameForGame { get; init; }
+        private TextureTargetChoice NameTarget { get; init; }
 
         private Game Game => Job.Game;
         private RenderTarget Target => Job.Target;
         
         
-        public IconProcessor(RenderJob job, string finalOutput, bool saturationBoost, bool saveDanceGif)
+        public IconProcessor(RenderJob job, string outputPath, bool saturationBoost, bool saveDanceGif, Game nameForGame, TextureTargetChoice nameTarget)
         {
             Job = job;
-            FinalOutput = finalOutput;
+            OutputPath = outputPath;
             SaturationBoost = saturationBoost;
             SaveDanceGIF = saveDanceGif;
+            NameForGame = nameForGame;
+            NameTarget = nameTarget;
         }
         
         public async Task ProcessJobAsync(CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
@@ -160,7 +165,8 @@ namespace PKXIconGen.Core.ImageProcessing
             }
             CoreManager.Logger.Information("Combining face images for {Output} ({Name})...Done!", Job.Data.FaceOutput, Job.Data.Name);
 
-            await main.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.FaceOutput + ".png"));
+            string outputName = Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Face) ?? Job.Data.FaceOutput;
+            await main.SaveAsPngAsync(Path.Combine(OutputPath, outputName + ".png"));
             stepOutputAsync?.Invoke($"Finished rendering face {Job.Data.Name}!".AsMemory());
             CoreManager.Logger.Information("Finished rendering face {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
         }
@@ -189,8 +195,11 @@ namespace PKXIconGen.Core.ImageProcessing
                 using Image danceFirstShiny = firstShiny.Clone(ctx => ctx.AddImageBottom(secondShiny).AddImageBottom(thirdShiny));
                 CoreManager.Logger.Information("Combining box images for {Output} ({Name})...Done!", Job.Data.DanceShinyOutput, Job.Data.Name);
                 
-                await danceFirst.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceOutput + ".png"));
-                await danceFirstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.DanceShinyOutput + ".png"));
+                string outputName = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Box) ?? Job.Data.DanceOutput) + ".png";
+                string outputNameShiny = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.BoxShiny) ?? Job.Data.DanceShinyOutput) + ".png";
+                
+                await danceFirst.SaveAsPngAsync(Path.Combine(OutputPath, outputName));
+                await danceFirstShiny.SaveAsPngAsync(Path.Combine(OutputPath, outputNameShiny));
 
                 if (SaveDanceGIF)
                 {
@@ -204,8 +213,11 @@ namespace PKXIconGen.Core.ImageProcessing
             {
                 token?.ThrowIfCancellationRequested();
                 
-                await first.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyOutput + ".png"));
-                await firstShiny.SaveAsPngAsync(Path.Combine(FinalOutput, Job.Data.BodyShinyOutput + ".png"));
+                string outputName = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Box) ?? Job.Data.BodyOutput) + ".png";
+                string outputNameShiny = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.BoxShiny) ?? Job.Data.BodyShinyOutput) + ".png";
+                
+                await first.SaveAsPngAsync(Path.Combine(OutputPath, outputName));
+                await firstShiny.SaveAsPngAsync(Path.Combine(OutputPath, outputNameShiny));
             }
             
             
@@ -244,7 +256,7 @@ namespace PKXIconGen.Core.ImageProcessing
                 metadata.ColorTableMode = GifColorTableMode.Local;
             }
             
-            await danceGif.SaveAsGifAsync(Path.Combine(FinalOutput, gifName), new GifEncoder { Quantizer = KnownQuantizers.Wu, ColorTableMode = GifColorTableMode.Local, PixelSamplingStrategy = new ExtensivePixelSamplingStrategy() }, token ?? CancellationToken.None);
+            await danceGif.SaveAsGifAsync(Path.Combine(OutputPath, gifName), new GifEncoder { Quantizer = KnownQuantizers.Wu, ColorTableMode = GifColorTableMode.Local, PixelSamplingStrategy = new ExtensivePixelSamplingStrategy() }, token ?? CancellationToken.None);
         }
         
         private async Task<Image> ProcessIconAsync(string path, Icon mode, CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)

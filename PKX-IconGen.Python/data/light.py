@@ -54,7 +54,7 @@ class Light(object):
         light: Light
         if target is RenderTarget.FACE:
             light = Light(
-                LightType.POINT,
+                LightType.AREA,
                 250,
                 Color.default(),
                 5
