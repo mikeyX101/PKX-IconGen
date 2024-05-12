@@ -17,17 +17,16 @@ If you want to use the Blender scenes outside of PKX-IconGen, you can still save
 
 ## Download
 #### Requirements
-- Blender 3.6.X LTS or higher ([found here](https://www.blender.org/download/)) (**Blender 2.93 LTS and up should work, but has not been tested in a while**)
-- .NET 8 Runtime ([found here](https://dotnet.microsoft.com/en-us/download))
+- Blender 3.6.X LTS ([found here](https://www.blender.org/download/)) (**Blender 2.93 LTS and up should work, but has not been tested in a while. Blender 4.X is NOT supported yet**)
 
 See the [release](https://github.com/mikeyX101/PKX-IconGen/releases) section for downloads. **(No MacOS builds are available for the time being)**
 
 ## Build
-You will need to have the .NET 7 SDK installed.
+You will need to have the .NET 8 SDK installed.
 
 Then, you can use Visual Studio 2019/2022, JetBrain Rider or the .NET CLI to build the PKX-IconGen.AvaloniaUI project.
 
-You can also simply self-publish using the scripts provided. These will give you a compressed single file executable.
+You can also simply self-publish using the scripts provided. These will give you a compressed single file executable that doesn't need the .NET runtime to execute.
 
 ## License
 PKX-IconGen is licensed under the [GNU General Public License v3.0](COPYING).
