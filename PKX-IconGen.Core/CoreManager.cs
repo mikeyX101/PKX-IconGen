@@ -19,10 +19,10 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using LinqToDB.EntityFrameworkCore;
-using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Logging;
 using PKXIconGen.Core.Services;
 using Serilog;
@@ -34,6 +34,7 @@ namespace PKXIconGen.Core
     public static class CoreManager
     {
         internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
+        private const byte MaxLogFiles = 5;
 
         private static IDisposable? _disposableProperty;
         public static ILogger Logger
@@ -116,6 +117,7 @@ namespace PKXIconGen.Core
             
             // Copy log as latest.log
             File.Copy(Paths.Log, Paths.LogLatest, true);
+            RespectMaxLogs();
         }
 
         private static void DisposeLogger()
@@ -124,6 +126,24 @@ namespace PKXIconGen.Core
             {
                 ((Logger)Logger).Dispose();
                 NullableLogger = null;
+            }
+        }
+
+        private static void RespectMaxLogs()
+        {
+            DirectoryInfo info = new DirectoryInfo(Paths.LogFolder);
+            FileInfo[] files = info.EnumerateFiles("log*.log").OrderBy(p => p.CreationTime).ToArray();
+            if (files.Length <= MaxLogFiles) return;
+            
+            int nbToDel = MaxLogFiles - files.Length;
+            foreach (FileInfo file in files)
+            {
+                file.Delete();
+
+                if (nbToDel-- <= MaxLogFiles)
+                {
+                    break;
+                }
             }
         }
     }

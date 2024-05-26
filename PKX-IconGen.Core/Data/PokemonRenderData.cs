@@ -218,11 +218,14 @@ namespace PKXIconGen.Core.Data
         private TextureNames? CachedNames { get; set; }
         public string? GetTextureNames(Game forGame, TextureTargetChoice texture, OutputChoice output)
         {
-            string modelName = Path.GetFileNameWithoutExtension(Model);
-            if (string.IsNullOrWhiteSpace(modelName))
+            if (string.IsNullOrWhiteSpace(Model) || forGame == Game.Undefined)
             {
                 return null;
             }
+
+            string modelFileName = Path.GetFileName(Model);
+            int indexFirstExtension = modelFileName.IndexOf('.');
+            string modelName = modelFileName[..indexFirstExtension];
 
             if (!NamesCached)
             {

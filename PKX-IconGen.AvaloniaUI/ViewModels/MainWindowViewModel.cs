@@ -368,6 +368,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         {
             EnableDeleteButton = SelectedPokemonRenderData.Count > 0;
             NbOfRenders = SelectedPokemonRenderData.Count;
+            NbOfPokemonRendered = 0;
         }
         
         public ReactiveCommand<Unit,Unit> NewRenderDataCommand { get; }

@@ -81,5 +81,6 @@ public static class NameMap
     {
         NamesMap?.Dispose();
         NamesMap = null;
+        NameMapGame = Game.Undefined;
     }
 }

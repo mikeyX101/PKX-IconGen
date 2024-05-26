@@ -176,12 +176,12 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 DialogButtons.Ok,
                 $"""
                  PKX-IconGen by mikeyX
-                 Core: {coreAssembly.GetName().Version?.ToString() ?? "Unknown Version"}
-                 UI: {uiAssembly.GetName().Version?.ToString() ?? "Unknown Version"}
+                 Core: {coreAssembly.GetName().Version?.ToString(3) ?? "Unknown Version"}
+                 UI: {uiAssembly.GetName().Version?.ToString(3) ?? "Unknown Version"}
                  Blender Addon: {Versions.AddonVersion}
                  Importer: Commit {Versions.ImporterCommit[..7]} on the {Versions.ImporterDate:yyyy-MM-dd}
 
-                 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString() ?? "Unknown Version"} 
+                 Powered by Avalonia {avaloniaAssembly.GetName().Version?.ToString(3) ?? "Unknown Version"} 
                  """,
                 height: 275, title: "About");
         }

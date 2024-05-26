@@ -99,30 +99,32 @@ namespace PKXIconGen.Core.ImageProcessing
         
         public async Task ProcessJobAsync(CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
         {
+            stepOutputAsync?.Invoke($"Processing icons for {Job.Data.Name}...".AsMemory());
+            
             List<Task<Image>> faceTasks = new();
             List<Task<Image>> boxTasks = new();
             if (Target.HasFlag(RenderTarget.Face))
             {
-                faceTasks.Add(ProcessIconAsync(Job.FaceMainPath, Icon.FaceNormal, token, stepOutputAsync));
-                faceTasks.Add(ProcessIconAsync(Job.FaceShinyPath, Icon.FaceShiny, token, stepOutputAsync));
+                faceTasks.Add(ProcessIconAsync(Job.FaceMainPath, Icon.FaceNormal, token));
+                faceTasks.Add(ProcessIconAsync(Job.FaceShinyPath, Icon.FaceShiny, token));
 
                 if (HasSecondary)
                 {
-                    faceTasks.Add(ProcessIconAsync(Job.FaceSecondaryPath, Icon.FaceNormalSecondary, token, stepOutputAsync));
-                    faceTasks.Add(ProcessIconAsync(Job.FaceShinySecondaryPath, Icon.FaceShinySecondary, token, stepOutputAsync));
+                    faceTasks.Add(ProcessIconAsync(Job.FaceSecondaryPath, Icon.FaceNormalSecondary, token));
+                    faceTasks.Add(ProcessIconAsync(Job.FaceShinySecondaryPath, Icon.FaceShinySecondary, token));
                 }
             }
             
             if (Target.HasFlag(RenderTarget.Box))
             {
-                boxTasks.Add(ProcessIconAsync(Job.BoxFirstMainPath, Icon.BoxFirst, token, stepOutputAsync));
-                boxTasks.Add(ProcessIconAsync(Job.BoxFirstShinyPath, Icon.BoxFirstShiny, token, stepOutputAsync));
+                boxTasks.Add(ProcessIconAsync(Job.BoxFirstMainPath, Icon.BoxFirst, token));
+                boxTasks.Add(ProcessIconAsync(Job.BoxFirstShinyPath, Icon.BoxFirstShiny, token));
                 if (Game == Game.PokemonXDGaleOfDarkness)
                 {
-                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondMainPath, Icon.BoxSecond, token, stepOutputAsync));
-                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondShinyPath, Icon.BoxSecondShiny, token, stepOutputAsync));
-                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdMainPath, Icon.BoxThird, token, stepOutputAsync));
-                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdShinyPath, Icon.BoxThirdShiny, token, stepOutputAsync));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondMainPath, Icon.BoxSecond, token));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxSecondShinyPath, Icon.BoxSecondShiny, token));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdMainPath, Icon.BoxThird, token));
+                    boxTasks.Add(ProcessIconAsync(Job.BoxThirdShinyPath, Icon.BoxThirdShiny, token));
                 }
             }
 
@@ -163,8 +165,7 @@ namespace PKXIconGen.Core.ImageProcessing
 
                 main.Mutate(ctx => ctx.AddImageRight(secondary));
             }
-            CoreManager.Logger.Information("Combining face images for {Output} ({Name})...Done!", Job.Data.FaceOutput, Job.Data.Name);
-
+            
             string outputName = Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Face) ?? Job.Data.FaceOutput;
             await main.SaveAsPngAsync(Path.Combine(OutputPath, outputName + ".png"));
             stepOutputAsync?.Invoke($"Finished rendering face {Job.Data.Name}!".AsMemory());
@@ -190,10 +191,8 @@ namespace PKXIconGen.Core.ImageProcessing
                 stepOutputAsync?.Invoke($"Combining box images for {Job.Data.Name}...".AsMemory());
                 CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
                 using Image danceFirst = first.Clone(ctx => ctx.AddImageBottom(second).AddImageBottom(third));
-                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...Done!", Job.Data.FaceOutput, Job.Data.Name);
                 CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceShinyOutput, Job.Data.Name);
                 using Image danceFirstShiny = firstShiny.Clone(ctx => ctx.AddImageBottom(secondShiny).AddImageBottom(thirdShiny));
-                CoreManager.Logger.Information("Combining box images for {Output} ({Name})...Done!", Job.Data.DanceShinyOutput, Job.Data.Name);
                 
                 string outputName = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Box) ?? Job.Data.DanceOutput) + ".png";
                 string outputNameShiny = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.BoxShiny) ?? Job.Data.DanceShinyOutput) + ".png";
@@ -221,8 +220,8 @@ namespace PKXIconGen.Core.ImageProcessing
             }
             
             
-            stepOutputAsync?.Invoke($"Finished rendering box {Job.Data.Name}!".AsMemory());
-            CoreManager.Logger.Information("Finished rendering box {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
+            stepOutputAsync?.Invoke($"Finished rendering box for {Job.Data.Name}!".AsMemory());
+            CoreManager.Logger.Information("Finished rendering box for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
         }
 
         private async Task SaveDanceGifAsync(string gifName, Image first, Image second, Image third, CancellationToken? token = null)
@@ -239,11 +238,6 @@ namespace PKXIconGen.Core.ImageProcessing
             GifMetadata gifMetaData = danceGif.Metadata.GetGifMetadata();
             gifMetaData.RepeatCount = repeatCount;
             gifMetaData.ColorTableMode = GifColorTableMode.Local;
-            gifMetaData.Comments = new List<string>
-            {
-                "Created in PKX-IconGen",
-                "https://www.github.com/mikeyX101/PKX-IconGen"
-            };
 
             danceGif.Frames.AddFrame(secondBg.Frames.RootFrame);
             danceGif.Frames.AddFrame(thirdBg.Frames.RootFrame);
@@ -259,7 +253,7 @@ namespace PKXIconGen.Core.ImageProcessing
             await danceGif.SaveAsGifAsync(Path.Combine(OutputPath, gifName), new GifEncoder { Quantizer = KnownQuantizers.Wu, ColorTableMode = GifColorTableMode.Local, PixelSamplingStrategy = new ExtensivePixelSamplingStrategy() }, token ?? CancellationToken.None);
         }
         
-        private async Task<Image> ProcessIconAsync(string path, Icon mode, CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
+        private async Task<Image> ProcessIconAsync(string path, Icon mode, CancellationToken? token = null)
         {
             Image img = await Image.LoadAsync(path);
             if (SaturationBoost)
@@ -277,24 +271,19 @@ namespace PKXIconGen.Core.ImageProcessing
             {
                 if (renderData.Glow.Alpha != 0)
                 {
-                    stepOutputAsync?.Invoke($"Applying glow to {mode} image for {Job.Data.Name}...".AsMemory());
                     CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                     ctx.ApplyEdgeGlow(renderData.Glow.ToPixel<RgbaVector>(), glowIntensity, expandByPixels);
-                    CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                 }
                 token?.ThrowIfCancellationRequested();
                 if (renderData.Background.Alpha != 0)
                 {
-                    stepOutputAsync?.Invoke($"Applying background color to {mode} image for {Job.Data.Name}...".AsMemory());
                     CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                     using Image background = new Image<Rgba32>(img.Width, img.Height, renderData.Background.ToPixel<Rgba32>());
                     ctx.AddImageBehind(background);
-                    CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...Done!", mode, Job.Data.Output, Job.Data.Name);
                 }
             });
             
-            stepOutputAsync?.Invoke($"Applying style for game {Game} for {Job.Data.Name}...".AsMemory());
-            CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...", Game, Job.Data.Output, Job.Data.Name);
+            CoreManager.Logger.Information("Applying style to {Mode} for game {Game} for {Output} ({Name})...", mode, Game, Job.Data.Output, Job.Data.Name);
             switch (Game)
             {
                 case Game.PokemonColosseum:
@@ -317,7 +306,6 @@ namespace PKXIconGen.Core.ImageProcessing
                 case Game.Undefined or _:
                     throw new InvalidOperationException("Selected style was 'Undefined'.");
             }
-            CoreManager.Logger.Information("Applying style for game {Game} for {Output} ({Name})...Done!", Game, Job.Data.Output, Job.Data.Name);
             return img;
         }
 
