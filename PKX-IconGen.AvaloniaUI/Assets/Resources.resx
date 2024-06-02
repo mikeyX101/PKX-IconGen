@@ -126,4 +126,7 @@ The download is around 200MB. It is required for the HD built-ins.
 The textures will be installed in "{{AssetsPath}}/icon-gen/hd-mikeyx/".
 The download is "latest.zip" from the folder from the link below.</value>
     </data>
+    <data name="TooltipLogBlender" xml:space="preserve">
+        <value>Log more details for Blender operations. Can increase the log size considerably.</value>
+    </data>
 </root>

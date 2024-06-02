@@ -41,11 +41,11 @@ from math import degrees, radians
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
-    "blender": (2, 93, 0),
-    "version": (0, 3, 14),
+    "blender": (3, 6, 0),
+    "version": (0, 3, 15),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
-    "author": "Samuel Caron/mikeyx",
+    "author": "Samuel Caron/mikeyX",
     "location": "View3D > PKX-IconGen",
     "doc_url": "https://github.com/mikeyX101/PKX-IconGen"
 }
@@ -317,7 +317,7 @@ class PKXSaveOperator(bpy.types.Operator):
         sync_props_to_prd(context)
 
         json: str = prd.to_json()
-        print(f"Output: {json}")
+        common.print_verbose(f"Output: {json}")
         # Will not work if debugging, test saves from the C# PKX-IconGen application
         try:
             name: str = prd.output_name or prd.name
@@ -327,7 +327,7 @@ class PKXSaveOperator(bpy.types.Operator):
                 bpy.ops.wm.save_mainfile()
         except:
             print("Something happened while saving JSON.")
-            print("Current PRD: " + prd.to_json())
+            common.print_verbose("Current PRD: " + json)
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -432,6 +432,11 @@ def update_mode(self, context):
     global mode
     mode = EditMode[value]
 
+    if mode in EditMode.ANY_BOX:
+        set_show_xd_cutout(False)
+    else:
+        set_show_xd_cutout(self.show_xd_cutout)
+
     for texture in list(render_textures.values()):
         common.reset_texture_images(texture)
 
@@ -441,6 +446,17 @@ def update_mode(self, context):
     common.switch_model(prd.shiny, mode)
     sync_prd_to_props(context)
     sync_props_to_scene(context)
+
+
+def update_show_xd_cutout(self, context):
+    value = self.show_xd_cutout
+
+    set_show_xd_cutout(value)
+
+
+def set_show_xd_cutout(toggle: bool):
+    camera = get_camera()
+    camera.data.background_images[0].show_background_image = toggle
 
 
 def update_animation_pose(self, context):
@@ -899,6 +915,12 @@ MAINPROPS = [
          
          update=update_mode
      )),
+    ('show_xd_cutout',
+     bpy.props.BoolProperty(
+         name="Show XD cutout",
+         description="Show the cutout that gets cropped for XD icons",
+         update=update_show_xd_cutout
+     )),
     ('secondary_enabled',
      bpy.props.BoolProperty(
          name="Enable secondary cameras",
@@ -1287,14 +1309,14 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
             expand = prop_name == "main_mode" or prop_name == "face_mode" or prop_name == "box_mode"
 
             if prop_name == "main_mode":
-                col.label(text=f"Main mode")
+                col.label(text="Main mode")
                 col.row(align=True).prop(context.scene, prop_name, expand=expand)
-            elif main_mode == "FACE" and (prop_name == "face_mode" or prop_name == "secondary_enabled"):
+            elif main_mode == "FACE" and (prop_name == "face_mode" or prop_name == "show_xd_cutout" or prop_name == "secondary_enabled"):
                 if prop_name == "face_mode":
-                    col.label(text=f"Face mode")
+                    col.label(text="Face mode")
                 col.row(align=True).prop(context.scene, prop_name, expand=expand)
             elif main_mode == "BOX" and prop_name == "box_mode":
-                col.label(text=f"Box mode")
+                col.label(text="Box mode")
                 col.row(align=True).prop(context.scene, prop_name, expand=expand)
 
         col.separator()
@@ -1526,6 +1548,7 @@ def register(data: PokemonRenderData):
 
     scene = bpy.data.scenes["Scene"]
     scene.secondary_enabled = secondary_enabled
+    scene.show_xd_cutout = common.xdCutoutInitialState
 
     sync_prd_to_props()
     sync_props_to_scene()

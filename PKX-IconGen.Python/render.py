@@ -129,12 +129,12 @@ if __name__ == "__main__":
         json = file.readline()
         file.close()
 
-        print(f"Rendering: {json}")
+        common.print_verbose(f"Rendering: {json}")
         job: RenderJob = RenderJob.from_json(json)
     else:
         json = sys.stdin.readline()
 
-        print(f"Rendering: {json}")
+        common.print_verbose(f"Rendering: {json}")
         job: RenderJob = RenderJob.from_json(json)
 
     common.import_models(job.data)

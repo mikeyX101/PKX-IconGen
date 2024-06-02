@@ -45,12 +45,12 @@ if __name__ == "__main__":
         json = file.readline()
         file.close()
 
-        print(f"Input: {json}")
+        common.print_verbose(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
     else:
         json = sys.stdin.readline()
 
-        print(f"Input: {json}")
+        common.print_verbose(f"Input: {json}")
         prd = PokemonRenderData.from_json(json)
 
     common.import_models(prd)

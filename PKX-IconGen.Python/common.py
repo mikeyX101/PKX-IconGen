@@ -75,6 +75,8 @@ SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"
 
 cmd_args = None
 assets_path: Optional[str] = None
+xdCutoutInitialState: bool = False
+do_print_verbose: bool = False
 pkx_cache = PkxIconGenCache()
 
 
@@ -96,13 +98,24 @@ def attach_debugger(debug_egg: str):
 def parse_cmd_args(script_args):
     global cmd_args
     global assets_path
+    global xdCutoutInitialState
+    global do_print_verbose
 
     if cmd_args is None:
-        cmd_args, _ = getopt.getopt(script_args, "", ["pkx-debug=", "debug-egg=", "assets-path="])
+        cmd_args, _ = getopt.getopt(script_args, "", ["pkx-debug=", "debug-egg=", "assets-path=", "xd-cutout", "verbose"])
         for arg, value in cmd_args:
             if arg == "--assets-path" and value != "":
                 assets_path = value
                 print(f"Assets Path: {assets_path}")
+            elif arg == "--xd-cutout":
+                xdCutoutInitialState = True
+            elif arg == "--verbose":
+                do_print_verbose = True
+
+
+def print_verbose(msg: str):
+    if do_print_verbose:
+        print(msg)
 
 
 def get_absolute_asset_path(model: str) -> str:

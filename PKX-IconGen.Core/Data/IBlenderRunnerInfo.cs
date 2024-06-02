@@ -25,5 +25,6 @@ namespace PKXIconGen.Core.Data
         public string BlenderPath { get; }
         public string BlenderOptionalArguments { get; }
         public string AssetsPath { get; }
+        public bool ShowXDCutout { get; }
     }
 }

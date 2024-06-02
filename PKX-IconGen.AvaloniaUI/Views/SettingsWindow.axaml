@@ -20,7 +20,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-        xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
+        xmlns:assets="clr-namespace:PKXIconGen.AvaloniaUI.Assets"
         xmlns:data="using:PKXIconGen.Core.Data"
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -53,7 +53,7 @@
             </StackPanel>
             <StackPanel Margin="16" Orientation="Vertical" DockPanel.Dock="Top">
                 <TextBlock FontSize="24">Settings</TextBlock>
-                <CheckBox Margin="4" IsChecked="{Binding LogBlender, Mode=TwoWay}" >Log Blender to Logs folder</CheckBox>
+                <CheckBox Margin="4" IsChecked="{Binding LogBlender, Mode=TwoWay}" ToolTip.Tip="{x:Static assets:Resources.TooltipLogBlender}">Log more Blender information</CheckBox>
                 <CheckBox Margin="4" IsChecked="{Binding SaturationBoost, Mode=TwoWay}" >10% Saturation Boost</CheckBox>
                 <CheckBox Margin="4" IsChecked="{Binding SaveDanceGIF, Mode=TwoWay}" >Save preview GIF for XD Dance sprites</CheckBox>
                 <Separator Margin="0 8"></Separator>

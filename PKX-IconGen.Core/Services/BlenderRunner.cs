@@ -44,14 +44,15 @@ namespace PKXIconGen.Core.Services
     {
         internal static class BlenderRunners
         {
-            internal static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, RenderJob job) => 
+            internal static IBlenderRunner GetRenderRunner(IBlenderRunnerInfo blenderRunnerInfo, RenderJob job) =>
                 new BlenderRunner(blenderRunnerInfo, job.Data.TemplateName, new string[]
                 {
                     "--background",
                     "--python", Paths.Render
                 }, JsonIO.ToJsonString(job));
 
-            internal static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData prd) => 
+            internal static IBlenderRunner GetModifyDataRunner(IBlenderRunnerInfo blenderRunnerInfo,
+                PokemonRenderData prd) =>
                 new BlenderRunner(blenderRunnerInfo, prd.TemplateName, new string[]
                 {
                     "--python", Paths.ModifyData
@@ -64,6 +65,7 @@ namespace PKXIconGen.Core.Services
         private bool LogBlender { get; init; }
         private string BlenderPath { get; init; }
         private string AssetsPath { get; init; }
+        private bool ShowXDCutout { get; init; }
         private string[] Arguments { get; init; }
         private string OptionalArguments { get; init; }
         private byte[] Input { get; init; }
@@ -76,6 +78,7 @@ namespace PKXIconGen.Core.Services
             LogBlender = blenderRunnerInfo.LogBlender;
             BlenderPath = blenderRunnerInfo.BlenderPath;
             AssetsPath = blenderRunnerInfo.AssetsPath;
+            ShowXDCutout = blenderRunnerInfo.ShowXDCutout;
             Arguments = arguments;
             OptionalArguments = blenderRunnerInfo.BlenderOptionalArguments;
             Input = Encoding.UTF8.GetBytes(input);
@@ -172,6 +175,11 @@ namespace PKXIconGen.Core.Services
                     args
                         .Add("--") // Python Script args
                         .Add("--assets-path").Add(AssetsPath);
+
+                    if (ShowXDCutout)
+                    {
+                        args.Add("--xd-cutout");
+                    }
                 });
             
             cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));

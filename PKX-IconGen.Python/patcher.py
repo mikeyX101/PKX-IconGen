@@ -74,7 +74,6 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         print("Patched Anorith")
 
 
-
 def _flip_outside_uv_x(obj_name: str):
     obj = bpy.data.objects[obj_name]
     obj.select_set(True)

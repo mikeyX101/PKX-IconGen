@@ -152,5 +152,11 @@ namespace PKXIconGen.AvaloniaUI.Assets {
                 return ResourceManager.GetString("TextureDownloaderInfo", resourceCulture);
             }
         }
+        
+        public static string TooltipLogBlender {
+            get {
+                return ResourceManager.GetString("TooltipLogBlender", resourceCulture);
+            }
+        }
     }
 }

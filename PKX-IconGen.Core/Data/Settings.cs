@@ -42,7 +42,9 @@ namespace PKXIconGen.Core.Data
         public RenderScale RenderScale { get; set; }
         [Column, MaxLength(int.MaxValue)]
         public string AssetsPath { get; set; }
-        
+
+        public bool ShowXDCutout => CurrentGame == Game.PokemonXDGaleOfDarkness;
+
         [Column]
         public bool LogBlender { get; set; }
         
