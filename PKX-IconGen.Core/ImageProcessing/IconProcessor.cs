@@ -168,8 +168,8 @@ namespace PKXIconGen.Core.ImageProcessing
             
             string outputName = Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Face) ?? Job.Data.FaceOutput;
             await main.SaveAsPngAsync(Path.Combine(OutputPath, outputName + ".png"));
-            stepOutputAsync?.Invoke($"Finished rendering face {Job.Data.Name}!".AsMemory());
-            CoreManager.Logger.Information("Finished rendering face {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
+            stepOutputAsync?.Invoke($"Finished rendering face for {Job.Data.Name}!".AsMemory());
+            CoreManager.Logger.Information("Finished rendering face for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
         }
         
         private async Task ProcessBoxAsync(IReadOnlyList<Task<Image>> boxImages, CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)

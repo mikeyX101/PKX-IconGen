@@ -15,12 +15,28 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from typing import Optional
 
 import blender_compat
 import bpy
 import bmesh
 import os
+
+
+class BlendMethod(Enum):
+    OPAQUE = 0,
+    CLIP = 1,
+    HASHED = 2,
+    BLEND = 3
+
+
+class ShadowMethod(Enum):
+    NONE = 0,
+    OPAQUE = 1,
+    CLIP = 2,
+    HASHED = 3
+
 
 """
 This file contains manual patches made for individual Pokemon to fix important broken features from models like mapping 
@@ -69,9 +85,25 @@ def apply_patches_by_model_name(model_path: Optional[str]):
     elif "anopth.pkx" in model_name:  # Anorith, make eyes track camera like a sprite and fix alpha blending
         _make_obj_track_camera("Object.002")
         _make_obj_track_camera("Object.004")
-        _set_mat_blend_mode("Material.006", "BLEND")
-        _set_mat_blend_mode("Material", "BLEND")
+        _set_mat_blend_mode("Material.006", BlendMethod.BLEND)
+        _set_mat_blend_mode("Material", BlendMethod.BLEND)
         print("Patched Anorith")
+    elif "tutinin.pkx" in model_name:  # Nincada, fix wings alpha blending
+        _set_mat_blend_mode("Material.008", BlendMethod.BLEND)
+        _set_mat_shadow_mode("Material.008", ShadowMethod.HASHED)
+        _set_mat_blend_mode("Material.013", BlendMethod.BLEND)
+        _set_mat_shadow_mode("Material.013", ShadowMethod.HASHED)
+        print("Patched Nincada")
+    elif "pearlulu.pkx" in model_name:  # Clamperl, fix pearl reflection to be less busy looking and fix face alpha blending
+        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.location, -1, 0, 2)
+        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.rotation, -90, 90, -90)
+        _set_mat_blend_mode("Material", BlendMethod.BLEND)
+        _set_mat_shadow_mode("Material", ShadowMethod.NONE)
+        _set_mat_blend_mode("Material.002", BlendMethod.BLEND)
+        _set_mat_shadow_mode("Material.002", ShadowMethod.NONE)
+        _set_mat_blend_mode("Material.003", BlendMethod.BLEND)
+        _set_mat_shadow_mode("Material.003", ShadowMethod.NONE)
+        print("Patched Nincada")
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -144,8 +176,12 @@ def _make_obj_track_camera(obj_name: str):
     track_constraint.track_axis = 'TRACK_Z'
 
 
-def _set_mat_blend_mode(mat_name: str, blend_mode: str):
-    bpy.data.materials[mat_name].blend_method = blend_mode
+def _set_mat_blend_mode(mat_name: str, blend_mode: BlendMethod):
+    bpy.data.materials[mat_name].blend_method = blend_mode.name
+
+
+def _set_mat_shadow_mode(mat_name: str, shadow_mode: ShadowMethod):
+    bpy.data.materials[mat_name].shadow_method = shadow_mode.name
 
 
 def _set_bsdf_roughness(mat_name: str, bsdf_roughness: float):
