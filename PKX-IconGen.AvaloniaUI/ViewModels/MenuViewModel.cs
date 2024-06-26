@@ -50,6 +50,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 nbOfRenders => nbOfRenders > 0);
 
             ExportCommand = ReactiveCommand.CreateFromTask(Export, exportEnabled);
+            ExportRenderJobCommand = ReactiveCommand.CreateFromTask<RenderTarget>(ExportRenderJob, exportEnabled);
             ExportBlenderCommand = ReactiveCommand.CreateFromTask(ExportBlender, exportEnabled);
             OpenSettingsCommand = ReactiveCommand.CreateFromTask(OpenSettings);
         }
@@ -94,13 +95,8 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             {
                 PokemonRenderData renderData = data.First();
 
-                List<string> extensions = new() {
-                    "*.json"
-                };
-                List<FilePickerFileType> filters = new()
-                {
-                    new FilePickerFileType("PKX-IconGen Json") { Patterns = extensions }
-                };
+                List<string> extensions = ["*.json"];
+                List<FilePickerFileType> filters = [new FilePickerFileType("PKX-IconGen Json") { Patterns = extensions }];
                 IStorageFile? file = await FileDialogHelper.SaveFile("Export Render Data", filters, initialFileName: renderData.Output + ".json", defaultExtension: "json");
                 if (file != null)
                 {
@@ -108,7 +104,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     await JsonIO.ExportAsync(renderData, fileStream);
                 }
             }
-            else if (data.Count > 1)
+            else
             {
                 IStorageFolder? directory = await FileDialogHelper.GetFolder("Export Render Data");
                 if (directory != null)
@@ -116,6 +112,38 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                     foreach (PokemonRenderData prd in data)
                     {
                         await JsonIO.ExportAsync(prd, Path.Combine(directory.Path.AbsolutePath, prd.Output + ".json"));
+                    }
+                }
+            }
+        }
+        
+        public ReactiveCommand<RenderTarget, Unit> ExportRenderJobCommand { get; }
+        private async Task ExportRenderJob(RenderTarget target)
+        {
+            List<PokemonRenderData> data = MainWindow.SelectedPokemonRenderData.Where(prd => prd is not null).Cast<PokemonRenderData>().ToList();
+            Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
+            if (data.Count == 1)
+            {
+                RenderJob renderJobData = new(data.First(), settings, target);
+
+                List<string> extensions = ["*.json"];
+                List<FilePickerFileType> filters = [new FilePickerFileType("PKX-IconGen RenderJob Json") { Patterns = extensions }];
+                IStorageFile? file = await FileDialogHelper.SaveFile("Export RenderJob Data", filters, initialFileName: renderJobData.Data.Output + "_job.json", defaultExtension: "json");
+                if (file != null)
+                {
+                    await using Stream fileStream = await file.OpenWriteAsync();
+                    await JsonIO.ExportAsync(renderJobData, fileStream);
+                }
+            }
+            else
+            {
+                IStorageFolder? directory = await FileDialogHelper.GetFolder("Export RenderJob Data");
+                if (directory != null)
+                {
+                    foreach (PokemonRenderData prd in data)
+                    {
+                        RenderJob renderJobData = new(prd, settings, target);
+                        await JsonIO.ExportAsync(renderJobData, Path.Combine(directory.Path.AbsolutePath, prd.Output +  "_job.json"));
                     }
                 }
             }
@@ -129,11 +157,11 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
         }
 
         public ReactiveCommand<Unit,Unit> OpenSettingsCommand { get; }
-        public async Task OpenSettings()
+        private async Task OpenSettings()
         {
             Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
             SettingsWindowViewModel dialogVm = new(settings);
-            await DialogHelper.ShowWindowDialog<SettingsWindowViewModel>(dialogVm);
+            await DialogHelper.ShowWindowDialog(dialogVm);
         }
 
         [UsedImplicitly]

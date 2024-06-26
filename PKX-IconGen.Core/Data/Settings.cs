@@ -54,6 +54,9 @@ namespace PKXIconGen.Core.Data
         [Column, DefaultValue(false)]
         public bool SaveDanceGIF { get; set; }
         
+        [Column, DefaultValue(false)]
+        public bool DevTools { get; set; }
+        
         [Column]
         public Game OutputNameForGame { get; set; }
         
@@ -73,6 +76,7 @@ namespace PKXIconGen.Core.Data
             LogBlender = false;
             SaturationBoost = true;
             SaveDanceGIF = false;
+            DevTools = false;
             OutputNameForGame = Game.Undefined;
             OutputNameForTarget = TextureTargetChoice.Dolphin;
         }

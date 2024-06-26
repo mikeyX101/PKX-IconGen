@@ -224,6 +224,13 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         #endregion
+        
+        private bool devTools;
+        public bool DevTools
+        {
+            get => devTools;
+            set => this.RaiseAndSetIfChanged(ref devTools, value);
+        }
 
         public MainWindowViewModel(Task databaseLoadingTask) : base()
         {
@@ -242,7 +249,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
                 .Bind(out pokemonRenderDataItems)
                 .Subscribe();
             
-            PokemonRenderDataSelection = new SelectionModel<PokemonRenderData>()
+            PokemonRenderDataSelection = new SelectionModel<PokemonRenderData>
             {
                 SingleSelect = false
             };
@@ -308,19 +315,14 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             
                 // Fields
                 BlenderPath = settings.BlenderPath;
-
                 BlenderOptionalArguments = settings.BlenderOptionalArguments;
-
                 OutputPath = settings.OutputPath;
-
                 SelectedIconStyle = IconStyleItems.First(i => i.Game == settings.CurrentGame);
-
                 SelectedRenderScale = settings.RenderScale;
-
                 EnableDeleteButton = false;
-
                 AssetsPath = settings.AssetsPath;
-            
+                DevTools = settings.DevTools;
+                
                 InitialLoadingFinished = true;
             }, DispatcherPriority.Background);
         }
@@ -384,6 +386,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         
+        [UsedImplicitly]
         public ReactiveCommand<PokemonRenderData,Unit> EditRenderDataCommand { get; }
         private async Task EditRenderData(PokemonRenderData prd)
         {

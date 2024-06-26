@@ -77,10 +77,6 @@ class PokemonRenderData(object):
         else:
             raise Exception(f"Unknown edit mode: {mode.name}")
 
-    def update_mode_render(self, mode: EditMode, update_func: Callable[[RenderData], None]):
-        render: RenderData = self.get_mode_render(mode)
-        update_func(render)
-
     def get_mode_camera(self, mode: EditMode) -> Optional[Camera]:
         render: RenderData = self.get_mode_render(mode)
         if mode in EditMode.ANY_FACE_MAIN or mode in EditMode.ANY_BOX:

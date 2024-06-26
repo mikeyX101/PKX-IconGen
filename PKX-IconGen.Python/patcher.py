@@ -15,27 +15,14 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from enum import Enum
+from blender_data_enums import *
+from math import radians
 from typing import Optional
 
 import blender_compat
 import bpy
 import bmesh
 import os
-
-
-class BlendMethod(Enum):
-    OPAQUE = 0,
-    CLIP = 1,
-    HASHED = 2,
-    BLEND = 3
-
-
-class ShadowMethod(Enum):
-    NONE = 0,
-    OPAQUE = 1,
-    CLIP = 2,
-    HASHED = 3
 
 
 """
@@ -95,15 +82,16 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _set_mat_shadow_mode("Material.013", ShadowMethod.HASHED)
         print("Patched Nincada")
     elif "pearlulu.pkx" in model_name:  # Clamperl, fix pearl reflection to be less busy looking and fix face alpha blending
-        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.location, -1, 0, 2)
-        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.rotation, -90, 90, -90)
+        _set_tex_projection("Material.004", "0x3F60 flag: 30081 image: 0x130A0  tlut: 0x-1", TextureProjection.SPHERE)
+        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.location, -2, 2, 0)
+        _set_mat_map_data("Material.004", "Mapping.001", blender_compat.mapping_in.rotation, 95, -95, 80)
         _set_mat_blend_mode("Material", BlendMethod.BLEND)
         _set_mat_shadow_mode("Material", ShadowMethod.NONE)
         _set_mat_blend_mode("Material.002", BlendMethod.BLEND)
         _set_mat_shadow_mode("Material.002", ShadowMethod.NONE)
         _set_mat_blend_mode("Material.003", BlendMethod.BLEND)
         _set_mat_shadow_mode("Material.003", ShadowMethod.NONE)
-        print("Patched Nincada")
+        print("Patched Clamperl")
 
 
 def _flip_outside_uv_x(obj_name: str):
@@ -126,31 +114,32 @@ def _flip_outside_uv_x(obj_name: str):
     obj.select_set(False)
 
 
-def _set_mat_bump_strength_to(mat_name: str, bumpnode_name: str, strength: float):
+def _set_mat_bump_strength_to(mat_name: str, bump_name: str, strength: float):
     mat = bpy.data.materials[mat_name]
     tree = mat.node_tree
     if tree is not None:
-        tree.nodes[bumpnode_name].inputs[blender_compat.bump_in.strength].default_value = strength
+        tree.nodes[bump_name].inputs[blender_compat.bump_in.strength].default_value = strength
 
 
-def _set_mat_mix_factor_to(mat_name: str, mixnode_name: str, fac: float):
+def _set_mat_mix_factor_to(mat_name: str, mix_name: str, fac: float):
     mat = bpy.data.materials[mat_name]
     tree = mat.node_tree
     if tree is not None:
-        tree.nodes[mixnode_name].inputs[blender_compat.mix_in.factor].default_value = fac
+        tree.nodes[mix_name].inputs[blender_compat.mix_in.factor].default_value = fac
 
 
-def _set_mat_map_data(mat_name: str, mapnode_name: str, data_idx: int, x: Optional[float] = None, y: Optional[float] = None, z: Optional[float] = None):
+def _set_mat_map_data(mat_name: str, map_name: str, data_idx: int, x: Optional[float] = None, y: Optional[float] = None, z: Optional[float] = None):
     mat = bpy.data.materials[mat_name]
     tree = mat.node_tree
+    modifying_rotation = data_idx == blender_compat.mapping_in.rotation
     if tree is not None:
-        xyz = tree.nodes[mapnode_name].inputs[data_idx].default_value
+        xyz = tree.nodes[map_name].inputs[data_idx].default_value
         if x is not None:
-            xyz[0] = x
+            xyz[0] = radians(x) if modifying_rotation else x
         if y is not None:
-            xyz[1] = y
+            xyz[1] = radians(y) if modifying_rotation else y
         if z is not None:
-            xyz[2] = z
+            xyz[2] = radians(z) if modifying_rotation else z
 
 
 def _set_mat_texture_ext_mode(mat_name: str, tex_node: str, ext_mode: str):
@@ -186,3 +175,7 @@ def _set_mat_shadow_mode(mat_name: str, shadow_mode: ShadowMethod):
 
 def _set_bsdf_roughness(mat_name: str, bsdf_roughness: float):
     bpy.data.materials[mat_name].node_tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.roughness].default_value = bsdf_roughness
+
+
+def _set_tex_projection(mat_name: str, tex_node: str, projection: TextureProjection):
+    bpy.data.materials[mat_name].node_tree.nodes[tex_node].projection = projection.name

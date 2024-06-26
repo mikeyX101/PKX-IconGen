@@ -21,6 +21,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
+             xmlns:data="using:PKXIconGen.Core.Data"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
              x:DataType="vm:MenuViewModel" x:CompileBindings="True"
              x:Class="PKXIconGen.AvaloniaUI.Views.MenuView">
@@ -35,6 +36,16 @@
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
+      </MenuItem>
+      <MenuItem IsVisible="{Binding MainWindow.DevTools}" Header="Export Selected to Full RenderJob" Command="{Binding ExportRenderJobCommand}">
+        <MenuItem.Icon>
+          <i:Icon Value="mdi-export" />
+        </MenuItem.Icon>
+        
+        <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="All..." Command="{Binding ExportRenderJobCommand}" CommandParameter="{x:Static data:RenderTarget.All}" />
+        <Separator />
+        <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Face..." Command="{Binding ExportRenderJobCommand}" CommandParameter="{x:Static data:RenderTarget.Face}" />
+        <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Box..." Command="{Binding ExportRenderJobCommand}" CommandParameter="{x:Static data:RenderTarget.Box}" />
       </MenuItem>
       <Separator />
       <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">

@@ -42,7 +42,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (3, 6, 0),
-    "version": (0, 3, 16),
+    "version": (0, 3, 17),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX",
@@ -834,18 +834,16 @@ def sync_props_to_prd(context):
     else:
         prd_camera = Camera(camera_pos_vector, camera_focus_pos_vector, is_ortho, fov, ortho_scale, light)
 
-    def update_render(prd_render_data: RenderData):
-        if mode in EditMode.ANY_FACE_SECONDARY:
-            prd_render_data.secondary_camera = prd_camera
-        else:
-            prd_render_data.main_camera = prd_camera
-        prd_render_data.animation_pose = animation_pose
-        prd_render_data.animation_frame = animation_frame
-        prd_render_data.removed_objects = removed_objs
-        prd_render_data.textures = textures
-        prd_render_data.shading = shading
-
-    prd.update_mode_render(mode, update_render)
+    render_data = prd.get_mode_render(mode)
+    if mode in EditMode.ANY_FACE_SECONDARY:
+        render_data.secondary_camera = prd_camera
+    else:
+        render_data.main_camera = prd_camera
+    render_data.animation_pose = animation_pose
+    render_data.animation_frame = animation_frame
+    render_data.removed_objects = removed_objs
+    render_data.textures = textures
+    render_data.shading = shading
 
     if prd.shiny.color1 is not None and prd.shiny.color2 is not None:
         prd.shiny.color1 = ShinyColor(scene.color1_r, scene.color1_g, scene.color1_b, scene.color1_a)

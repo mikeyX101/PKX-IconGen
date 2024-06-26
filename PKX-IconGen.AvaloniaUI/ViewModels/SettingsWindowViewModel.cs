@@ -56,6 +56,16 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             }
         }
         
+        private bool devTools;
+        public bool DevTools
+        {
+            get => devTools;
+            set { 
+                DoDBQuery(db => db.SaveSettingsProperty(s => s.DevTools, value));
+                this.RaiseAndSetIfChanged(ref devTools, value); 
+            }
+        }
+        
         private Game outputNameForGame;
         public Game OutputNameForGame
         {
@@ -92,6 +102,7 @@ namespace PKXIconGen.AvaloniaUI.ViewModels
             LogBlender = settings.LogBlender;
             SaturationBoost = settings.SaturationBoost;
             SaveDanceGIF = settings.SaveDanceGIF;
+            DevTools = settings.DevTools;
             OutputNameForTarget = settings.OutputNameForTarget;
             OutputNameForGame = settings.OutputNameForGame;
             
