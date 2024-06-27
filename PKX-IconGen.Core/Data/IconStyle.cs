@@ -20,23 +20,22 @@
 using System;
 using System.Linq;
 
-namespace PKXIconGen.Core.Data
+namespace PKXIconGen.Core.Data;
+
+public class IconStyle
 {
-    public class IconStyle
+    public static IconStyle[] GetIconStyles()
     {
-        public static IconStyle[] GetIconStyles()
-        {
-            Game[] games = Enum.GetValues<Game>();
-            //TODO Remove Where when PBR is supported
-            return games.Where(game => game != Game.PokemonBattleRevolution).Select(game => new IconStyle(game)).ToArray();
-        }
+        Game[] games = Enum.GetValues<Game>();
+        //TODO Remove Where when PBR is supported
+        return games.Where(game => game != Game.PokemonBattleRevolution).Select(game => new IconStyle(game)).ToArray();
+    }
 
-        public Game Game { get; }
-        public string DisplayName => Game.GetName();
+    public Game Game { get; }
+    public string DisplayName => Game.GetName();
 
-        private IconStyle(Game game)
-        {
-            Game = game;
-        }
+    private IconStyle(Game game)
+    {
+        Game = game;
     }
 }

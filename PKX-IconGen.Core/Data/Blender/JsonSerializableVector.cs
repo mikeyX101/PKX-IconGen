@@ -21,104 +21,103 @@ using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
-namespace PKXIconGen.Core.Data.Blender
+namespace PKXIconGen.Core.Data.Blender;
+
+/// <summary>
+/// Wrapper for <see cref="Vector3"/> so that it can be serialized with the JSONSerializer.
+/// The original <see cref="Vector3"/> struct can be accessed with the <see cref="Vector"/> property.
+/// </summary>
+public readonly struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
 {
-    /// <summary>
-    /// Wrapper for <see cref="Vector3"/> so that it can be serialized with the JSONSerializer.
-    /// The original <see cref="Vector3"/> struct can be accessed with the <see cref="Vector"/> property.
-    /// </summary>
-    public readonly struct JsonSerializableVector3 : IJsonSerializable, IEquatable<JsonSerializableVector3>
+    [JsonIgnore]
+    public Vector3 Vector { get; }
+
+    [JsonPropertyName("x")]
+    public float X => Vector.X;
+
+    [JsonPropertyName("y")]
+    public float Y => Vector.Y;
+
+    [JsonPropertyName("z")]
+    public float Z => Vector.Z;
+
+    public JsonSerializableVector3(Vector3 vector)
     {
-        [JsonIgnore]
-        public readonly Vector3 Vector { get; init; }
-
-        [JsonPropertyName("x")]
-        public readonly float X => Vector.X;
-
-        [JsonPropertyName("y")]
-        public readonly float Y => Vector.Y;
-
-        [JsonPropertyName("z")]
-        public readonly float Z => Vector.Z;
-
-        public JsonSerializableVector3(Vector3 vector)
-        {
-            Vector = vector;
-        }
-
-        [JsonConstructor]
-        public JsonSerializableVector3(float x, float y, float z)
-        {
-            Vector = new Vector3((float)Math.Round(x, 3), (float)Math.Round(y, 3), (float)Math.Round(z, 3));
-        }
-
-        public bool Equals(JsonSerializableVector3 other)
-        {
-            return Vector.Equals(other.Vector);
-        }
-        public override bool Equals(object? obj)
-        {
-            return obj is JsonSerializableVector3 vector && Equals(vector);
-        }
-
-        public static bool operator ==(JsonSerializableVector3 left, JsonSerializableVector3 right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(JsonSerializableVector3 left, JsonSerializableVector3 right)
-        {
-            return !(left == right);
-        }
-
-        public readonly override int GetHashCode() => Vector.GetHashCode();
+        Vector = vector;
     }
+
+    [JsonConstructor]
+    public JsonSerializableVector3(float x, float y, float z)
+    {
+        Vector = new Vector3((float)Math.Round(x, 3), (float)Math.Round(y, 3), (float)Math.Round(z, 3));
+    }
+
+    public bool Equals(JsonSerializableVector3 other)
+    {
+        return Vector.Equals(other.Vector);
+    }
+    public override bool Equals(object? obj)
+    {
+        return obj is JsonSerializableVector3 vector && Equals(vector);
+    }
+
+    public static bool operator ==(JsonSerializableVector3 left, JsonSerializableVector3 right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(JsonSerializableVector3 left, JsonSerializableVector3 right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode() => Vector.GetHashCode();
+}
     
-    /// <summary>
-    /// Wrapper for <see cref="Vector2"/> so that it can be serialized with the JSONSerializer.
-    /// The original <see cref="Vector2"/> struct can be accessed with the <see cref="Vector"/> property.
-    /// </summary>
-    public readonly struct JsonSerializableVector2 : IJsonSerializable, IEquatable<JsonSerializableVector2>
+/// <summary>
+/// Wrapper for <see cref="Vector2"/> so that it can be serialized with the JSONSerializer.
+/// The original <see cref="Vector2"/> struct can be accessed with the <see cref="Vector"/> property.
+/// </summary>
+public readonly struct JsonSerializableVector2 : IJsonSerializable, IEquatable<JsonSerializableVector2>
+{
+    [JsonIgnore]
+    public Vector2 Vector { get; }
+
+    [JsonPropertyName("x")]
+    public float X => Vector.X;
+
+    [JsonPropertyName("y")]
+    public float Y => Vector.Y;
+
+    public JsonSerializableVector2(Vector2 vector)
     {
-        [JsonIgnore]
-        public readonly Vector2 Vector { get; init; }
-
-        [JsonPropertyName("x")]
-        public readonly float X => Vector.X;
-
-        [JsonPropertyName("y")]
-        public readonly float Y => Vector.Y;
-
-        public JsonSerializableVector2(Vector2 vector)
-        {
-            Vector = vector;
-        }
-
-        [JsonConstructor]
-        public JsonSerializableVector2(float x, float y)
-        {
-            Vector = new Vector2((float)Math.Round(x, 3), (float)Math.Round(y, 3));
-        }
-
-        public bool Equals(JsonSerializableVector2 other)
-        {
-            return Vector.Equals(other.Vector);
-        }
-        public override bool Equals(object? obj)
-        {
-            return obj is JsonSerializableVector2 vector && Equals(vector);
-        }
-
-        public static bool operator ==(JsonSerializableVector2 left, JsonSerializableVector2 right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(JsonSerializableVector2 left, JsonSerializableVector2 right)
-        {
-            return !(left == right);
-        }
-
-        public readonly override int GetHashCode() => Vector.GetHashCode();
+        Vector = vector;
     }
+
+    [JsonConstructor]
+    public JsonSerializableVector2(float x, float y)
+    {
+        Vector = new Vector2((float)Math.Round(x, 3), (float)Math.Round(y, 3));
+    }
+
+    public bool Equals(JsonSerializableVector2 other)
+    {
+        return Vector.Equals(other.Vector);
+    }
+    public override bool Equals(object? obj)
+    {
+        return obj is JsonSerializableVector2 vector && Equals(vector);
+    }
+
+    public static bool operator ==(JsonSerializableVector2 left, JsonSerializableVector2 right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(JsonSerializableVector2 left, JsonSerializableVector2 right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode() => Vector.GetHashCode();
 }

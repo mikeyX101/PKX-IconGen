@@ -21,45 +21,43 @@ using System;
 using System.Text.Json.Serialization;
 using PKXIconGen.Core.Data.Blender;
 
-namespace PKXIconGen.Core.Data
+namespace PKXIconGen.Core.Data;
+
+public readonly struct Material: IJsonSerializable, IEquatable<Material>
 {
-    public readonly struct Material: IJsonSerializable, IEquatable<Material>
+    [JsonPropertyName("name")]
+    public string Name { get; }
+        
+    [JsonPropertyName("map")]
+    public JsonSerializableVector2 Map { get; }
+        
+    [JsonConstructor]
+    public Material(string name, JsonSerializableVector2 map)
     {
-        [JsonPropertyName("name")]
-        public readonly string Name { get; init; }
-        
-        [JsonPropertyName("map")]
-        public readonly JsonSerializableVector2 Map { get; init; }
-        
-        [JsonConstructor]
-        public Material(string name, JsonSerializableVector2 map)
-        {
-            Name = name;
-            Map = map;
-        }
-    
-        public bool Equals(Material other)
-        {
-            return
-                Name == other.Name &&
-                Map == other.Map;
-        }
-        public override bool Equals(object? obj)
-        {
-            return obj is Material material && Equals(material);
-        }
-
-        public static bool operator ==(Material left, Material right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(Material left, Material right)
-        {
-            return !(left == right);
-        }
-
-        public readonly override int GetHashCode() => (Name, Map).GetHashCode();
+        Name = name;
+        Map = map;
     }
-}
+    
+    public bool Equals(Material other)
+    {
+        return
+            Name == other.Name &&
+            Map == other.Map;
+    }
+    public override bool Equals(object? obj)
+    {
+        return obj is Material material && Equals(material);
+    }
 
+    public static bool operator ==(Material left, Material right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Material left, Material right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode() => (Name, Map).GetHashCode();
+}

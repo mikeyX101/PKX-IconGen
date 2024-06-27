@@ -27,63 +27,62 @@ using PKXIconGen.Core.Services;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.MaterialDesign;
 
-namespace PKXIconGen.AvaloniaUI
+namespace PKXIconGen.AvaloniaUI;
+
+public static class Program
 {
-    public static class Program
+    // Initialization code. Don't use any Avalonia, third-party APIs or any
+    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+    // yet and stuff might break.
+    [STAThread]
+    public static async Task Main(string[] args)
     {
-        // Initialization code. Don't use any Avalonia, third-party APIs or any
-        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-        // yet and stuff might break.
-        [STAThread]
-        public static async Task Main(string[] args)
+        CoreManager.Initiate();
+        if (CoreManager.Initiated)
         {
-            CoreManager.Initiate();
-            if (CoreManager.Initiated)
+            try
             {
+                CoreManager.Logger.Information("Initiating Avalonia App...");
+                BuildAvaloniaApp()
+                    .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
+            }
+            catch (Exception ex)
+            {
+                Settings? settings = null;
                 try
                 {
-                    CoreManager.Logger.Information("Initiating Avalonia App...");
-                    BuildAvaloniaApp()
-                        .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
+                    Database db = Database.Instance;
+                    settings = await db.GetSettingsAsync();
                 }
-                catch (Exception ex)
+                catch (Exception settingsEx)
                 {
-                    Settings? settings = null;
-                    try
-                    {
-                        Database db = Database.Instance;
-                        settings = await db.GetSettingsAsync();
-                    }
-                    catch (Exception settingsEx)
-                    {
-                        CoreManager.Logger.Fatal(settingsEx,
-                            "An exception occured while fetching settings on Avalonia exception");
-                    }
+                    CoreManager.Logger.Fatal(settingsEx,
+                        "An exception occured while fetching settings on Avalonia exception");
+                }
 
-                    CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}",
-                        settings);
-                }
-                finally
-                {
-                    CoreManager.OnClose();
-                }
+                CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}",
+                    settings);
             }
-            else
+            finally
             {
                 CoreManager.OnClose();
             }
         }
-
-        // Avalonia configuration, don't remove; also used by visual designer.
-        private static AppBuilder BuildAvaloniaApp()
+        else
         {
-            IconProvider.Current
-                .Register<MaterialDesignIconProvider>();
-
-            return AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .LogToTrace()
-                .UseReactiveUI();
+            CoreManager.OnClose();
         }
+    }
+
+    // Avalonia configuration, don't remove; also used by visual designer.
+    private static AppBuilder BuildAvaloniaApp()
+    {
+        IconProvider.Current
+            .Register<MaterialDesignIconProvider>();
+
+        return AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .LogToTrace()
+            .UseReactiveUI();
     }
 }

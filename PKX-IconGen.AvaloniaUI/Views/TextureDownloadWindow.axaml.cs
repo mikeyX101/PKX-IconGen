@@ -17,29 +17,26 @@
 */
 #endregion
 
-using Avalonia;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 
-namespace PKXIconGen.AvaloniaUI.Views
+namespace PKXIconGen.AvaloniaUI.Views;
+
+public partial class TextureDownloadWindow : ReactiveWindow<TextureDownloadWindowViewModel>
 {
-    public partial class TextureDownloadWindow : ReactiveWindow<TextureDownloadWindowViewModel>
+    public TextureDownloadWindow()
     {
-        public TextureDownloadWindow()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            Closing += (sender, args) =>
-            {
-                args.Cancel = ((TextureDownloadWindowViewModel?)DataContext)?.Downloading ?? false;
-            };
-        }
-
-        public void Close(object sender, RoutedEventArgs e)
+        Closing += (_, args) =>
         {
-            Close();
-        }
+            args.Cancel = ((TextureDownloadWindowViewModel?)DataContext)?.Downloading ?? false;
+        };
+    }
+
+    public void Close(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

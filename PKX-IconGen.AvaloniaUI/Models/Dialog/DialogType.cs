@@ -17,44 +17,43 @@
 */
 #endregion
 
-namespace PKXIconGen.AvaloniaUI.Models.Dialog
+namespace PKXIconGen.AvaloniaUI.Models.Dialog;
+
+public enum DialogType
 {
-    public enum DialogType
+    Info    = 0,
+    Warning = 1,
+    Error   = 2
+}
+
+public static class DialogTypeExtensions
+{
+    public static string GetMaterialDesignIcon(this DialogType dialogType)
     {
-        Info    = 0,
-        Warning = 1,
-        Error   = 2
+        return dialogType switch
+        {
+            DialogType.Warning      => "mdi-alert",
+            DialogType.Error        => "mdi-close-circle",
+            DialogType.Info or _    => "mdi-information"
+        };
     }
 
-    public static class DialogTypeExtensions
+    public static uint GetColor(this DialogType dialogType)
     {
-        public static string GetMaterialDesignIcon(this DialogType dialogType)
+        return dialogType switch
         {
-            return dialogType switch
-            {
-                DialogType.Warning      => "mdi-alert",
-                DialogType.Error        => "mdi-close-circle",
-                DialogType.Info or _    => "mdi-information"
-            };
-        }
-
-        public static uint GetColor(this DialogType dialogType)
+            DialogType.Warning      => 0xffffc107,
+            DialogType.Error        => 0xffff0000,
+            DialogType.Info or _    => 0xffffffff
+        };
+    }
+    public static string GetTitle(this DialogType dialogType)
+    {
+        return dialogType switch
         {
-            return dialogType switch
-            {
-                DialogType.Warning      => 0xffffc107,
-                DialogType.Error        => 0xffff0000,
-                DialogType.Info or _    => 0xffffffff
-            };
-        }
-        public static string GetTitle(this DialogType dialogType)
-        {
-            return dialogType switch
-            {
-                DialogType.Warning      => "Warning",
-                DialogType.Error        => "Error",
-                DialogType.Info or _    => "Information"
-            };
-        }
+            DialogType.Warning      => "Warning",
+            DialogType.Error        => "Error",
+            DialogType.Info or _    => "Information"
+        };
     }
 }

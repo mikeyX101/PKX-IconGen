@@ -455,6 +455,9 @@ $RECYCLE.BIN/
 
 [Pp]ublish/
 
+# Kate Swap files
+*.kate-swp
+
 # Blender autosaves and debuging .blend files, we need .blend files though
 *.blend1
 

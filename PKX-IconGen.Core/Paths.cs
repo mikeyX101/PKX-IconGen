@@ -20,49 +20,48 @@
 using System;
 using System.IO;
 
-namespace PKXIconGen.Core
+namespace PKXIconGen.Core;
+
+internal static class Paths
 {
-    internal static class Paths
+    // Data Folder
+    internal static string DataFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+    internal static string NameMapsFolder => Path.Combine(DataFolder, "NameMaps");
+    internal static string DatabaseFile => Path.Combine(DataFolder, "DB.db");
+    internal static string ColoNameMapFile => Path.Combine(NameMapsFolder, "coloNameMap.json");
+    internal static string XDNameMapFile => Path.Combine(NameMapsFolder, "xdNameMap.json");
+        
+    // Logs
+    internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+    private static string SessionLog { get; } = $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
+    internal static string Log => Path.Combine(LogFolder, SessionLog);
+
+    internal static string LogLatest => Path.Combine(LogFolder, "latest.log");
+
+    internal static string BlenderLogsFolder => Path.Combine(LogFolder, "Blender");
+    internal static string BlenderLog => Path.Combine(BlenderLogsFolder, $"blenderLog-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log");
+
+    // Temp Folders
+    internal static string TempFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");
+    internal static string TempBlendFolder => Path.Combine(TempFolder, "Blend");
+
+        
+    // Python Folders
+    internal static string PythonFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Python");
+
+    // Python Files
+    internal static string Render => Path.Combine(PythonFolder, "render.py");
+    internal static string ModifyData => Path.Combine(PythonFolder, "modify_data.py");
+
+    // Template
+    private static string Template => Path.Combine(PythonFolder, "template.blend");
+    internal static string GetTemplateCopy(string templateName) 
     {
-        // Data Folder
-        internal static string DataFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-        internal static string NameMapsFolder => Path.Combine(DataFolder, "NameMaps");
-        internal static string DatabaseFile => Path.Combine(DataFolder, "DB.db");
-        internal static string ColoNameMapFile => Path.Combine(NameMapsFolder, "coloNameMap.json");
-        internal static string XDNameMapFile => Path.Combine(NameMapsFolder, "xdNameMap.json");
-        
-        // Logs
-        internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-        private static string SessionLog { get; } = $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
-        internal static string Log => Path.Combine(LogFolder, SessionLog);
-
-        internal static string LogLatest => Path.Combine(LogFolder, $"latest.log");
-
-        internal static string BlenderLogsFolder => Path.Combine(LogFolder, "Blender");
-        internal static string BlenderLog => Path.Combine(BlenderLogsFolder, $"blenderLog-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log");
-
-        // Temp Folders
-        internal static string TempFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");
-        internal static string TempBlendFolder => Path.Combine(TempFolder, "Blend");
-
-        
-        // Python Folders
-        internal static string PythonFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Python");
-
-        // Python Files
-        internal static string Render => Path.Combine(PythonFolder, "render.py");
-        internal static string ModifyData => Path.Combine(PythonFolder, "modify_data.py");
-
-        // Template
-        private static string Template => Path.Combine(PythonFolder, "template.blend");
-        internal static string GetTemplateCopy(string templateName) 
+        string copy = Path.Combine(TempBlendFolder, $"{templateName}.blend");
+        if (!File.Exists(copy))
         {
-            string copy = Path.Combine(TempBlendFolder, $"{templateName}.blend");
-            if (!File.Exists(copy))
-            {
-                File.Copy(Template, copy, false);
-            }
-            return copy;
+            File.Copy(Template, copy, false);
         }
+        return copy;
     }
 }

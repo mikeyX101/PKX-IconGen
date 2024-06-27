@@ -17,12 +17,10 @@
 */
 #endregion
 
-namespace PKXIconGen.AvaloniaUI.Models.Dialog
-{
-    public enum DialogButtons
-    {
-        Ok = 0,
-        YesNo = 1
-    }
-}
+namespace PKXIconGen.AvaloniaUI.Models.Dialog;
 
+public enum DialogButtons
+{
+    Ok = 0,
+    YesNo = 1
+}

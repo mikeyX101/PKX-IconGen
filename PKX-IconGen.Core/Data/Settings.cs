@@ -22,63 +22,62 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PKXIconGen.Core.Data
+namespace PKXIconGen.Core.Data;
+
+[Table("Settings")]
+public class Settings : IBlenderRunnerInfo
 {
-    [Table("Settings")]
-    public class Settings : IBlenderRunnerInfo
+    [Column("ID"), Key, DefaultValue(1)]
+    public uint InternalID { get; private set; } = 1;
+
+    [Column, MaxLength(int.MaxValue)]
+    public string BlenderPath { get; set; }
+    [Column, MaxLength(int.MaxValue)]
+    public string BlenderOptionalArguments { get; set; }
+    [Column, MaxLength(int.MaxValue)]
+    public string OutputPath { get; set; }
+    [Column]
+    public Game CurrentGame { get; set; }
+    [Column]
+    public RenderScale RenderScale { get; set; }
+    [Column, MaxLength(int.MaxValue)]
+    public string AssetsPath { get; set; }
+
+    public bool ShowXDCutout => CurrentGame == Game.PokemonXDGaleOfDarkness;
+
+    [Column]
+    public bool LogBlender { get; set; }
+        
+    [Column, DefaultValue(true)]
+    public bool SaturationBoost { get; set; }
+        
+    [Column, DefaultValue(false)]
+    public bool SaveDanceGIF { get; set; }
+        
+    [Column, DefaultValue(false)]
+    public bool DevTools { get; set; }
+        
+    [Column]
+    public Game OutputNameForGame { get; set; }
+        
+    [Column]
+    public TextureTargetChoice OutputNameForTarget { get; set; }
+
+    public Settings()
     {
-        [Column("ID"), Key, DefaultValue(1)]
-        public uint InternalID { get; private set; } = 1;
+        BlenderPath = OperatingSystem.IsMacOS() ? "/Applications/Blender/blender.app/Contents/MacOS/blender" : "";
 
-        [Column, MaxLength(int.MaxValue)]
-        public string BlenderPath { get; set; }
-        [Column, MaxLength(int.MaxValue)]
-        public string BlenderOptionalArguments { get; set; }
-        [Column, MaxLength(int.MaxValue)]
-        public string OutputPath { get; set; }
-        [Column]
-        public Game CurrentGame { get; set; }
-        [Column]
-        public RenderScale RenderScale { get; set; }
-        [Column, MaxLength(int.MaxValue)]
-        public string AssetsPath { get; set; }
-
-        public bool ShowXDCutout => CurrentGame == Game.PokemonXDGaleOfDarkness;
-
-        [Column]
-        public bool LogBlender { get; set; }
-        
-        [Column, DefaultValue(true)]
-        public bool SaturationBoost { get; set; }
-        
-        [Column, DefaultValue(false)]
-        public bool SaveDanceGIF { get; set; }
-        
-        [Column, DefaultValue(false)]
-        public bool DevTools { get; set; }
-        
-        [Column]
-        public Game OutputNameForGame { get; set; }
-        
-        [Column]
-        public TextureTargetChoice OutputNameForTarget { get; set; }
-
-        public Settings()
-        {
-            BlenderPath = OperatingSystem.IsMacOS() ? "/Applications/Blender/blender.app/Contents/MacOS/blender" : "";
-
-            BlenderOptionalArguments = "";
-            OutputPath = "";
-            CurrentGame = Game.Undefined;
-            RenderScale = RenderScale.X1;
-            AssetsPath = "";
+        BlenderOptionalArguments = "";
+        OutputPath = "";
+        CurrentGame = Game.Undefined;
+        RenderScale = RenderScale.X1;
+        AssetsPath = "";
             
-            LogBlender = false;
-            SaturationBoost = true;
-            SaveDanceGIF = false;
-            DevTools = false;
-            OutputNameForGame = Game.Undefined;
-            OutputNameForTarget = TextureTargetChoice.Dolphin;
-        }
+        LogBlender = false;
+        SaturationBoost = true;
+        SaveDanceGIF = false;
+        DevTools = false;
+        OutputNameForGame = Game.Undefined;
+        OutputNameForTarget = TextureTargetChoice.Dolphin;
     }
 }

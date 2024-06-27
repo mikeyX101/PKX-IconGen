@@ -35,9 +35,9 @@ public enum OutputChoice : byte
 public readonly struct TextureNames
 {
     [JsonPropertyName("dol")]
-    public Names DolphinNames { get; init; }
+    public Names DolphinNames { get; }
     [JsonPropertyName("og")]
-    public Names OriginalNames { get; init; }
+    public Names OriginalNames { get; }
     
     public string? GetName(TextureTargetChoice textureChoice, OutputChoice outputChoice) => textureChoice switch
     {
@@ -50,13 +50,13 @@ public readonly struct TextureNames
 public readonly struct Names
 {
     [JsonPropertyName("f")]
-    public string? Face { get; init; }
+    public string? Face { get; }
 
     [JsonPropertyName("b")]
-    public string? Box { get; init; }
+    public string? Box { get; }
 
     [JsonPropertyName("bs")]
-    public string? BoxShiny { get; init; }
+    public string? BoxShiny { get; }
     
     public string? GetName(OutputChoice outputChoice) => outputChoice switch
     {

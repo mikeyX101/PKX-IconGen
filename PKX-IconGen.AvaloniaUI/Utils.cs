@@ -23,37 +23,36 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 
-namespace PKXIconGen.AvaloniaUI
+namespace PKXIconGen.AvaloniaUI;
+
+internal static class Utils
 {
-    internal static class Utils
+    public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
     {
-        public static IClassicDesktopStyleApplicationLifetime GetApplicationLifetime()
-        {
-            return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new InvalidOperationException();
-        }
+        return Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime ?? throw new InvalidOperationException();
+    }
 
-        public static Window GetMainWindow()
-        {
-            return GetApplicationLifetime().MainWindow!;
-        }
+    public static Window GetMainWindow()
+    {
+        return GetApplicationLifetime().MainWindow!;
+    }
 
-        public static void OpenUrl(string url)
+    public static void OpenUrl(string url)
+    {
+        // For .NETCore 3 and more: https://stackoverflow.com/a/43232486
+        // hack because of this: https://github.com/dotnet/corefx/issues/10361
+        if (OperatingSystem.IsWindows())
         {
-            // For .NETCore 3 and more: https://stackoverflow.com/a/43232486
-            // hack because of this: https://github.com/dotnet/corefx/issues/10361
-            if (OperatingSystem.IsWindows())
-            {
-                url = url.Replace("&", "^&");
-                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                Process.Start("xdg-open", url);
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                Process.Start("open", url);
-            }
+            url = url.Replace("&", "^&");
+            Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            Process.Start("xdg-open", url);
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            Process.Start("open", url);
         }
     }
 }

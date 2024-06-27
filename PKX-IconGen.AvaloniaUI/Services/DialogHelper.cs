@@ -26,81 +26,79 @@ using PKXIconGen.AvaloniaUI.Models.Dialog;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
 
-namespace PKXIconGen.AvaloniaUI.Services
+namespace PKXIconGen.AvaloniaUI.Services;
+
+public static class DialogHelper
 {
-    public static class DialogHelper
+    private static readonly Dictionary<Type, Type> windowTypeCache = new();
+
+    public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
     {
-        private static readonly Dictionary<Type, Type> windowTypeCache = new();
+        parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
 
-        public static async Task<bool> ShowDialog(DialogType dialogType, DialogButtons dialogButtons, string message, uint? height = null, string? title = null, Window? parent = null)
+        DialogWindowViewModel vm = new(dialogType, dialogButtons, message, height, title);
+        return await new DialogWindow
         {
-            parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
+            DataContext = vm
+        }.ShowDialog<bool>(parent);
+    }
 
-            DialogWindowViewModel vm = new(dialogType, dialogButtons, message, height, title);
-            return await new DialogWindow
-            {
-                DataContext = vm
-            }.ShowDialog<bool>(parent);
-        }
+    public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, uint? height = null, Window? parent = null)
+    {
+        parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
 
-        public static async Task<bool> ShowDialog(string asset, DialogButtons dialogButtons, string message, string title, uint? height = null, Window? parent = null)
+        DialogWindowViewModel vm = new(asset, dialogButtons, message, title, height);
+        return await new DialogWindow
         {
-            parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
+            DataContext = vm
+        }.ShowDialog<bool>(parent);
+    }
 
-            DialogWindowViewModel vm = new(asset, dialogButtons, message, title, height);
-            return await new DialogWindow
-            {
-                DataContext = vm
-            }.ShowDialog<bool>(parent);
-        }
-
-        public static async Task ShowWindowDialog<TViewModel>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
-        {
-            await ShowWindowDialog<TViewModel, Unit>(vm, parent);
-        }
+    public static async Task ShowWindowDialog<TViewModel>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
+    {
+        await ShowWindowDialog<TViewModel, Unit>(vm, parent);
+    }
         
-        public static async Task<TResult> ShowWindowDialog<TViewModel, TResult>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
+    public static async Task<TResult> ShowWindowDialog<TViewModel, TResult>(TViewModel vm, Window? parent = null) where TViewModel : ViewModelBase
+    {
+        Type vmType = typeof(TViewModel);
+        if (!windowTypeCache.TryGetValue(vmType, out Type? value))
         {
-            Type vmType = typeof(TViewModel);
-            if (!windowTypeCache.ContainsKey(vmType))
+            if (vmType.FullName == null)
             {
-                if (vmType.FullName == null)
-                {
-                    Exception ex = new NullReferenceException("vmType.FullName is null.");
-                    Core.CoreManager.Logger.Error(ex, "vmType.FullName is null");
-                    throw ex;
-                }
-
-                Type? windowType = Type.GetType(vmType.FullName.Remove(vmType.FullName.LastIndexOf("ViewModel", StringComparison.InvariantCulture)).Replace(".ViewModels.", ".Views."));
-                if (windowType == null)
-                {
-                    Exception ex = new NullReferenceException($"No view type were found for {typeof(TViewModel)}");
-                    Core.CoreManager.Logger.Error(ex, "No view type were found for {@ViewModelType}", typeof(TViewModel));
-                    throw ex;
-                }
-                else if (!windowType.IsAssignableTo(typeof(Window)))
-                {
-                    Exception ex = new InvalidCastException("Found window type is not assignable to Window.");
-                    Core.CoreManager.Logger.Error(ex, "Found window type {@WindowType} is not assignable to Window", windowType.Name);
-                    throw ex;
-                }
-                
-                windowTypeCache.Add(vmType, windowType);
-            }
-            
-            Window? window = (Window?)Activator.CreateInstance(windowTypeCache[vmType]);
-            if (window != null)
-            {
-                window.DataContext = vm;
-                parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
-                return await window.ShowDialog<TResult>(parent);
-            }
-            else
-            {
-                Exception ex = new NullReferenceException("Window was null.");
-                Core.CoreManager.Logger.Error(ex, "Window was null");
+                Exception ex = new NullReferenceException("vmType.FullName is null.");
+                Core.CoreManager.Logger.Error(ex, "vmType.FullName is null");
                 throw ex;
             }
+
+            Type? windowType = Type.GetType(vmType.FullName.Remove(vmType.FullName.LastIndexOf("ViewModel", StringComparison.InvariantCulture)).Replace(".ViewModels.", ".Views."));
+            if (windowType == null)
+            {
+                Exception ex = new NullReferenceException($"No view type were found for {typeof(TViewModel)}");
+                Core.CoreManager.Logger.Error(ex, "No view type were found for {@ViewModelType}", typeof(TViewModel));
+                throw ex;
+            }
+            if (!windowType.IsAssignableTo(typeof(Window)))
+            {
+                Exception ex = new InvalidCastException("Found window type is not assignable to Window.");
+                Core.CoreManager.Logger.Error(ex, "Found window type {@WindowType} is not assignable to Window", windowType.Name);
+                throw ex;
+            }
+
+            value = windowType;
+            windowTypeCache.Add(vmType, value);
         }
+            
+        Window? window = (Window?)Activator.CreateInstance(value);
+        if (window == null)
+        {
+            Exception ex = new NullReferenceException("Window was null.");
+            Core.CoreManager.Logger.Error(ex, "Window was null");
+            throw ex;
+        }
+        
+        window.DataContext = vm;
+        parent ??= Utils.GetApplicationLifetime().MainWindow ?? throw new InvalidOperationException("MainWindow was null.");
+        return await window.ShowDialog<TResult>(parent);
     }
 }

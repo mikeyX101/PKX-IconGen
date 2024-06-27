@@ -17,14 +17,13 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data
+namespace PKXIconGen.Core.Data;
+
+public interface IBlenderRunnerInfo
 {
-    public interface IBlenderRunnerInfo
-    {
-        public bool LogBlender { get; }
-        public string BlenderPath { get; }
-        public string BlenderOptionalArguments { get; }
-        public string AssetsPath { get; }
-        public bool ShowXDCutout { get; }
-    }
+    public bool LogBlender { get; }
+    public string BlenderPath { get; }
+    public string BlenderOptionalArguments { get; }
+    public string AssetsPath { get; }
+    public bool ShowXDCutout { get; }
 }

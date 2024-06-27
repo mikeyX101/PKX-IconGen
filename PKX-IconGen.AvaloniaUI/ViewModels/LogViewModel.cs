@@ -24,78 +24,77 @@ using Avalonia.Threading;
 using JetBrains.Annotations;
 using ReactiveUI;
 
-namespace PKXIconGen.AvaloniaUI.ViewModels
+namespace PKXIconGen.AvaloniaUI.ViewModels;
+
+public sealed class LogViewModel : ViewModelBase
 {
-    public class LogViewModel : ViewModelBase
-    {
-        public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
+    public static string LogFont => OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono";
         
-        private readonly StringBuilder logBuilder;
-        public string LogText => logBuilder.ToString();
+    private readonly StringBuilder logBuilder;
+    public string LogText => logBuilder.ToString();
 
-        private const ushort UpdateRate = 250;
-        private Task? updatePendingTask;
+    private const ushort UpdateRate = 250;
+    private Task? updatePendingTask;
 
-        private const int initialCapacity = 8192;
-        private const int maxCapacity = initialCapacity * 4;
-        public LogViewModel()
-        {
-            logBuilder = new StringBuilder(initialCapacity, maxCapacity);
-        }
+    private const int initialCapacity = 8192;
+    private const int maxCapacity = initialCapacity * 4;
+    public LogViewModel()
+    {
+        logBuilder = new StringBuilder(initialCapacity, maxCapacity);
+    }
 
-        [UsedImplicitly]
-        public void ClearLog()
-        {
-            logBuilder.Clear();
-            this.RaisePropertyChanged(nameof(LogText));
-        }
-        public void WriteLine(ReadOnlyMemory<char> line)
-        {
-            AssureMaxCapacity(line, true);
-            logBuilder.Append(line).Append('\n');
-            ScheduleUpdate();
-        }
-        public void Write(ReadOnlyMemory<char> line)
-        {
-            AssureMaxCapacity(line, false);
-            logBuilder.Append(line);
-            ScheduleUpdate();
-        }
+    [UsedImplicitly]
+    public void ClearLog()
+    {
+        logBuilder.Clear();
+        this.RaisePropertyChanged(nameof(LogText));
+    }
+    public void WriteLine(ReadOnlyMemory<char> line)
+    {
+        AssureMaxCapacity(line, true);
+        logBuilder.Append(line).Append('\n');
+        ScheduleUpdate();
+    }
+    public void Write(ReadOnlyMemory<char> line)
+    {
+        AssureMaxCapacity(line, false);
+        logBuilder.Append(line);
+        ScheduleUpdate();
+    }
 
-        private void AssureMaxCapacity(ReadOnlyMemory<char> line, bool hasNewLine)
+    private void AssureMaxCapacity(ReadOnlyMemory<char> line, bool hasNewLine)
+    {
+        int lengthToInsert = line.Length + (hasNewLine ? 1 : 0);
+        while (logBuilder.Length + lengthToInsert > maxCapacity)
         {
-            int lengthToInsert = line.Length + (hasNewLine ? 1 : 0);
-            while (logBuilder.Length + lengthToInsert > maxCapacity)
+            int lastNewLineIndex = logBuilder.Length - 1;
+            for (int i = 0; i < logBuilder.Length; i++)
             {
-                int lastNewLineIndex = logBuilder.Length - 1;
-                for (int i = 0; i < logBuilder.Length; i++)
-                {
-                    if (logBuilder[i] == '\n')
-                    {
-                        lastNewLineIndex = i;
-                        break;
-                    }
-                }
-                // Remove lines until new line is insertable
-                logBuilder.Remove(0, lastNewLineIndex + 1);
-            }
-        }
-        private async void ScheduleUpdate()
-        {
-            if (updatePendingTask == null)
-            {
-                updatePendingTask = Task.Run(async () => {
-                    await Task.Delay(UpdateRate);
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        this.RaisePropertyChanged(nameof(LogText));
-                    });
-                });
-                await updatePendingTask;
+                if (logBuilder[i] != '\n') 
+                    continue;
                 
-                updatePendingTask?.Dispose();
-                updatePendingTask = null;
+                lastNewLineIndex = i;
+                break;
             }
+            // Remove lines until new line is insertable
+            logBuilder.Remove(0, lastNewLineIndex + 1);
         }
+    }
+    private async void ScheduleUpdate()
+    {
+        if (updatePendingTask != null) 
+            return;
+        
+        updatePendingTask = Task.Run(async () => {
+            await Task.Delay(UpdateRate);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                this.RaisePropertyChanged(nameof(LogText));
+            });
+        });
+        await updatePendingTask;
+                
+        updatePendingTask?.Dispose();
+        updatePendingTask = null;
     }
 }

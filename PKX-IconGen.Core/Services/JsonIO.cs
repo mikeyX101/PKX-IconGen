@@ -25,148 +25,146 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PKXIconGen.Core.Data;
-using PKXIconGen.Core.Data.Compatibility;
 
-namespace PKXIconGen.Core.Services
+namespace PKXIconGen.Core.Services;
+
+/// <summary>
+/// IO for Json.
+/// Try/Catch the functions to handle errors.
+/// </summary>
+public static class JsonIO
 {
-    /// <summary>
-    /// IO for Json.
-    /// Try/Catch the functions to handle errors.
-    /// </summary>
-    public static class JsonIO
+    public static readonly JsonSerializerOptions DefaultOptions = new()
     {
-        public static readonly JsonSerializerOptions DefaultOptions = new()
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            WriteIndented = false
-        };
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = false
+    };
 
-        public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
+    public static async Task ExportAsync<T>(T data, string path) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                await using FileStream file = File.Create(path);
-                await JsonSerializer.SerializeAsync(file, data, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while serializing to JSON in file: {@FilePath}. Object getting serialized: {@Object}", path, data);
-                throw;
-            }
+            await using FileStream file = File.Create(path);
+            await JsonSerializer.SerializeAsync(file, data, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while serializing to JSON in file: {@FilePath}. Object getting serialized: {@Object}", path, data);
+            throw;
+        }
+    }
         
-        public static async Task ExportAsync<T>(T data, Stream stream) where T : IJsonSerializable
+    public static async Task ExportAsync<T>(T data, Stream stream) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                await JsonSerializer.SerializeAsync(stream, data, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while serializing to JSON in stream. Object getting serialized: {@Object}", data);
-                throw;
-            }
+            await JsonSerializer.SerializeAsync(stream, data, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while serializing to JSON in stream. Object getting serialized: {@Object}", data);
+            throw;
+        }
+    }
 
-        public static async Task<T?> ImportAsync<T>(string path) where T : IJsonSerializable
+    public static async Task<T?> ImportAsync<T>(string path) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                await using FileStream file = File.OpenRead(path);
-                return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}", path);
-                throw;
-            }
+            await using FileStream file = File.OpenRead(path);
+            return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}", path);
+            throw;
+        }
+    }
         
-        public static async Task<T?> ImportAsync<T>(Stream stream) where T : IJsonSerializable
+    public static async Task<T?> ImportAsync<T>(Stream stream) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while deserializing from JSON in stream");
-                throw;
-            }
+            return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while deserializing from JSON in stream");
+            throw;
+        }
+    }
 
-        public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string path) where T : IJsonSerializable
+    public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(string path) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                using FileStream file = File.OpenRead(path);
-                return JsonSerializer.DeserializeAsyncEnumerable<T>(file, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}", path);
-                throw;
-            }
+            using FileStream file = File.OpenRead(path);
+            return JsonSerializer.DeserializeAsyncEnumerable<T>(file, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}", path);
+            throw;
+        }
+    }
         
-        public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(Stream stream) where T : IJsonSerializable
+    public static IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(Stream stream) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, DefaultOptions);
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in stream");
-                throw;
-            }
+            return JsonSerializer.DeserializeAsyncEnumerable<T>(stream, DefaultOptions);
         }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in stream");
+            throw;
+        }
+    }
 
-        public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<string> paths) where T : IJsonSerializable?
+    public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<string> paths) where T : IJsonSerializable?
+    {
+        foreach (string path in paths)
         {
-            foreach (string path in paths)
-            {
-                await using FileStream file = File.OpenRead(path);
-                yield return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
-            }
+            await using FileStream file = File.OpenRead(path);
+            yield return await JsonSerializer.DeserializeAsync<T>(file, DefaultOptions);
         }
+    }
         
-        public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<Stream> streams) where T : IJsonSerializable?
+    public static async IAsyncEnumerable<T?> ImportAsyncEnumerable<T>(IEnumerable<Stream> streams) where T : IJsonSerializable?
+    {
+        foreach (Stream stream in streams)
         {
-            foreach (Stream stream in streams)
-            {
-                yield return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
-            }
+            yield return await JsonSerializer.DeserializeAsync<T>(stream, DefaultOptions);
         }
+    }
 
-        public static string ToJsonString<T>(T data) where T : IJsonSerializable
+    public static string ToJsonString<T>(T data) where T : IJsonSerializable
+    {
+        try
         {
-            try
-            {
-                using MemoryStream memoryStream = new(2048);
-                JsonSerializer.Serialize(memoryStream, data, DefaultOptions);
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
-                throw;
-            }
+            using MemoryStream memoryStream = new(2048);
+            JsonSerializer.Serialize(memoryStream, data, DefaultOptions);
+            return Encoding.UTF8.GetString(memoryStream.ToArray());
         }
-
-        public static async Task<string> ToJsonStringAsync<T>(T data) where T : IJsonSerializable
+        catch (Exception ex)
         {
-            try
-            {
-                using MemoryStream memoryStream = new(2048);
-                await JsonSerializer.SerializeAsync(memoryStream, data, DefaultOptions);
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
-            catch (Exception ex)
-            {
-                CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
-                throw;
-            }
+            CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+            throw;
+        }
+    }
+
+    public static async Task<string> ToJsonStringAsync<T>(T data) where T : IJsonSerializable
+    {
+        try
+        {
+            using MemoryStream memoryStream = new(2048);
+            await JsonSerializer.SerializeAsync(memoryStream, data, DefaultOptions);
+            return Encoding.UTF8.GetString(memoryStream.ToArray());
+        }
+        catch (Exception ex)
+        {
+            CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+            throw;
         }
     }
 }

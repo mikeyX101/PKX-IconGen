@@ -29,46 +29,45 @@ using PKXIconGen.AvaloniaUI.Views;
 using PKXIconGen.Core;
 using Projektanker.Icons.Avalonia;
 
-namespace PKXIconGen.AvaloniaUI
+namespace PKXIconGen.AvaloniaUI;
+
+public class App : Application
 {
-    public class App : Application
+    public override void Initialize()
     {
-        public override void Initialize()
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            AvaloniaXamlLoader.Load(this);
+            if (CoreManager.DatabaseMigrationTask == null)
+            {
+                const string msg = "Database Migration didn't happen.";
+                InvalidOperationException e = new(msg);
+                CoreManager.Logger.Fatal(e, msg);
+                throw e;
+            }
+                
+            desktop.MainWindow = new MainWindow
+            {
+                DataContext = new MainWindowViewModel(CoreManager.DatabaseMigrationTask)
+            };
+        }
+        else
+        {
+            // Workaround for other assemblies in the designer (https://github.com/AvaloniaUI/Avalonia/issues/7126)
+            GC.KeepAlive(typeof(Interaction));
+            GC.KeepAlive(typeof(InvokeCommandAction));
+
+            GC.KeepAlive(typeof(Icon));
+            GC.KeepAlive(typeof(Attached));
+                
+            GC.KeepAlive(typeof(ColorButton));
+            GC.KeepAlive(typeof(ColorPicker));
         }
 
-        public override void OnFrameworkInitializationCompleted()
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                if (CoreManager.DatabaseMigrationTask == null)
-                {
-                    const string msg = "Database Migration didn't happen.";
-                    InvalidOperationException e = new(msg);
-                    CoreManager.Logger.Fatal(e, msg);
-                    throw e;
-                }
-                
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(CoreManager.DatabaseMigrationTask)
-                };
-            }
-            else
-            {
-                // Workaround for other assemblies in the designer (https://github.com/AvaloniaUI/Avalonia/issues/7126)
-                GC.KeepAlive(typeof(Interaction));
-                GC.KeepAlive(typeof(InvokeCommandAction));
-
-                GC.KeepAlive(typeof(Icon));
-                GC.KeepAlive(typeof(Attached));
-                
-                GC.KeepAlive(typeof(ColorButton));
-                GC.KeepAlive(typeof(ColorPicker));
-            }
-
-            base.OnFrameworkInitializationCompleted();
-        }
+        base.OnFrameworkInitializationCompleted();
     }
 }

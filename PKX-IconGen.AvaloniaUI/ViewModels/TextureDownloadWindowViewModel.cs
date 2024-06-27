@@ -20,100 +20,103 @@
 using System;
 using System.Threading;
 using JetBrains.Annotations;
+using PKXIconGen.AvaloniaUI.Models.Dialog;
+using PKXIconGen.AvaloniaUI.Services;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
 
-namespace PKXIconGen.AvaloniaUI.ViewModels
+namespace PKXIconGen.AvaloniaUI.ViewModels;
+
+public sealed class TextureDownloadWindowViewModel : WindowViewModelBase, IDisposable
 {
-    public class TextureDownloadWindowViewModel : WindowViewModelBase, IDisposable
+    private bool downloading;
+    public bool Downloading
     {
-        private bool downloading;
-        public bool Downloading
-        {
-            get => downloading;
-            set => this.RaiseAndSetIfChanged(ref downloading, value);
-        }
+        get => downloading;
+        set => this.RaiseAndSetIfChanged(ref downloading, value);
+    }
         
-        private double progress;
-        public double Progress
-        {
-            get => progress;
-            set => this.RaiseAndSetIfChanged(ref progress, value);
-        }
+    private double progress;
+    public double Progress
+    {
+        get => progress;
+        set => this.RaiseAndSetIfChanged(ref progress, value);
+    }
 
-        private string statusText = "";
-        public string StatusText
-        {
-            get => statusText;
-            set => this.RaiseAndSetIfChanged(ref statusText, value);
-        }
+    private string statusText = "";
+    public string StatusText
+    {
+        get => statusText;
+        set => this.RaiseAndSetIfChanged(ref statusText, value);
+    }
 
-        private string AssetsPath { get; init; }
+    private string AssetsPath { get; }
         
-        public TextureDownloadWindowViewModel(string assetsPath)
+    public TextureDownloadWindowViewModel(string assetsPath)
+    {
+        Downloading = false;
+        Progress = 0;
+        StatusText = "Standing by...";
+
+        AssetsPath = assetsPath;
+    }
+
+    private CancellationTokenSource? cancelDownloadTokenSource;
+    [UsedImplicitly]
+    public async void Download()
+    {
+        DisposeCancelDownloadRenderToken();
+        cancelDownloadTokenSource = new CancellationTokenSource();
+
+        Downloading = true;
+        Progress = 0;
+        StatusText = "Downloading... 0%";
+        using TexturesInstaller installer = new(AssetsPath, p =>
         {
-            Downloading = false;
-            Progress = 0;
-            StatusText = "Standing by...";
-
-            AssetsPath = assetsPath;
-        }
-
-        private CancellationTokenSource? cancelDownloadTokenSource;
-        [UsedImplicitly]
-        public async void Download()
+            Progress = p;
+            StatusText = $"Downloading... {Progress:##0.#}%"; // Lots of reallocation, but it's not the end of the world
+        });
+        try
         {
-            DisposeCancelDownloadRenderToken();
-            cancelDownloadTokenSource = new CancellationTokenSource();
-
-            Downloading = true;
-            Progress = 0;
-            StatusText = "Downloading... 0%";
-            using TexturesInstaller installer = new(AssetsPath, p =>
-            {
-                Progress = p;
-                StatusText = $"Downloading... {Progress:##0.#}%"; // Lots of reallocation, but it's not the end of the world
-            });
-            try
-            {
-                if (await installer.DownloadAsync(cancelDownloadTokenSource.Token))
-                {
-                    Progress = 100; // In case file already exists
-                    StatusText = "Installing...";
-                    await installer.ExtractAsync();
-                }
-            }
-            catch (OperationCanceledException) { }
-            finally
-            {
-                EndDownload();
-            }
+            await installer.DownloadAsync(cancelDownloadTokenSource.Token);
+            Progress = 100; // In case file already exists
+            StatusText = "Installing...";
+            await installer.ExtractAsync();
         }
-
-        [UsedImplicitly]
-        public void Cancel() => EndDownload();
-
-        private void EndDownload()
+        catch (OperationCanceledException) { }
+        catch (Exception)
         {
-            Downloading = false;
-            StatusText = "Finished!";
-            DisposeCancelDownloadRenderToken();
+            await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while downloading or installing the textures.");
         }
+        finally
+        {
+            EndDownload();
+        }
+    }
+
+    [UsedImplicitly]
+    public void Cancel() => EndDownload();
+
+    private void EndDownload()
+    {
+        Downloading = false;
+        StatusText = "Finished!";
+        DisposeCancelDownloadRenderToken();
+    }
         
-        private void DisposeCancelDownloadRenderToken()
-        {
-            // Make sure tokens are canceled
-            if (cancelDownloadTokenSource != null)
-            {
-                cancelDownloadTokenSource.Cancel();
-                cancelDownloadTokenSource.Dispose();
-                cancelDownloadTokenSource = null;
-            }
-        }
+    private void DisposeCancelDownloadRenderToken()
+    {
+        // Make sure tokens are canceled
+        if (cancelDownloadTokenSource == null) 
+            return;
         
-        public void Dispose()
-        {
-            DisposeCancelDownloadRenderToken();
-        }
+        cancelDownloadTokenSource.Cancel();
+        cancelDownloadTokenSource.Dispose();
+        cancelDownloadTokenSource = null;
+    }
+        
+    public void Dispose()
+    {
+        DisposeCancelDownloadRenderToken();
     }
 }

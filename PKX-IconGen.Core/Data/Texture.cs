@@ -27,15 +27,15 @@ namespace PKXIconGen.Core.Data;
 public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
 {
     [JsonPropertyName("name")]
-    public readonly string TextureName { get; init; }
+    public string TextureName { get; }
     /**
      * Can contain {{AssetsPath}}
      */
     [JsonPropertyName("path")]
-    public readonly string? ImagePath { get; init; }
+    public string? ImagePath { get; }
 
     [JsonPropertyName("mats")]
-    public readonly List<Material> Materials { get; init; }
+    public List<Material> Materials { get; }
     
     [JsonConstructor]
     public Texture(string textureName, string? imagePath, List<Material>? materials)
@@ -43,7 +43,7 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
         TextureName = textureName;
         ImagePath = imagePath;
 
-        Materials = materials ?? new List<Material>();
+        Materials = materials ?? [];
     }
     
     public bool Equals(Texture other)
@@ -68,5 +68,5 @@ public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
         return !(left == right);
     }
 
-    public readonly override int GetHashCode() => (TextureName, ImagePath, Materials).GetHashCode();
+    public override int GetHashCode() => (TextureName, ImagePath, Materials).GetHashCode();
 }

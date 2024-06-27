@@ -37,7 +37,8 @@
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
       </MenuItem>
-      <MenuItem IsVisible="{Binding MainWindow.DevTools}" Header="Export Selected to Full RenderJob" Command="{Binding ExportRenderJobCommand}">
+      <Separator IsVisible="{Binding MainWindow.DevTools, Mode=OneWay}" />
+      <MenuItem IsVisible="{Binding MainWindow.DevTools, Mode=OneWay}" Header="Export Selected to Full RenderJob" Command="{Binding ExportRenderJobCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>
@@ -46,12 +47,6 @@
         <Separator />
         <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Face..." Command="{Binding ExportRenderJobCommand}" CommandParameter="{x:Static data:RenderTarget.Face}" />
         <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="Box..." Command="{Binding ExportRenderJobCommand}" CommandParameter="{x:Static data:RenderTarget.Box}" />
-      </MenuItem>
-      <Separator />
-      <MenuItem IsEnabled="{Binding !MainWindow.CurrentlyRendering}" Header="_Export Selected to Blender Scene..." Command="{Binding ExportBlenderCommand}">
-        <MenuItem.Icon>
-          <i:Icon Value="mdi-blender-software" />
-        </MenuItem.Icon>
       </MenuItem>
       <Separator />
       <MenuItem Header="Quit" Command="{ReflectionBinding Quit}">

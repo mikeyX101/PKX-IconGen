@@ -17,10 +17,9 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data
-{
-    /// <summary>
-    /// Types implementing this interface should be able to serialize and deserialize with the <see cref="System.Text.Json.JsonSerializer"/>.
-    /// </summary>
-    public interface IJsonSerializable { }
-}
+namespace PKXIconGen.Core.Data;
+
+/// <summary>
+/// Types implementing this interface should be able to serialize and deserialize with the <see cref="System.Text.Json.JsonSerializer"/>.
+/// </summary>
+public interface IJsonSerializable;

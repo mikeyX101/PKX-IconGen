@@ -25,16 +25,16 @@ namespace PKXIconGen.Core.Data;
 public readonly struct ShinyColor : IJsonSerializable, IEquatable<ShinyColor>, ICloneable
 {
     [JsonPropertyName("r")]
-    public readonly byte R { get; init; }
+    public byte R { get; init; }
     [JsonPropertyName("g")]
-    public readonly byte G { get; init; }
+    public byte G { get; init; }
     [JsonPropertyName("b")]
-    public readonly byte B { get; init; }
+    public byte B { get; init; }
     [JsonPropertyName("a")]
-    public readonly byte A { get; init; }
+    public byte A { get; init; }
     
     [JsonIgnore]
-    public readonly string DisplayString => $"({R},{G},{B},{A})";
+    public string DisplayString => $"({R},{G},{B},{A})";
 
     public ShinyColor(byte r, byte g, byte b, byte a)
     {
@@ -67,7 +67,7 @@ public readonly struct ShinyColor : IJsonSerializable, IEquatable<ShinyColor>, I
         return !(left == right);
     }
 
-    public readonly override int GetHashCode() => (R, G, B, A).GetHashCode();
+    public override int GetHashCode() => (R, G, B, A).GetHashCode();
 
     public object Clone()
     {

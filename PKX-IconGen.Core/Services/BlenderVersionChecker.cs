@@ -22,53 +22,43 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
-namespace PKXIconGen.Core.Services
+namespace PKXIconGen.Core.Services;
+
+public readonly struct BlenderCheckResult(bool isBlender, bool isValidVersion, float version)
 {
-    public readonly struct BlenderCheckResult
+    public bool IsBlender { get; } = isBlender;
+
+    public bool IsValidVersion { get; } = isValidVersion;
+
+    public float Version { get; } = version;
+}
+
+public static class BlenderVersionChecker
+{
+    private const float MinimumBlenderVersion = 2.93f;
+
+    public static BlenderCheckResult? CheckExecutable(string? path)
     {
-        public readonly bool IsBlender { get; init; }
-
-        public readonly bool IsValidVersion { get; init; }
-
-        public readonly float Version { get; init; }
-
-        public BlenderCheckResult(bool isBlender, bool isValidVersion, float version)
+        if (!OperatingSystem.IsWindows())
         {
-            IsBlender = isBlender;
-            IsValidVersion = isValidVersion;
-            Version = version;
+            // Ask with "blender --version"?
+            return new BlenderCheckResult(true, true, 0);
         }
-    }
-
-    public static class BlenderVersionChecker
-    {
-        private const float MinimumBlenderVersion = 2.93f;
-
-        public static BlenderCheckResult? CheckExecutable(string? path)
-        {
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                if (!OperatingSystem.IsWindows())
-                {
-                    // Ask with "blender --version"?
-                    return new(true, true, 0);
-                }
-                else if (File.Exists(path))
-                {
-                    // Windows has metadata we can use.
-                    FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(path);
-                    string? name = fileVersionInfo.ProductName;
-                    float? version = fileVersionInfo.ProductVersion != null ? float.Parse(fileVersionInfo.ProductVersion, CultureInfo.InvariantCulture) : null;
-
-                    if (name != null && version.HasValue)
-                    {
-                        bool isBlender = name.Equals("Blender");
-                        bool isValidVersion = version.Value >= MinimumBlenderVersion;
-                        return new BlenderCheckResult(isBlender, isValidVersion, version.Value);    
-                    }
-                }
-            }
+        
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) 
             return null;
+
+        // Windows has metadata we can use.
+        FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(path);
+        string? name = fileVersionInfo.ProductName;
+        float? version = fileVersionInfo.ProductVersion != null ? float.Parse(fileVersionInfo.ProductVersion, CultureInfo.InvariantCulture) : null;
+
+        if (name != null && version.HasValue)
+        {
+            bool isBlender = name.Equals("Blender");
+            bool isValidVersion = version.Value >= MinimumBlenderVersion;
+            return new BlenderCheckResult(isBlender, isValidVersion, version.Value);    
         }
+        return null;
     }
 }

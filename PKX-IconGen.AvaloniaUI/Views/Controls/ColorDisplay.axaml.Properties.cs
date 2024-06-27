@@ -22,18 +22,17 @@ using Avalonia.Data;
 using JetBrains.Annotations;
 using AvaloniaColor = Avalonia.Media.Color;
 
-namespace PKXIconGen.AvaloniaUI.Views.Controls
-{
-    public partial class ColorDisplay
-    {
-        [UsedImplicitly] 
-        public static readonly StyledProperty<AvaloniaColor> ColorProperty =
-            AvaloniaProperty.Register<ColorDisplay, AvaloniaColor>(nameof(Color), defaultBindingMode: BindingMode.TwoWay);
+namespace PKXIconGen.AvaloniaUI.Views.Controls;
 
-        public AvaloniaColor Color
-        {
-            get => GetValue(ColorProperty);
-            set => SetValue(ColorProperty, value);
-        }
+public partial class ColorDisplay
+{
+    [UsedImplicitly] 
+    public static readonly StyledProperty<AvaloniaColor> ColorProperty =
+        AvaloniaProperty.Register<ColorDisplay, AvaloniaColor>(nameof(Color), defaultBindingMode: BindingMode.TwoWay);
+
+    public AvaloniaColor Color
+    {
+        get => GetValue(ColorProperty);
+        set => SetValue(ColorProperty, value);
     }
 }

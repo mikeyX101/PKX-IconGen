@@ -19,83 +19,81 @@
 
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using PKXIconGen.Core.ImageProcessing;
 using PKXIconGen.Core.Services;
 
-namespace PKXIconGen.Core.Data
+namespace PKXIconGen.Core.Data;
+
+public class RenderJob : IJsonSerializable
 {
-    public class RenderJob : IJsonSerializable
+    [JsonPropertyName("data")]
+    public PokemonRenderData Data { get; }
+
+    [JsonPropertyName("scale")]
+    public RenderScale Scale => Settings.RenderScale;
+
+    [JsonPropertyName("game")] 
+    public Game Game => Settings.CurrentGame;
+        
+    [JsonPropertyName("target")] 
+    public RenderTarget Target { get; }
+
+    [JsonIgnore]
+    private Settings Settings { get; }
+
+    [JsonIgnore]
+    private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
+
+    [JsonPropertyName("face_main_path")]
+    public string FaceMainPath => BlenderOutputPath + "_face_main.png";
+    [JsonPropertyName("face_shiny_path")]
+    public string FaceShinyPath => BlenderOutputPath + "_face_shiny.png";
+    [JsonPropertyName("face_secondary_path")]
+    public string FaceSecondaryPath => BlenderOutputPath + "_face_secondary.png";
+    [JsonPropertyName("face_shiny_secondary_path")]
+    public string FaceShinySecondaryPath => BlenderOutputPath + "_face_shiny_secondary.png";
+        
+    [JsonPropertyName("box_first_main_path")]
+    public string BoxFirstMainPath => BlenderOutputPath + "_box_first_main.png";
+    [JsonPropertyName("box_first_shiny_path")]
+    public string BoxFirstShinyPath => BlenderOutputPath + "_box_first_shiny.png";
+    [JsonPropertyName("box_second_main_path")]
+    public string BoxSecondMainPath => BlenderOutputPath + "_box_second_main.png";
+    [JsonPropertyName("box_second_shiny_path")]
+    public string BoxSecondShinyPath => BlenderOutputPath + "_box_second_shiny.png";
+    [JsonPropertyName("box_third_main_path")]
+    public string BoxThirdMainPath => BlenderOutputPath + "_box_third_main.png";
+    [JsonPropertyName("box_third_shiny_path")]
+    public string BoxThirdShinyPath => BlenderOutputPath + "_box_third_shiny.png";
+        
+    public RenderJob(PokemonRenderData data, Settings settings, RenderTarget target)
     {
-        [JsonPropertyName("data")]
-        public PokemonRenderData Data { get; init; }
-
-        [JsonPropertyName("scale")]
-        public RenderScale Scale => Settings.RenderScale;
-
-        [JsonPropertyName("game")] 
-        public Game Game => Settings.CurrentGame;
+        Data = data;
+        Settings = settings;
+        Target = target;
+    }
         
-        [JsonPropertyName("target")] 
-        public RenderTarget Target { get; init; }
-
-        [JsonIgnore]
-        private Settings Settings { get; init; }
-
-        [JsonIgnore]
-        private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
-
-        [JsonPropertyName("face_main_path")]
-        public string FaceMainPath => BlenderOutputPath + "_face_main.png";
-        [JsonPropertyName("face_shiny_path")]
-        public string FaceShinyPath => BlenderOutputPath + "_face_shiny.png";
-        [JsonPropertyName("face_secondary_path")]
-        public string FaceSecondaryPath => BlenderOutputPath + "_face_secondary.png";
-        [JsonPropertyName("face_shiny_secondary_path")]
-        public string FaceShinySecondaryPath => BlenderOutputPath + "_face_shiny_secondary.png";
-        
-        [JsonPropertyName("box_first_main_path")]
-        public string BoxFirstMainPath => BlenderOutputPath + "_box_first_main.png";
-        [JsonPropertyName("box_first_shiny_path")]
-        public string BoxFirstShinyPath => BlenderOutputPath + "_box_first_shiny.png";
-        [JsonPropertyName("box_second_main_path")]
-        public string BoxSecondMainPath => BlenderOutputPath + "_box_second_main.png";
-        [JsonPropertyName("box_second_shiny_path")]
-        public string BoxSecondShinyPath => BlenderOutputPath + "_box_second_shiny.png";
-        [JsonPropertyName("box_third_main_path")]
-        public string BoxThirdMainPath => BlenderOutputPath + "_box_third_main.png";
-        [JsonPropertyName("box_third_shiny_path")]
-        public string BoxThirdShinyPath => BlenderOutputPath + "_box_third_shiny.png";
-        
-        public RenderJob(PokemonRenderData data, Settings settings, RenderTarget target)
+    public async Task RenderAsync(CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
+    {
+        IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(Settings, this);
+        if (onOutput != null)
         {
-            Data = data;
-            Settings = settings;
-            Target = target;
+            runner.OnOutput += onOutput;
         }
-        
-        public async Task RenderAsync(CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
+        if (onFinish != null)
         {
-            IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(Settings, this);
-            if (onOutput != null)
-            {
-                runner.OnOutput += onOutput;
-            }
-            if (onFinish != null)
-            {
-                runner.OnFinish += onFinish;
-            }
-
-            stepOutputAsync?.Invoke($"Rendering {Data.Name}...".AsMemory());
-            CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
-            await Task.Run(async() => await runner.RunAsync(token));
-            CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
-
-            IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF, Settings.OutputNameForGame, Settings.OutputNameForTarget);
-            await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutputAsync));
+            runner.OnFinish += onFinish;
         }
+
+        stepOutputAsync?.Invoke($"Rendering {Data.Name}...".AsMemory());
+        CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
+        await Task.Run(async() => await runner.RunAsync(token));
+        CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
+
+        IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF, Settings.OutputNameForGame, Settings.OutputNameForTarget);
+        await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutputAsync));
     }
 }

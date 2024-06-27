@@ -22,27 +22,26 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using AvaloniaColor = Avalonia.Media.Color;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class AvaloniaColorHexStringConverter : IValueConverter
 {
-    public class AvaloniaColorHexStringConverter : IValueConverter
+    public static readonly AvaloniaColorHexStringConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly AvaloniaColorHexStringConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(string)))
         {
-            if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(string)))
-            {
-                return $"#{color.ToUInt32() & 0x00FFFFFF:X8}";
-            }
-            return null;
+            return $"#{color.ToUInt32() & 0x00FFFFFF:X8}";
         }
+        return null;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting an hex string back to the original value is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting an hex string back to the original value is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

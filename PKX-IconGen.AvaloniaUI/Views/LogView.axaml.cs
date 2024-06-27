@@ -20,22 +20,21 @@
 using Avalonia;
 using Avalonia.Controls;
 
-namespace PKXIconGen.AvaloniaUI.Views
+namespace PKXIconGen.AvaloniaUI.Views;
+
+public partial class LogView : UserControl
 {
-    public partial class LogView : UserControl
+    public LogView()
     {
-        public LogView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
         
-        public void LogScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    public void LogScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.ExtentDelta != Vector.Zero)
         {
-            if (e.ExtentDelta != Vector.Zero)
-            {
-                ScrollViewer scrollViewer = (ScrollViewer)sender;
-                scrollViewer.ScrollToEnd();
-            }
+            ScrollViewer scrollViewer = (ScrollViewer)sender;
+            scrollViewer.ScrollToEnd();
         }
     }
 }

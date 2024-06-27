@@ -19,30 +19,29 @@
 
 using System.Linq;
 
-namespace PKXIconGen.Core.Data
-{
-    public enum Game : byte
-    {
-        Undefined = 0,
-        PokemonColosseum = 1,
-        PokemonXDGaleOfDarkness = 2,
-        PokemonBattleRevolution = 3
-    }
+namespace PKXIconGen.Core.Data;
 
-    public static class GameExtensions
+public enum Game : byte
+{
+    Undefined = 0,
+    PokemonColosseum = 1,
+    PokemonXDGaleOfDarkness = 2,
+    PokemonBattleRevolution = 3
+}
+
+public static class GameExtensions
+{
+    public static IconStyle GetIconStyle(this Game game)
     {
-        public static IconStyle GetIconStyle(this Game game)
-        {
-            IconStyle[] iconStyles = IconStyle.GetIconStyles();
-            return iconStyles.First(g => g.Game == game);
-        }
-        
-        public static string GetName(this Game game) => game switch
-        {
-            Game.PokemonColosseum => "Pokémon Colosseum",
-            Game.PokemonXDGaleOfDarkness => "Pokémon XD: Gale of Darkness",
-            Game.PokemonBattleRevolution => "Pokémon Battle Revolution",
-            Game.Undefined or _ => ""
-        };
+        IconStyle[] iconStyles = IconStyle.GetIconStyles();
+        return iconStyles.First(g => g.Game == game);
     }
+        
+    public static string GetName(this Game game) => game switch
+    {
+        Game.PokemonColosseum => "Pokémon Colosseum",
+        Game.PokemonXDGaleOfDarkness => "Pokémon XD: Gale of Darkness",
+        Game.PokemonBattleRevolution => "Pokémon Battle Revolution",
+        Game.Undefined or _ => ""
+    };
 }

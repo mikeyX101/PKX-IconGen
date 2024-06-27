@@ -22,33 +22,30 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using PKXIconGen.AvaloniaUI.ViewModels;
 
-namespace PKXIconGen.AvaloniaUI
+namespace PKXIconGen.AvaloniaUI;
+
+public class ViewLocator : IDataTemplate
 {
-    public class ViewLocator : IDataTemplate
+    public Control Build(object? data)
     {
-        public Control Build(object? data)
+        string? name = data?.GetType().FullName!.Replace("ViewModel", "View");
+        if (name is null)
         {
-            string? name = data?.GetType().FullName!.Replace("ViewModel", "View");
-            if (name is null)
-            {
-                return new TextBlock { Text = "No data" };
-            }
+            return new TextBlock { Text = "No data" };
+        }
             
-            Type? type = Type.GetType(name);
+        Type? type = Type.GetType(name);
 
-            if (type != null)
-            {
-                return (Control)Activator.CreateInstance(type)!;
-            }
-            else
-            {
-                return new TextBlock { Text = "Not Found: " + name };
-            }
-        }
-
-        public bool Match(object? data)
+        if (type != null)
         {
-            return data is ViewModelBase;
+            return (Control)Activator.CreateInstance(type)!;
         }
+        
+        return new TextBlock { Text = "Not Found: " + name };
+    }
+
+    public bool Match(object? data)
+    {
+        return data is ViewModelBase;
     }
 }

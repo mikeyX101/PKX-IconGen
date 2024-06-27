@@ -20,67 +20,66 @@
 using Avalonia.Media;
 using PKXIconGen.AvaloniaUI.Models.Dialog;
 
-namespace PKXIconGen.AvaloniaUI.ViewModels
+namespace PKXIconGen.AvaloniaUI.ViewModels;
+
+public sealed class DialogWindowViewModel : WindowViewModelBase
 {
-    public class DialogWindowViewModel : WindowViewModelBase
-    {
-        private const uint DefaultHeight = 200;
-        public uint Height { get; init; }
+    private const uint DefaultHeight = 200;
+    public uint Height { get; init; }
 
-        public string DialogText { get; init; }
-        public string DialogTitle { get; init; }
+    public string DialogText { get; init; }
+    public string DialogTitle { get; init; }
 
-        public string? Icon { get; init; }
-        public Brush? IconColor { get; init; }
-        public bool IconVisible { get; init; }
+    public string? Icon { get; init; }
+    public Brush? IconColor { get; init; }
+    public bool IconVisible { get; init; }
         
-        public string? ImageAsset { get; init; }
-        public bool ImageVisible { get; init; }
+    public string? ImageAsset { get; init; }
+    public bool ImageVisible { get; init; }
 
-        public bool OkButtonVisible { get; init; }
-        public bool YesNoButtonsVisible { get; init; }
+    public bool OkButtonVisible { get; init; }
+    public bool YesNoButtonsVisible { get; init; }
 
-        private DialogWindowViewModel(uint? height, string text, string title, DialogButtons dialogButtons)
+    private DialogWindowViewModel(uint? height, string text, string title, DialogButtons dialogButtons)
+    {
+        Height = height ?? DefaultHeight;
+        DialogText = text;
+        DialogTitle = title;
+
+        switch (dialogButtons)
         {
-            Height = height ?? DefaultHeight;
-            DialogText = text;
-            DialogTitle = title;
-
-            switch (dialogButtons)
-            {
-                case DialogButtons.YesNo:
-                    YesNoButtonsVisible = true;
-                    break;
+            case DialogButtons.YesNo:
+                YesNoButtonsVisible = true;
+                break;
                 
-                case DialogButtons.Ok or _:
-                    OkButtonVisible = true;
-                    break;
-            }
+            case DialogButtons.Ok or _:
+                OkButtonVisible = true;
+                break;
         }
+    }
 
-        public DialogWindowViewModel(DialogType dialogType, DialogButtons dialogButtons, string text, uint? height = DefaultHeight, string? title = null)
-            : this(
-                  height,
-                  text,
-                  title ?? dialogType.GetTitle(),
-                  dialogButtons
-            )
-        {
-            Icon = dialogType.GetMaterialDesignIcon();
-            IconColor = new SolidColorBrush(Color.FromUInt32(dialogType.GetColor()));
-            IconVisible = true;
-        }
+    public DialogWindowViewModel(DialogType dialogType, DialogButtons dialogButtons, string text, uint? height = DefaultHeight, string? title = null)
+        : this(
+            height,
+            text,
+            title ?? dialogType.GetTitle(),
+            dialogButtons
+        )
+    {
+        Icon = dialogType.GetMaterialDesignIcon();
+        IconColor = new SolidColorBrush(Color.FromUInt32(dialogType.GetColor()));
+        IconVisible = true;
+    }
 
-        public DialogWindowViewModel(string asset, DialogButtons dialogButtons, string text, string title, uint? height = DefaultHeight)
-            : this(
-                  height,
-                  text,
-                  title,
-                  dialogButtons
-            )
-        {
-            ImageAsset = asset;
-            ImageVisible = true;
-        }
+    public DialogWindowViewModel(string asset, DialogButtons dialogButtons, string text, string title, uint? height = DefaultHeight)
+        : this(
+            height,
+            text,
+            title,
+            dialogButtons
+        )
+    {
+        ImageAsset = asset;
+        ImageVisible = true;
     }
 }

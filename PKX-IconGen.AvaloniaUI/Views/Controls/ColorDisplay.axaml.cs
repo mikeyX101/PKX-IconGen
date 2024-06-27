@@ -19,13 +19,12 @@
 
 using Avalonia.Controls;
 
-namespace PKXIconGen.AvaloniaUI.Views.Controls
+namespace PKXIconGen.AvaloniaUI.Views.Controls;
+
+public partial class ColorDisplay : UserControl
 {
-    public partial class ColorDisplay : UserControl
+    public ColorDisplay()
     {
-        public ColorDisplay()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

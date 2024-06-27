@@ -26,64 +26,63 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
 // https://docs.avaloniaui.net/docs/controls/image
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+/// <summary>
+/// <para>
+/// Converts a string path to a bitmap asset.
+/// </para>
+/// <para>
+/// The asset must be in the same assembly as the program. If it isn't,
+/// specify "avares://assemblynamehere/" in front of the path to the asset.
+/// </para>
+/// </summary>
+public class BitmapAssetValueConverter : IValueConverter
 {
-    /// <summary>
-    /// <para>
-    /// Converts a string path to a bitmap asset.
-    /// </para>
-    /// <para>
-    /// The asset must be in the same assembly as the program. If it isn't,
-    /// specify "avares://assemblynamehere/" in front of the path to the asset.
-    /// </para>
-    /// </summary>
-    public class BitmapAssetValueConverter : IValueConverter
+    public static readonly BitmapAssetValueConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly BitmapAssetValueConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is string rawUri && targetType.IsAssignableFrom(typeof(Bitmap)))
         {
-            if (value is string rawUri && targetType.IsAssignableFrom(typeof(Bitmap)))
+            Uri? uri = null;
+
+            // Allow for assembly overrides
+            if (rawUri.StartsWith("avares://"))
             {
-                Uri? uri = null;
-
-                // Allow for assembly overrides
-                if (rawUri.StartsWith("avares://"))
+                uri = new Uri(rawUri);
+            }
+            else
+            {
+                Assembly? assembly = Assembly.GetEntryAssembly();
+                if (assembly != null)
                 {
-                    uri = new Uri(rawUri);
-                }
-                else
-                {
-                    Assembly? assembly = Assembly.GetEntryAssembly();
-                    if (assembly != null)
+                    string? assemblyName = assembly.GetName().Name;
+                    if (assemblyName != null)
                     {
-                        string? assemblyName = assembly.GetName().Name;
-                        if (assemblyName != null)
-                        {
-                            uri = new Uri($"avares://{assemblyName}{rawUri}");
-                        }
+                        uri = new Uri($"avares://{assemblyName}{rawUri}");
                     }
-                }
-
-                if (uri != null) 
-                {
-                    Stream assetStream = AssetLoader.Open(uri);
-                    return new Bitmap(assetStream);
                 }
             }
 
-            return new Avalonia.Data.BindingNotification(
-                new InvalidDataException("Invalid data while converting to Bitmap object."), 
-                Avalonia.Data.BindingErrorType.Error
-            );
+            if (uri != null) 
+            {
+                Stream assetStream = AssetLoader.Open(uri);
+                return new Bitmap(assetStream);
+            }
         }
 
-        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting Bitmap back to the original value is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+        return new Avalonia.Data.BindingNotification(
+            new InvalidDataException("Invalid data while converting to Bitmap object."), 
+            Avalonia.Data.BindingErrorType.Error
+        );
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting Bitmap back to the original value is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

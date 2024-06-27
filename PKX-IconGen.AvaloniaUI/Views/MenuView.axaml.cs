@@ -19,13 +19,12 @@
 
 using Avalonia.Controls;
 
-namespace PKXIconGen.AvaloniaUI.Views
+namespace PKXIconGen.AvaloniaUI.Views;
+
+public partial class MenuView : UserControl
 {
-    public partial class MenuView : UserControl
+    public MenuView()
     {
-        public MenuView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

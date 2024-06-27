@@ -21,41 +21,40 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace PKXIconGen.Core.ImageProcessing.Extensions
+namespace PKXIconGen.Core.ImageProcessing.Extensions;
+
+public static class ImageAddExtensions
 {
-    public static class ImageAddExtensions
+    public static IImageProcessingContext AddImageBottom(this IImageProcessingContext ctx, Image img)
     {
-        public static IImageProcessingContext AddImageBottom(this IImageProcessingContext ctx, Image img)
-        {
-            Size size = ctx.GetCurrentSize();
+        Size size = ctx.GetCurrentSize();
 
-            return ctx
-                .Resize(new ResizeOptions
-                {
-                    Size = new Size(size.Width, size.Height + img.Height),
-                    Mode = ResizeMode.BoxPad,
-                    Position = AnchorPositionMode.TopLeft
-                })
-                .DrawImage(img, new Point(0, size.Height), 1f);
-        }
+        return ctx
+            .Resize(new ResizeOptions
+            {
+                Size = new Size(size.Width, size.Height + img.Height),
+                Mode = ResizeMode.BoxPad,
+                Position = AnchorPositionMode.TopLeft
+            })
+            .DrawImage(img, new Point(0, size.Height), 1f);
+    }
 
-        public static IImageProcessingContext AddImageRight(this IImageProcessingContext ctx, Image img)
-        {
-            Size size = ctx.GetCurrentSize();
+    public static IImageProcessingContext AddImageRight(this IImageProcessingContext ctx, Image img)
+    {
+        Size size = ctx.GetCurrentSize();
 
-            return ctx
-                .Resize(new ResizeOptions
-                {
-                    Size = new Size(size.Width + img.Width, size.Height),
-                    Mode = ResizeMode.BoxPad,
-                    Position = AnchorPositionMode.TopLeft
-                })
-                .DrawImage(img, new Point(size.Width, 0), 1f);
-        }
+        return ctx
+            .Resize(new ResizeOptions
+            {
+                Size = new Size(size.Width + img.Width, size.Height),
+                Mode = ResizeMode.BoxPad,
+                Position = AnchorPositionMode.TopLeft
+            })
+            .DrawImage(img, new Point(size.Width, 0), 1f);
+    }
         
-        public static IImageProcessingContext AddImageBehind(this IImageProcessingContext ctx, Image img)
-        {
-            return ctx.DrawImage(img, new Point(0, 0), PixelColorBlendingMode.Normal, PixelAlphaCompositionMode.DestOver, 1f);
-        }
+    public static IImageProcessingContext AddImageBehind(this IImageProcessingContext ctx, Image img)
+    {
+        return ctx.DrawImage(img, new Point(0, 0), PixelColorBlendingMode.Normal, PixelAlphaCompositionMode.DestOver, 1f);
     }
 }

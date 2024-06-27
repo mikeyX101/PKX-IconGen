@@ -17,14 +17,13 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data.Blender
+namespace PKXIconGen.Core.Data.Blender;
+
+/// <summary>
+/// Blender object in a 3D space with Serializable Vector3s.
+/// </summary>
+public interface IJsonSerializableBlenderObject : IJsonSerializable
 {
-    /// <summary>
-    /// Blender object in a 3D space with Serializable Vector3s.
-    /// </summary>
-    public interface IJsonSerializableBlenderObject : IJsonSerializable
-    {
-        public JsonSerializableVector3 Position { get; }
-        public JsonSerializableVector3 FocusPoint { get; }
-    }
+    public JsonSerializableVector3 Position { get; }
+    public JsonSerializableVector3 FocusPoint { get; }
 }

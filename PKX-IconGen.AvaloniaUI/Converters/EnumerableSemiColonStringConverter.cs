@@ -24,47 +24,37 @@ using System.Globalization;
 using System.Linq;
 using Avalonia.Data.Converters;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class EnumerableSemiColonStringConverter : IValueConverter
 {
-    public class EnumerableSemiColonStringConverter : IValueConverter
+    public static readonly EnumerableSemiColonStringConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly EnumerableSemiColonStringConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is IEnumerable items && targetType.IsAssignableFrom(typeof(string)))
         {
-            if (value is IEnumerable items && targetType.IsAssignableFrom(typeof(string)))
+            IEnumerable<object> objectItems = items.OfType<object>().ToList();
+
+            if (!objectItems.Any())
             {
-                IEnumerable<object> objectItems = items.OfType<object>().ToList();
-
-                if (!objectItems.Any())
-                {
-                    return "";
-                }
-                else
-                {
-                    return objectItems
-                        .Select(o => o.ToString())
-                        .Aggregate((s1, s2) => $"{s1};{s2}");
-                }
+                return "";
             }
-            return null;
+            
+            return objectItems
+                .Select(o => o.ToString())
+                .Aggregate((s1, s2) => $"{s1};{s2}");
         }
+        return null;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is string s && targetType.IsAssignableFrom(typeof(IEnumerable)))
         {
-            if (value == null)
-            {
-                return null;
-            }
-
-            if (value is string s && targetType.IsAssignableFrom(typeof(IEnumerable)))
-            {
-                return s.Split(';', options: StringSplitOptions.None);
-            }
-            else
-            {
-                return null;
-            }
+            return s.Split(';', options: StringSplitOptions.None);
         }
+        
+        return null;
     }
 }

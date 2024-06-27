@@ -22,27 +22,26 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class StringFontFamilyConverter : IValueConverter
 {
-    public class StringFontFamilyConverter : IValueConverter
+    public static readonly StringFontFamilyConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly StringFontFamilyConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is string fontName && targetType.IsAssignableFrom(typeof(FontFamily)))
         {
-            if (value is string fontName && targetType.IsAssignableFrom(typeof(FontFamily)))
-            {
-                return new FontFamily(fontName);
-            }
-            return null;
+            return new FontFamily(fontName);
         }
+        return null;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting FontFamily back to the original value is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting FontFamily back to the original value is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

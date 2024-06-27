@@ -23,28 +23,27 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using AvaloniaColor = Avalonia.Media.Color;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class HueAvaloniaColorConverter : IValueConverter
 {
-    public class HueAvaloniaColorConverter : IValueConverter
+    public static readonly HueAvaloniaColorConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly HueAvaloniaColorConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is float hue && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
         {
-            if (value is float hue && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
-            {
-                uint rgb = Core.Utils.HueToRgb(Core.Utils.ConvertRange(0, 1, 0, 360, hue));
-                return AvaloniaColor.FromUInt32(rgb);
-            }
-            return Colors.Transparent;
+            uint rgb = Core.Utils.HueToRgb(Core.Utils.ConvertRange(0, 1, 0, 360, hue));
+            return AvaloniaColor.FromUInt32(rgb);
         }
+        return Colors.Transparent;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting a Avalonia color back to the original hue is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting a Avalonia color back to the original hue is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

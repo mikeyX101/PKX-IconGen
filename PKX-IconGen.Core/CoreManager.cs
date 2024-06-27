@@ -29,121 +29,120 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Exceptions;
 
-namespace PKXIconGen.Core
+namespace PKXIconGen.Core;
+
+public static class CoreManager
 {
-    public static class CoreManager
+    internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
+    private const byte MaxLogFiles = 5;
+
+    private static IDisposable? _disposableProperty;
+    public static ILogger Logger
     {
-        internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
-        private const byte MaxLogFiles = 5;
-
-        private static IDisposable? _disposableProperty;
-        public static ILogger Logger
-        {
-            get {
-                // Update calling assembly
-                Assembly callingAssembly = Assembly.GetCallingAssembly();
-                _disposableProperty?.Dispose();
-                _disposableProperty = Serilog.Context.LogContext.PushProperty(LoggingAssemblyPropertyName, callingAssembly.GetName().Name);
+        get {
+            // Update calling assembly
+            Assembly callingAssembly = Assembly.GetCallingAssembly();
+            _disposableProperty?.Dispose();
+            _disposableProperty = Serilog.Context.LogContext.PushProperty(LoggingAssemblyPropertyName, callingAssembly.GetName().Name);
                 
-                return NullableLogger ?? throw new ArgumentNullException(nameof(NullableLogger), "CoreManager.Initiate must be called before using the Logger.");
-            }
+            return NullableLogger ?? throw new ArgumentNullException(nameof(NullableLogger), "CoreManager.Initiate must be called before using the Logger.");
         }
-        private static Logger? NullableLogger { get; set; }
+    }
+    private static Logger? NullableLogger { get; set; }
 
-        public static Task? DatabaseMigrationTask { get; private set; }
+    public static Task? DatabaseMigrationTask { get; private set; }
         
-        public static bool Initiated { get; private set; }
-        public static void Initiate()
+    public static bool Initiated { get; private set; }
+    public static void Initiate()
+    {
+        if (Initiated)
         {
-            if (Initiated)
-            {
-                Logger.Warning("Tried to initiate Core again");
-                return;
-            }
+            Logger.Warning("Tried to initiate Core again");
+            return;
+        }
 
-            if (!Directory.Exists(Paths.TempFolder))
-            {
-                Directory.CreateDirectory(Paths.TempFolder);
-            }
+        if (!Directory.Exists(Paths.TempFolder))
+        {
+            Directory.CreateDirectory(Paths.TempFolder);
+        }
 
-            if (!Directory.Exists(Paths.TempBlendFolder))
-            {
-                Directory.CreateDirectory(Paths.TempBlendFolder);
-            }
+        if (!Directory.Exists(Paths.TempBlendFolder))
+        {
+            Directory.CreateDirectory(Paths.TempBlendFolder);
+        }
 
-            if (!Directory.Exists(Paths.LogFolder))
-            {
-                Directory.CreateDirectory(Paths.LogFolder);
-            }
+        if (!Directory.Exists(Paths.LogFolder))
+        {
+            Directory.CreateDirectory(Paths.LogFolder);
+        }
             
-            if (!Directory.Exists(Paths.LogFolder))
-            {
-                Directory.CreateDirectory(Paths.LogFolder);
-            }
+        if (!Directory.Exists(Paths.LogFolder))
+        {
+            Directory.CreateDirectory(Paths.LogFolder);
+        }
 
-            Serilog.Formatting.ITextFormatter textFormatter = new LogTemplateFormatter();
-            NullableLogger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.WithExceptionDetails()
-                .Enrich.FromLogContext()
-                .WriteTo.Async(config => 
-                    config.File(textFormatter, Paths.Log, 
-                        buffered: true,
-                        rollOnFileSizeLimit: false,
-                        flushToDiskInterval: TimeSpan.FromSeconds(15)
-                    )
-                )     
+        Serilog.Formatting.ITextFormatter textFormatter = new LogTemplateFormatter();
+        NullableLogger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .Enrich.WithExceptionDetails()
+            .Enrich.FromLogContext()
+            .WriteTo.Async(config => 
+                config.File(textFormatter, Paths.Log, 
+                    buffered: true,
+                    rollOnFileSizeLimit: false,
+                    flushToDiskInterval: TimeSpan.FromSeconds(15)
+                )
+            )     
 #if DEBUG
-                .WriteTo.Debug(textFormatter)
+            .WriteTo.Debug(textFormatter)
 #endif
-                .WriteTo.Console(textFormatter)
-                .CreateLogger();
+            .WriteTo.Console(textFormatter)
+            .CreateLogger();
             
-            LinqToDBForEFTools.Initialize();
+        LinqToDBForEFTools.Initialize();
             
-            Logger.Information("Starting database migration Task");
-            DatabaseMigrationTask = Database.Instance.GetMigrationTask();
+        Logger.Information("Starting database migration Task");
+        DatabaseMigrationTask = Database.Instance.GetMigrationTask();
             
-            Logger.Information("PKX-IconGen Core initiated");
-            Initiated = true;
-        }
+        Logger.Information("PKX-IconGen Core initiated");
+        Initiated = true;
+    }
 
-        public static void OnClose()
-        {
-            Logger.Information("PKX-IconGen Core shutting down gracefully...");
-            NameMap.CleanUp();
-            Database.OnClose();
-            DisposeLogger();
+    public static void OnClose()
+    {
+        Logger.Information("PKX-IconGen Core shutting down gracefully...");
+        NameMap.CleanUp();
+        Database.OnClose();
+        DisposeLogger();
             
-            // Copy log as latest.log
-            File.Copy(Paths.Log, Paths.LogLatest, true);
-            RespectMaxLogs();
-        }
+        // Copy log as latest.log
+        File.Copy(Paths.Log, Paths.LogLatest, true);
+        RespectMaxLogs();
+    }
 
-        private static void DisposeLogger()
+    private static void DisposeLogger()
+    {
+        if (NullableLogger == null) 
+            return;
+        
+        ((Logger)Logger).Dispose();
+        NullableLogger = null;
+    }
+
+    private static void RespectMaxLogs()
+    {
+        DirectoryInfo info = new(Paths.LogFolder);
+        FileInfo[] files = info.EnumerateFiles("log*.log").OrderBy(p => p.CreationTime).ToArray();
+        if (files.Length <= MaxLogFiles) return;
+            
+        int nbToDel = MaxLogFiles - files.Length;
+        foreach (FileInfo file in files)
         {
-            if (NullableLogger != null)
+            file.Delete();
+
+            if (nbToDel-- <= MaxLogFiles)
             {
-                ((Logger)Logger).Dispose();
-                NullableLogger = null;
-            }
-        }
-
-        private static void RespectMaxLogs()
-        {
-            DirectoryInfo info = new DirectoryInfo(Paths.LogFolder);
-            FileInfo[] files = info.EnumerateFiles("log*.log").OrderBy(p => p.CreationTime).ToArray();
-            if (files.Length <= MaxLogFiles) return;
-            
-            int nbToDel = MaxLogFiles - files.Length;
-            foreach (FileInfo file in files)
-            {
-                file.Delete();
-
-                if (nbToDel-- <= MaxLogFiles)
-                {
-                    break;
-                }
+                break;
             }
         }
     }

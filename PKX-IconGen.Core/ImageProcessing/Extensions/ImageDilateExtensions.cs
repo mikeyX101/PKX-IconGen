@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using SixLabors.ImageSharp;
@@ -68,14 +67,13 @@ public static class ImageDilateExtensions
             Size = size;
         }
         
-        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Execute()
         {
             if (Size == 0)
             {
                 return;
             }
-            
+
             using Image<TPixel> target = Source.Clone<TPixel>();
             target.ProcessPixelRows(Source, (sourceAccessor, targetAccessor) =>
             {

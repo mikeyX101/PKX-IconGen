@@ -27,98 +27,97 @@ using Avalonia.Platform.Storage;
 using PKXIconGen.AvaloniaUI.Models;
 using PKXIconGen.AvaloniaUI.Services;
 
-namespace PKXIconGen.AvaloniaUI.Views.Controls
+namespace PKXIconGen.AvaloniaUI.Views.Controls;
+
+public partial class FileTextField : UserControl
 {
-    public partial class FileTextField : UserControl
+    private readonly TextBox fileTextBox;
+    private readonly Button insertAssetsPathButton;
+    private readonly Button browseFilesButton;
+
+    private readonly List<FilePickerFileType> filters;
+        
+    public FileTextField()
     {
-        private readonly TextBox fileTextBox;
-        private readonly Button insertAssetsPathButton;
-        private readonly Button browseFilesButton;
+        InitializeComponent();
 
-        private readonly List<FilePickerFileType> filters;
-        
-        public FileTextField()
-        {
-            InitializeComponent();
-
-            fileTextBox = this.GetControl<TextBox>("FileTextBox");
+        fileTextBox = this.GetControl<TextBox>("FileTextBox");
             
-            insertAssetsPathButton = this.GetControl<Button>("InsertAssetsPathButton");
-            insertAssetsPathButton.Click += InsertAssetsPath;
+        insertAssetsPathButton = this.GetControl<Button>("InsertAssetsPathButton");
+        insertAssetsPathButton.Click += InsertAssetsPath;
             
-            browseFilesButton = this.GetControl<Button>("BrowseFilesButton");
-            browseFilesButton.Click += BrowseFiles;
+        browseFilesButton = this.GetControl<Button>("BrowseFilesButton");
+        browseFilesButton.Click += BrowseFiles;
 
-            filters = new List<FilePickerFileType>();
-        }
+        filters = new List<FilePickerFileType>();
+    }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
-            base.OnPropertyChanged(change);
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
 
-            if (change.Property == IsAssetsPathFieldProperty)
-            {
-                Grid.SetColumnSpan(fileTextBox, IsAssetsPathField ? 1 : 2);
-            }
-            else if (change.Property == TypeProperty)
-            {
-                filters.Clear();
-                List<string> extensions = Type switch
-                {
-                    FileSelectType.GCNModel => new List<string> { ".dat", ".pkx" },
-                    FileSelectType.Directory or FileSelectType.Executable or _ => new List<string> { "*" }
-                };
-                if (OperatingSystem.IsWindows() && Type == FileSelectType.Executable)
-                {
-                    extensions.Add(".exe");
-                }
-                
-                string name = Type switch
-                {
-                    FileSelectType.GCNModel => "GCN Pokemon Model",
-                    FileSelectType.Executable => "Executable",
-                    FileSelectType.Directory => "Folder",
-                    _ => ""
-                };
-                
-                filters.Add(new FilePickerFileType(name) { Patterns = extensions });
-            }
-        }
-
-        private void InsertAssetsPath(object? sender, RoutedEventArgs e) 
+        if (change.Property == IsAssetsPathFieldProperty)
         {
-            const string toInsert = "{{AssetsPath}}";
-            if (fileTextBox.Text?.Contains(toInsert) ?? false) return;
-            
-            fileTextBox.Text = fileTextBox.Text is null ? toInsert : fileTextBox.Text.Insert(fileTextBox.CaretIndex, toInsert);
-            fileTextBox.Focus();
-            fileTextBox.CaretIndex += toInsert.Length;
+            Grid.SetColumnSpan(fileTextBox, IsAssetsPathField ? 1 : 2);
         }
-        
-        private async void BrowseFiles(object? sender, RoutedEventArgs e)
+        else if (change.Property == TypeProperty)
         {
-            IStorageItem? newItem = await OpenDialog();
-            if (newItem != null)
+            filters.Clear();
+            List<string> extensions = Type switch
             {
-                string newPath = newItem.Path.LocalPath;
-                if (AssetsPath != "" && newPath.Contains(AssetsPath))
-                {
-                    newPath = newPath.Replace(AssetsPath, "{{AssetsPath}}");
-                }
-            
-                Path = newPath;
-            }
-        }
-        
-        private async Task<IStorageItem?> OpenDialog()
-        {
-            string? initialDirectory = !string.IsNullOrWhiteSpace(AssetsPath) && (string.IsNullOrWhiteSpace(Path) || Path.StartsWith("{{AssetsPath}}")) ? AssetsPath + '/' : Path;
-            return Type switch
-            {
-                FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),
-                FileSelectType.GCNModel or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters, initialDirectory),
-                _ => throw new InvalidOperationException("Unknown FileSelectType, somehow?")
+                FileSelectType.GCNModel => [".dat", ".pkx"],
+                FileSelectType.Directory or FileSelectType.Executable or _ => ["*"]
             };
+            if (OperatingSystem.IsWindows() && Type == FileSelectType.Executable)
+            {
+                extensions.Add(".exe");
+            }
+                
+            string name = Type switch
+            {
+                FileSelectType.GCNModel => "GCN Pokemon Model",
+                FileSelectType.Executable => "Executable",
+                FileSelectType.Directory => "Folder",
+                _ => ""
+            };
+                
+            filters.Add(new FilePickerFileType(name) { Patterns = extensions });
         }
+    }
+
+    private void InsertAssetsPath(object? sender, RoutedEventArgs e) 
+    {
+        const string toInsert = "{{AssetsPath}}";
+        if (fileTextBox.Text?.Contains(toInsert) ?? false) return;
+            
+        fileTextBox.Text = fileTextBox.Text is null ? toInsert : fileTextBox.Text.Insert(fileTextBox.CaretIndex, toInsert);
+        fileTextBox.Focus();
+        fileTextBox.CaretIndex += toInsert.Length;
+    }
+        
+    private async void BrowseFiles(object? sender, RoutedEventArgs e)
+    {
+        IStorageItem? newItem = await OpenDialog();
+        if (newItem == null) 
+            return;
+        
+        string newPath = newItem.Path.LocalPath;
+        if (AssetsPath != "" && newPath.Contains(AssetsPath))
+        {
+            newPath = newPath.Replace(AssetsPath, "{{AssetsPath}}");
+        }
+            
+        Path = newPath;
+    }
+        
+    private async Task<IStorageItem?> OpenDialog()
+    {
+        string? initialDirectory = !string.IsNullOrWhiteSpace(AssetsPath) && (string.IsNullOrWhiteSpace(Path) || Path.StartsWith("{{AssetsPath}}")) ? AssetsPath + '/' : Path;
+        return Type switch
+        {
+            FileSelectType.Directory => await FileDialogHelper.GetFolder(Title, initialDirectory),
+            FileSelectType.GCNModel or FileSelectType.Executable => await FileDialogHelper.GetFile(Title, filters, initialDirectory),
+            _ => throw new InvalidOperationException("Unknown FileSelectType, somehow?")
+        };
     }
 }

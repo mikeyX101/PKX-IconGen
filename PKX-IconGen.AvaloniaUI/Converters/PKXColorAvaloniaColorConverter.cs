@@ -24,28 +24,27 @@ using Avalonia.Media;
 using AvaloniaColor = Avalonia.Media.Color;
 using Color = PKXIconGen.Core.Data.Blender.Color;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class PKXColorAvaloniaColorConverter : IValueConverter
 {
-    public class PKXColorAvaloniaColorConverter : IValueConverter
+    public static readonly PKXColorAvaloniaColorConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly PKXColorAvaloniaColorConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is Color color && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
         {
-            if (value is Color color && targetType.IsAssignableFrom(typeof(AvaloniaColor)))
-            {
-                return AvaloniaColor.FromUInt32(color.ToArgbUInt());
-            }
-            return Colors.Transparent;
+            return AvaloniaColor.FromUInt32(color.ToArgbUInt());
         }
+        return Colors.Transparent;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(Color)))
         {
-            if (value is AvaloniaColor color && targetType.IsAssignableFrom(typeof(Color)))
-            {
-                return Color.FromArgbUInt(color.ToUInt32());
-            }
-            return Color.FromArgbUInt(Colors.Transparent.ToUInt32());
+            return Color.FromArgbUInt(color.ToUInt32());
         }
+        return Color.FromArgbUInt(Colors.Transparent.ToUInt32());
     }
 }

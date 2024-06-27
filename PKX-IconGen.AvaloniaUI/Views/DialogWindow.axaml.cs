@@ -21,22 +21,21 @@ using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 
-namespace PKXIconGen.AvaloniaUI.Views
-{
-    public partial class DialogWindow : ReactiveWindow<DialogWindowViewModel>
-    {
-        public DialogWindow()
-        {
-            InitializeComponent();
-        }
+namespace PKXIconGen.AvaloniaUI.Views;
 
-        public void CloseFalse(object sender, RoutedEventArgs e)
-        {
-            Close(false);
-        }
-        public void CloseTrue(object sender, RoutedEventArgs e)
-        {
-            Close(true);
-        }
+public partial class DialogWindow : ReactiveWindow<DialogWindowViewModel>
+{
+    public DialogWindow()
+    {
+        InitializeComponent();
+    }
+
+    public void CloseFalse(object sender, RoutedEventArgs e)
+    {
+        Close(false);
+    }
+    public void CloseTrue(object sender, RoutedEventArgs e)
+    {
+        Close(true);
     }
 }

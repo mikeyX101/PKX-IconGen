@@ -23,46 +23,45 @@ using JetBrains.Annotations;
 using PKXIconGen.Core.Services;
 using ReactiveUI;
 
-namespace PKXIconGen.AvaloniaUI.ViewModels
+namespace PKXIconGen.AvaloniaUI.ViewModels;
+
+public class ViewModelBase : ReactiveObject
 {
-    public class ViewModelBase : ReactiveObject
+    #region OS
+    [UsedImplicitly]
+    public bool IsWindows { get; init; }
+    [UsedImplicitly]
+    public bool IsMacOs { get; init; }
+    [UsedImplicitly]
+    public bool IsLinux { get; init; }
+    #endregion
+
+    public ViewModelBase()
     {
-        #region OS
-        [UsedImplicitly]
-        public bool IsWindows { get; init; }
-        [UsedImplicitly]
-        public bool IsMacOs { get; init; }
-        [UsedImplicitly]
-        public bool IsLinux { get; init; }
-        #endregion
-
-        public ViewModelBase()
-        {
-            IsWindows = OperatingSystem.IsWindows();
-            IsMacOs = OperatingSystem.IsMacOS();
-            IsLinux = OperatingSystem.IsLinux();
-        }
-
-        private protected static void DoDBQuery(Action<Database> action)
-        {
-            action(Database.Instance);
-        }
-
-        private protected static T DoDBQuery<T>(Func<Database, T> func)
-        {
-            return func(Database.Instance);
-        }
-
-        private protected static async Task DoDBQueryAsync(Func<Database, Task> func)
-        {
-            await func(Database.Instance);
-        }
-
-        private protected static async Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
-        {
-            return await func(Database.Instance);
-        }
+        IsWindows = OperatingSystem.IsWindows();
+        IsMacOs = OperatingSystem.IsMacOS();
+        IsLinux = OperatingSystem.IsLinux();
     }
 
-    public class WindowViewModelBase : ViewModelBase { }
+    private protected static void DoDBQuery(Action<Database> action)
+    {
+        action(Database.Instance);
+    }
+
+    private protected static T DoDBQuery<T>(Func<Database, T> func)
+    {
+        return func(Database.Instance);
+    }
+
+    private protected static async Task DoDBQueryAsync(Func<Database, Task> func)
+    {
+        await func(Database.Instance);
+    }
+
+    private protected static async Task<T> DoDBQueryAsync<T>(Func<Database, Task<T>> func)
+    {
+        return await func(Database.Instance);
+    }
 }
+
+public class WindowViewModelBase : ViewModelBase;

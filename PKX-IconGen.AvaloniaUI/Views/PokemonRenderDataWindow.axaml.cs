@@ -22,16 +22,15 @@ using Avalonia.ReactiveUI;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using ReactiveUI;
 
-namespace PKXIconGen.AvaloniaUI.Views
-{
-    public partial class PokemonRenderDataWindow : ReactiveWindow<PokemonRenderDataWindowViewModel>
-    {
-        public PokemonRenderDataWindow()
-        {
-            InitializeComponent();
+namespace PKXIconGen.AvaloniaUI.Views;
 
-            this.WhenActivated(d => d(ViewModel!.CancelCommand.Subscribe(Close)));
-            this.WhenActivated(d => d(ViewModel!.SaveCommand.Subscribe(Close)));
-        }
+public partial class PokemonRenderDataWindow : ReactiveWindow<PokemonRenderDataWindowViewModel>
+{
+    public PokemonRenderDataWindow()
+    {
+        InitializeComponent();
+
+        this.WhenActivated(d => d(ViewModel!.CancelCommand.Subscribe(Close)));
+        this.WhenActivated(d => d(ViewModel!.SaveCommand.Subscribe(Close)));
     }
 }

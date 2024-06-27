@@ -21,61 +21,60 @@ using System;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace PKXIconGen.Core.Data.Blender
+namespace PKXIconGen.Core.Data.Blender;
+
+/// <summary>
+/// Data for a light in a Blender scene.
+/// </summary>
+public readonly struct Light : IJsonSerializable, IEquatable<Light>
 {
-    /// <summary>
-    /// Data for a light in a Blender scene.
-    /// </summary>
-    public readonly struct Light : IJsonSerializable, IEquatable<Light>
-    {
-        [JsonPropertyName("type")]
-        public readonly LightType Type { get; init; }
-        [JsonPropertyName("strength")]
-        public readonly float Strength { get; init; }
-        [JsonPropertyName("color")]
-        public readonly Color Color { get; init; }
-        [JsonPropertyName("distance")]
-        public readonly float Distance { get; init; }
+    [JsonPropertyName("type")]
+    public LightType Type { get; }
+    [JsonPropertyName("strength")]
+    public float Strength { get; }
+    [JsonPropertyName("color")]
+    public Color Color { get; }
+    [JsonPropertyName("distance")]
+    public float Distance { get; }
         
-        [UsedImplicitly]
-        public Light(LightType type, float strength, Color color, float distance)
-        {
-            Type = type;
-            Strength = strength;
-            Color = color;
-            Distance = distance;
-        }
-
-        public bool Equals(Light other)
-        {
-            return 
-                Type == other.Type &&
-                Math.Abs(Strength - other.Strength) < 0.000000001 &&
-                Color.Equals(other.Color) &&
-                Math.Abs(Distance - other.Distance) < 0.000000001;
-        }
-        public override bool Equals(object? obj)
-        {
-            return obj is Light light && Equals(light);
-        }
-
-        public static bool operator ==(Light left, Light right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(Light left, Light right)
-        {
-            return !(left == right);
-        }
-
-        public readonly override int GetHashCode() => (Type, Strength, Color, Distance).GetHashCode();
-
-        public static Light GetDefaultLight(RenderTarget target) => target switch
-        {
-            RenderTarget.Face => new Light(LightType.Area, 250f, Color.GetDefaultColor(), 5f),
-            RenderTarget.Box => new Light(LightType.Area, 650f, Color.GetDefaultColor(), 13f),
-            _ => throw new ArgumentException("Unknown RenderTarget.", nameof(target))
-        };
+    [UsedImplicitly]
+    public Light(LightType type, float strength, Color color, float distance)
+    {
+        Type = type;
+        Strength = strength;
+        Color = color;
+        Distance = distance;
     }
+
+    public bool Equals(Light other)
+    {
+        return 
+            Type == other.Type &&
+            Math.Abs(Strength - other.Strength) < 0.000000001 &&
+            Color.Equals(other.Color) &&
+            Math.Abs(Distance - other.Distance) < 0.000000001;
+    }
+    public override bool Equals(object? obj)
+    {
+        return obj is Light light && Equals(light);
+    }
+
+    public static bool operator ==(Light left, Light right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Light left, Light right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode() => (Type, Strength, Color, Distance).GetHashCode();
+
+    public static Light GetDefaultLight(RenderTarget target) => target switch
+    {
+        RenderTarget.Face => new Light(LightType.Area, 250f, Color.GetDefaultColor(), 5f),
+        RenderTarget.Box => new Light(LightType.Area, 650f, Color.GetDefaultColor(), 13f),
+        RenderTarget.All or _ => throw new ArgumentException("Unknown RenderTarget.", nameof(target))
+    };
 }

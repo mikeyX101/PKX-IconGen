@@ -17,25 +17,24 @@
 */
 #endregion
 
-namespace PKXIconGen.Core.Data.Blender
-{
-    /// <summary>
-    /// Light types available in Blender.
-    /// See: https://docs.blender.org/api/current/bpy.types.Light.html#bpy.types.Light.type
-    /// </summary>
-    public enum LightType : byte
-    {
-        Point = 0,
-        Sun = 1,
-        Spot = 2,
-        Area = 3
-    }
+namespace PKXIconGen.Core.Data.Blender;
 
-    public static class LightTypeExtensions
+/// <summary>
+/// Light types available in Blender.
+/// See: https://docs.blender.org/api/current/bpy.types.Light.html#bpy.types.Light.type
+/// </summary>
+public enum LightType : byte
+{
+    Point = 0,
+    Sun = 1,
+    Spot = 2,
+    Area = 3
+}
+
+public static class LightTypeExtensions
+{
+    public static string GetBlenderName(this LightType type)
     {
-        public static string GetBlenderName(this LightType type)
-        {
-            return type.ToString().ToUpper();
-        }
+        return type.ToString().ToUpper();
     }
 }

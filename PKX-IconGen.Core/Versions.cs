@@ -19,13 +19,12 @@
 
 using System;
 
-namespace PKXIconGen.Core
-{
-    public static class Versions
-    {
-        public static string ImporterCommit => "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
-        public static DateTime ImporterDate => new(2021, 08, 27);
+namespace PKXIconGen.Core;
 
-        public static string AddonVersion => "0.3.17";
-    }
+public static class Versions
+{
+    public const string ImporterCommit = "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
+    public static DateTime ImporterDate => new(2021, 08, 27);
+
+    public const string AddonVersion = "0.3.17";
 }

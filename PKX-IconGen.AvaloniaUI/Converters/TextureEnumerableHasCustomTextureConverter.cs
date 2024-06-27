@@ -23,29 +23,27 @@ using System.Globalization;
 using System.Linq;
 using Avalonia.Data.Converters;
 using PKXIconGen.Core.Data;
-using AvaloniaColor = Avalonia.Media.Color;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class TextureEnumerableHasCustomTextureConverter : IValueConverter
 {
-    public class TextureEnumerableHasCustomTextureConverter : IValueConverter
+    public static readonly TextureEnumerableHasCustomTextureConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly TextureEnumerableHasCustomTextureConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is IEnumerable<Texture> textures && targetType.IsAssignableFrom(typeof(bool)))
         {
-            if (value is IEnumerable<Texture> textures && targetType.IsAssignableFrom(typeof(bool)))
-            {
-                return textures.Any(t => !string.IsNullOrWhiteSpace(t.ImagePath));
-            }
-            return false;
+            return textures.Any(t => !string.IsNullOrWhiteSpace(t.ImagePath));
         }
+        return false;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting the result back to the original value is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting the result back to the original value is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

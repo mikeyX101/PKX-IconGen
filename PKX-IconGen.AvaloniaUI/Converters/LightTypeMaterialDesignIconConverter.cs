@@ -22,33 +22,32 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using PKXIconGen.Core.Data.Blender;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class LightTypeMaterialDesignIconConverter : IValueConverter
 {
-    public class LightTypeMaterialDesignIconConverter : IValueConverter
+    public static readonly LightTypeMaterialDesignIconConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly LightTypeMaterialDesignIconConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is LightType type && targetType.IsAssignableFrom(typeof(string)))
         {
-            if (value is LightType type && targetType.IsAssignableFrom(typeof(string)))
+            return type switch
             {
-                return type switch
-                {
-                    LightType.Sun => "mdi-weather-sunny",
-                    LightType.Spot => "mdi-lightbulb-spot",
-                    LightType.Area => "mdi-wall-sconce-flat",
-                    LightType.Point or _ => "mdi-lightbulb-on",
-                };
-            }
-            return "mdi-lightbulb-on";
+                LightType.Sun => "mdi-weather-sunny",
+                LightType.Spot => "mdi-lightbulb-spot",
+                LightType.Area => "mdi-wall-sconce-flat",
+                LightType.Point or _ => "mdi-lightbulb-on"
+            };
         }
+        return "mdi-lightbulb-on";
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting a light type icon back to the original value is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting a light type icon back to the original value is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }

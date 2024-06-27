@@ -28,129 +28,139 @@ using System.Threading;
 using System.Threading.Tasks;
 using CG.Web.MegaApiClient;
 
-namespace PKXIconGen.Core.Services
+namespace PKXIconGen.Core.Services;
+
+public class TexturesInstaller : IDisposable
 {
-    public class TexturesInstaller : IDisposable
+    public const string MEGA_FOLDER_URL = "https://mega.nz/folder/9ZZmUa5b#y157hcF9D7i0REq6RyaqEg";
+    private static string ZipTarget => Path.Combine(Paths.TempFolder, "hd_textures.zip");
+    private string ZipExtractTarget => Path.Combine(AssetsPath, "icon-gen", "hd-mikeyx");
+
+    private Task LoginTask { get; }
+    private readonly MegaApiClient MegaClient = new();
+    private string AssetsPath { get; }
+    private Action<double>? OnProgress { get; }
+
+    public TexturesInstaller(string assetsPath, Action<double>? onProgress = null)
     {
-        public const string MEGA_FOLDER_URL = "https://mega.nz/folder/9ZZmUa5b#y157hcF9D7i0REq6RyaqEg";
-        private static string ZipTarget => Path.Combine(Paths.TempFolder, "hd_textures.zip");
-        private string ZipExtractTarget => Path.Combine(AssetsPath, "icon-gen", "hd-mikeyx");
+        AssetsPath = assetsPath;
+        OnProgress = onProgress;
 
-        private Task LoginTask { get; }
-        private readonly IMegaApiClient MegaClient = new MegaApiClient();
-        private string AssetsPath { get; }
-        private Action<double>? OnProgress { get; }
+        LoginTask = LoginAsync();
+    }
 
-        public TexturesInstaller(string assetsPath, Action<double>? onProgress = null)
+    private async Task LoginAsync()
+    {
+        await MegaClient.LoginAnonymousAsync();
+    }
+
+    public async Task DownloadAsync(CancellationToken token = default)
+    {
+        static IEnumerable<byte> CleanHash(byte[] hash)
         {
-            AssetsPath = assetsPath;
-            OnProgress = onProgress;
-
-            LoginTask = LoginAsync();
+            return Encoding.UTF8.GetBytes(
+                BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant()
+            );
         }
 
-        private async Task LoginAsync()
+        await LoginTask;
+        token.ThrowIfCancellationRequested();
+
+        Uri folderLink = new(MEGA_FOLDER_URL);
+        INode[] nodes = (await MegaClient.GetNodesFromLinkAsync(folderLink)).ToArray();
+
+        INode? texturesZip = nodes.SingleOrDefault(n => n.Name == "latest.zip");
+        if (texturesZip is null)
         {
-            await MegaClient.LoginAnonymousAsync();
+            Exception e = new InvalidDataException("Can't find latest.zip node");
+            CoreManager.Logger.Error(e, "Can't find latest.zip node");
+            throw e;
         }
 
-        public async Task<bool> DownloadAsync(CancellationToken token = default)
+        INode? texturesZipHash = nodes.SingleOrDefault(n => n.Name == "latest.zip.sha256");
+        if (texturesZipHash is null)
         {
-            static IEnumerable<byte> CleanHash(byte[] hash)
-            {
-                return Encoding.UTF8.GetBytes(
-                    BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant()
-                );
-            }
-
-            await LoginTask;
-            token.ThrowIfCancellationRequested();
-
-            Uri folderLink = new(MEGA_FOLDER_URL);
-            INode[] nodes = (await MegaClient.GetNodesFromLinkAsync(folderLink)).ToArray();
-
-            INode? texturesZip = nodes.SingleOrDefault(n => n.Name == "latest.zip");
-            if (texturesZip is null)
-            {
-                CoreManager.Logger.Error("Can't find latest.zip node");
-                return false;
-            }
-
-            INode? texturesZipHash = nodes.SingleOrDefault(n => n.Name == "latest.zip.sha256");
-            if (texturesZipHash is null)
-            {
-                CoreManager.Logger.Error("Can't find latest.zip.sha256 node");
-                return false;
-            }
-
-            await using Stream hashDownloadStream = await MegaClient.DownloadAsync(texturesZipHash, null, token);
-            byte[] expectedHash = new byte[64];
-            _ = await hashDownloadStream.ReadAsync(expectedHash, 0, 64, token);
-            token.ThrowIfCancellationRequested();
-
-            if (File.Exists(ZipTarget))
-            {
-                await using FileStream existingFileStream = File.OpenRead(ZipTarget);
-                using SHA256 fileSHA256 = SHA256.Create();
-                IEnumerable<byte> fileHash = CleanHash(await fileSHA256.ComputeHashAsync(existingFileStream, token));
-
-                if (expectedHash.SequenceEqual(fileHash))
-                {
-                    CoreManager.Logger.Information("File found and has same hash");
-                    return true;
-                }
-
-                CoreManager.Logger.Information("File found but hash didn't match");
-            }
-
-            CoreManager.Logger.Information("Downloading textures...");
-            IProgress<double>? progressHandler = OnProgress is not null ? new Progress<double>(OnProgress) : null;
-            await using Stream downloadStream = await MegaClient.DownloadAsync(texturesZip, progressHandler, token);
-            // File should be around 200MB, which is reasonable enough to have in memory to compute hash instantly
-            await using Stream memoryStream = new MemoryStream((int)texturesZip.Size);
-            await downloadStream.CopyToAsync(memoryStream, token);
-
-            using SHA256 downloadSHA256 = SHA256.Create();
-            memoryStream.Position = 0;
-            IEnumerable<byte> computedHash = CleanHash(await downloadSHA256.ComputeHashAsync(memoryStream, token));
-            token.ThrowIfCancellationRequested();
-
-            if (!expectedHash.SequenceEqual(computedHash))
-            {
-                CoreManager.Logger.Error("Downloaded archive doesn't match expected hash");
-                return false;
-            }
-
-            await using FileStream fileStream = File.OpenWrite(ZipTarget);
-            memoryStream.Position = 0;
-            await memoryStream.CopyToAsync(fileStream, token);
-
-            CoreManager.Logger.Information("Downloaded textures successfully");
-            return true;
+            Exception e = new InvalidDataException("Can't find latest.zip.sha256 node");
+            CoreManager.Logger.Error(e, "Can't find latest.zip.sha256 node");
+            throw e;
         }
 
-        public Task ExtractAsync(CancellationToken token = default)
+        await using Stream hashDownloadStream = await MegaClient.DownloadAsync(texturesZipHash, null, token);
+        Memory<byte> memHash = new byte[64];
+        _ = await hashDownloadStream.ReadAsync(memHash, token);
+        byte[] expectedHash = memHash.ToArray();
+        
+        token.ThrowIfCancellationRequested();
+
+        if (File.Exists(ZipTarget))
         {
-            return Task.Run(() =>
+            await using FileStream existingFileStream = File.OpenRead(ZipTarget);
+            using SHA256 fileSHA256 = SHA256.Create();
+            IEnumerable<byte> fileHash = CleanHash(await fileSHA256.ComputeHashAsync(existingFileStream, token));
+
+            if (expectedHash.ToArray().SequenceEqual(fileHash))
             {
-                if (!Directory.Exists(ZipExtractTarget))
-                {
-                    Directory.CreateDirectory(ZipExtractTarget);
-                }
+                CoreManager.Logger.Information("File found and has same hash");
+                return;
+            }
 
-                CoreManager.Logger.Information("Extracting textures...");
-                ZipFile.ExtractToDirectory(ZipTarget, ZipExtractTarget, true);
-                CoreManager.Logger.Information("Extracted textures successfully");
-            }, token);
+            CoreManager.Logger.Information("File found but hash didn't match");
         }
 
-        public void Dispose()
+        CoreManager.Logger.Information("Downloading textures...");
+        IProgress<double>? progressHandler = OnProgress is not null ? new Progress<double>(OnProgress) : null;
+        await using Stream downloadStream = await MegaClient.DownloadAsync(texturesZip, progressHandler, token);
+        // File should be around 200MB, which is reasonable enough to have in memory to compute hash instantly
+        await using Stream memoryStream = new MemoryStream((int)texturesZip.Size);
+        await downloadStream.CopyToAsync(memoryStream, token);
+
+        using SHA256 downloadSHA256 = SHA256.Create();
+        memoryStream.Position = 0;
+        IEnumerable<byte> computedHash = CleanHash(await downloadSHA256.ComputeHashAsync(memoryStream, token));
+        token.ThrowIfCancellationRequested();
+
+        if (!expectedHash.SequenceEqual(computedHash))
         {
-            MegaClient.Logout();
-
-            LoginTask.Dispose();
-            GC.SuppressFinalize(this);
-            GC.Collect(GC.GetGeneration(this));
+            Exception e = new InvalidDataException("Downloaded archive doesn't match expected hash");
+            CoreManager.Logger.Error(e, "Downloaded archive doesn't match expected hash");
+            throw e;
         }
+
+        await using FileStream fileStream = File.OpenWrite(ZipTarget);
+        memoryStream.Position = 0;
+        await memoryStream.CopyToAsync(fileStream, token);
+
+        CoreManager.Logger.Information("Downloaded textures successfully");
+    }
+
+    public Task ExtractAsync(CancellationToken token = default)
+    {
+        if (!File.Exists(ZipTarget))
+        {
+            Exception e = new FileNotFoundException("Tried to extract the archive, but it was not found");
+            CoreManager.Logger.Error(e, "Tried to extract the archive, but it was not found");
+            return Task.FromException(e);
+        }
+        
+        return Task.Run(() =>
+        {
+            if (!Directory.Exists(ZipExtractTarget))
+            {
+                Directory.CreateDirectory(ZipExtractTarget);
+            }
+
+            CoreManager.Logger.Information("Extracting textures...");
+            ZipFile.ExtractToDirectory(ZipTarget, ZipExtractTarget, true);
+            CoreManager.Logger.Information("Extracted textures successfully");
+        }, token);
+    }
+
+    public void Dispose()
+    {
+        MegaClient.Logout();
+
+        LoginTask.Dispose();
+        GC.SuppressFinalize(this);
+        GC.Collect(GC.GetGeneration(this));
     }
 }

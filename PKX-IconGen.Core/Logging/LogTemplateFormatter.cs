@@ -25,24 +25,24 @@ using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using Serilog.Parsing;
 
-namespace PKXIconGen.Core.Logging
+namespace PKXIconGen.Core.Logging;
+
+// https://github.com/serilog/serilog-sinks-file/issues/137
+internal class LogTemplateFormatter : ITextFormatter
 {
-    // https://github.com/serilog/serilog-sinks-file/issues/137
-    internal class LogTemplateFormatter : ITextFormatter
+    private readonly MessageTemplateTextFormatter
+        withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
+        withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
+
+    public void Format(LogEvent logEvent, TextWriter output)
     {
-        private readonly MessageTemplateTextFormatter
-            withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
-            withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
+        HashSet<string> tokens =
+        [
+            ..logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Select(p => p.PropertyName),
+            CoreManager.LoggingAssemblyPropertyName
+        ];
 
-        public void Format(LogEvent logEvent, TextWriter output)
-        {
-            HashSet<string> tokens = new(logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Select(p => p.PropertyName))
-            {
-                CoreManager.LoggingAssemblyPropertyName
-            };
-
-            MessageTemplateTextFormatter formatter = logEvent.Properties.All(p => tokens.Contains(p.Key)) ? withoutProperties : withProperties;
-            formatter.Format(logEvent, output);
-        }
+        MessageTemplateTextFormatter formatter = logEvent.Properties.All(p => tokens.Contains(p.Key)) ? withoutProperties : withProperties;
+        formatter.Format(logEvent, output);
     }
 }

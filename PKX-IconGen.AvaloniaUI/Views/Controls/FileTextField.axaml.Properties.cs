@@ -22,58 +22,57 @@ using Avalonia.Data;
 using JetBrains.Annotations;
 using PKXIconGen.AvaloniaUI.Models;
 
-namespace PKXIconGen.AvaloniaUI.Views.Controls {
+namespace PKXIconGen.AvaloniaUI.Views.Controls;
 
-    public partial class FileTextField
+public partial class FileTextField
+{
+    [UsedImplicitly] 
+    public static readonly StyledProperty<bool> IsAssetsPathFieldProperty =
+        AvaloniaProperty.Register<FileTextField, bool>(nameof(IsAssetsPathField), defaultBindingMode: BindingMode.OneTime);
+        
+    [UsedImplicitly] 
+    public static readonly StyledProperty<string?> PathProperty =
+        AvaloniaProperty.Register<FileTextField, string?>(nameof(Path), defaultBindingMode: BindingMode.TwoWay, defaultValue: null);
+        
+    [UsedImplicitly] 
+    public static readonly StyledProperty<string> TitleProperty =
+        AvaloniaProperty.Register<FileTextField, string>(nameof(Title), defaultBindingMode: BindingMode.OneTime, inherits: true);
+        
+    [UsedImplicitly] 
+    public static readonly StyledProperty<FileSelectType> TypeProperty =
+        AvaloniaProperty.Register<FileTextField, FileSelectType>(nameof(Type), defaultBindingMode: BindingMode.OneTime, inherits: true);
+
+    [UsedImplicitly] 
+    public static readonly StyledProperty<string?> AssetsPathProperty =
+        AvaloniaProperty.Register<FileTextField, string?>(nameof(AssetsPath), defaultBindingMode: BindingMode.OneTime, inherits: true);
+        
+    public bool IsAssetsPathField
     {
-        [UsedImplicitly] 
-        public static readonly StyledProperty<bool> IsAssetsPathFieldProperty =
-            AvaloniaProperty.Register<FileTextField, bool>(nameof(IsAssetsPathField), defaultBindingMode: BindingMode.OneTime);
+        get => GetValue(IsAssetsPathFieldProperty);
+        set => SetValue(IsAssetsPathFieldProperty, value);
+    }
         
-        [UsedImplicitly] 
-        public static readonly StyledProperty<string?> PathProperty =
-            AvaloniaProperty.Register<FileTextField, string?>(nameof(Path), defaultBindingMode: BindingMode.TwoWay, defaultValue: null);
+    public string? Path
+    {
+        get => GetValue(PathProperty);
+        set => SetValue(PathProperty, value);
+    }
         
-        [UsedImplicitly] 
-        public static readonly StyledProperty<string> TitleProperty =
-            AvaloniaProperty.Register<FileTextField, string>(nameof(Title), defaultBindingMode: BindingMode.OneTime, inherits: true);
+    public string Title
+    {
+        get => GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
+    }
         
-        [UsedImplicitly] 
-        public static readonly StyledProperty<FileSelectType> TypeProperty =
-            AvaloniaProperty.Register<FileTextField, FileSelectType>(nameof(Type), defaultBindingMode: BindingMode.OneTime, inherits: true);
-
-        [UsedImplicitly] 
-        public static readonly StyledProperty<string?> AssetsPathProperty =
-            AvaloniaProperty.Register<FileTextField, string?>(nameof(AssetsPath), defaultBindingMode: BindingMode.OneTime, inherits: true);
+    public FileSelectType Type
+    {
+        get => GetValue(TypeProperty);
+        set => SetValue(TypeProperty, value);
+    }
         
-        public bool IsAssetsPathField
-        {
-            get => GetValue(IsAssetsPathFieldProperty);
-            set => SetValue(IsAssetsPathFieldProperty, value);
-        }
-        
-        public string? Path
-        {
-            get => GetValue(PathProperty);
-            set => SetValue(PathProperty, value);
-        }
-        
-        public string Title
-        {
-            get => GetValue(TitleProperty);
-            set => SetValue(TitleProperty, value);
-        }
-        
-        public FileSelectType Type
-        {
-            get => GetValue(TypeProperty);
-            set => SetValue(TypeProperty, value);
-        }
-        
-        public string AssetsPath
-        {
-            get => GetValue(AssetsPathProperty) ?? "";
-            set => SetValue(AssetsPathProperty, value);
-        }
+    public string AssetsPath
+    {
+        get => GetValue(AssetsPathProperty) ?? "";
+        set => SetValue(AssetsPathProperty, value);
     }
 }

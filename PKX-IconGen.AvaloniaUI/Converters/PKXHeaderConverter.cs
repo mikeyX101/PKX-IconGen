@@ -21,27 +21,26 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace PKXIconGen.AvaloniaUI.Converters
+namespace PKXIconGen.AvaloniaUI.Converters;
+
+public class PKXHeaderConverter : IValueConverter
 {
-    public class PKXHeaderConverter : IValueConverter
+    public static readonly PKXHeaderConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public static readonly PKXHeaderConverter Instance = new();
-
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is string name && targetType.IsAssignableFrom(typeof(string)))
         {
-            if (value is string name && targetType.IsAssignableFrom(typeof(string)))
-            {
-                return $"Pokemon - {(name.Length > 0 ? name : "???")}";
-            }
-            return null;
+            return $"Pokemon - {(name.Length > 0 ? name : "???")}";
         }
+        return null;
+    }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            return new Avalonia.Data.BindingNotification(
-                new NotSupportedException("Converting a header string back to the original string is not supported."),
-                Avalonia.Data.BindingErrorType.Error
-            );
-        }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return new Avalonia.Data.BindingNotification(
+            new NotSupportedException("Converting a header string back to the original string is not supported."),
+            Avalonia.Data.BindingErrorType.Error
+        );
     }
 }
