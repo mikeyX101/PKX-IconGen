@@ -71,12 +71,12 @@ public sealed class MenuViewModel : ViewModelBase
         }
         catch (Exception ex) when (ex is ArgumentException or JsonException)
         {
-            CoreManager.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
+            PKXCore.Logger.Error(ex, "An exception occured while importing data. Json is probably invalid");
             await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An error occured while importing. The given Json is invalid.\nClose the application and see the logs for further details.");
         }
         catch (Exception ex) 
         {
-            CoreManager.Logger.Error(ex, "An unexpected exception occured while importing data");
+            PKXCore.Logger.Error(ex, "An unexpected exception occured while importing data");
             await DialogHelper.ShowDialog(DialogType.Error, DialogButtons.Ok, "An unexpected error occured while importing. \nClose the application and see the logs for further details.");
         }
     }

@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
@@ -35,46 +36,38 @@ public static class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static async Task Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
-        CoreManager.Initiate();
-        if (CoreManager.Initiated)
+        PKXCore.Initiate();
+        if (PKXCore.Initiated)
         {
             try
             {
-                CoreManager.Logger.Information("Initiating Avalonia App...");
-                BuildAvaloniaApp()
-                    .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
+                InitAvaloniaApp(args);
+                return 0;
             }
             catch (Exception ex)
             {
-                Settings? settings = null;
-                try
-                {
-                    Database db = Database.Instance;
-                    settings = await db.GetSettingsAsync();
-                }
-                catch (Exception settingsEx)
-                {
-                    CoreManager.Logger.Fatal(settingsEx,
-                        "An exception occured while fetching settings on Avalonia exception");
-                }
-
-                CoreManager.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}",
-                    settings);
+                await HandleUnexpectedAppErrorAsync(ex);
+                return 12;
             }
             finally
             {
-                CoreManager.OnClose();
+                ReleaseApp();
             }
         }
-        else
-        {
-            CoreManager.OnClose();
-        }
+
+        ReleaseApp();
+        return 11;
     }
 
-    // Avalonia configuration, don't remove; also used by visual designer.
+    private static void InitAvaloniaApp(string[] args)
+    {
+        PKXCore.Logger.Information("Initiating Avalonia App...");
+        BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args, Avalonia.Controls.ShutdownMode.OnMainWindowClose);
+    } 
+    
     private static AppBuilder BuildAvaloniaApp()
     {
         IconProvider.Current
@@ -84,5 +77,28 @@ public static class Program
             .UsePlatformDetect()
             .LogToTrace()
             .UseReactiveUI();
+    }
+
+    private static async Task HandleUnexpectedAppErrorAsync(Exception ex)
+    {
+        Settings? settings = null;
+        try
+        {
+            Database db = Database.Instance;
+            settings = await db.GetSettingsAsync();
+        }
+        catch (Exception settingsEx)
+        {
+            PKXCore.Logger.Fatal(settingsEx,
+                "An exception occured while fetching settings on Avalonia exception");
+        }
+
+        PKXCore.Logger.Fatal(ex, "An unhandled exception occured. Settings used: {@Settings}",
+            settings);
+    }
+
+    private static void ReleaseApp()
+    {
+        PKXCore.OnClose();
     }
 }

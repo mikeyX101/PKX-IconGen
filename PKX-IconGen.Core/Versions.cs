@@ -18,6 +18,8 @@
 #endregion
 
 using System;
+using System.IO;
+using System.Text;
 
 namespace PKXIconGen.Core;
 
@@ -26,5 +28,28 @@ public static class Versions
     public const string ImporterCommit = "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
     public static DateTime ImporterDate => new(2021, 08, 27);
 
-    public const string AddonVersion = "0.3.17";
+    public static string AddonVersion => GetAddonVersion();
+    private static string? CachedAddonVersion;
+    private static string GetAddonVersion()
+    {
+        if (CachedAddonVersion is not null)
+        {
+            return CachedAddonVersion;
+        }
+
+        try
+        {
+            using FileStream addonFile = File.Open(Path.Combine(Paths.PythonFolder, "version.py"), FileMode.Open, FileAccess.Read, FileShare.Read);
+            using TextReader reader = new StreamReader(addonFile, Encoding.UTF8);
+            string? versionLine = reader.ReadLine() ?? throw new FormatException("Version file format is invalid");
+            CachedAddonVersion = versionLine.Replace("addon_ver_str: str = \"", "").Replace("\"", "");
+        }
+        catch (Exception e)
+        {
+            PKXCore.Logger.Error(e, "Error while getting addon version");
+            CachedAddonVersion = "Unknown";
+        }
+
+        return CachedAddonVersion;
+    }
 }

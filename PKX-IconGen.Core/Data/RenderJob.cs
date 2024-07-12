@@ -24,13 +24,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using PKXIconGen.Core.ImageProcessing;
 using PKXIconGen.Core.Services;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// We need to let EF init properties
 
 namespace PKXIconGen.Core.Data;
 
-public class RenderJob : IJsonSerializable
+public readonly struct RenderJob(PokemonRenderData data, Settings settings, RenderTarget target) : IJsonSerializable
 {
     [JsonPropertyName("data")]
-    public PokemonRenderData Data { get; }
+    public PokemonRenderData Data { get; init; } = data;
 
     [JsonPropertyName("scale")]
     public RenderScale Scale => Settings.RenderScale;
@@ -39,10 +41,10 @@ public class RenderJob : IJsonSerializable
     public Game Game => Settings.CurrentGame;
         
     [JsonPropertyName("target")] 
-    public RenderTarget Target { get; }
+    public RenderTarget Target { get; init; } = target;
 
     [JsonIgnore]
-    private Settings Settings { get; }
+    private Settings Settings { get; } = settings;
 
     [JsonIgnore]
     private string BlenderOutputPath => Path.Combine(Paths.TempFolder, Data.Output);
@@ -68,14 +70,7 @@ public class RenderJob : IJsonSerializable
     public string BoxThirdMainPath => BlenderOutputPath + "_box_third_main.png";
     [JsonPropertyName("box_third_shiny_path")]
     public string BoxThirdShinyPath => BlenderOutputPath + "_box_third_shiny.png";
-        
-    public RenderJob(PokemonRenderData data, Settings settings, RenderTarget target)
-    {
-        Data = data;
-        Settings = settings;
-        Target = target;
-    }
-        
+
     public async Task RenderAsync(CancellationToken? token = null, IBlenderRunner.OutDel? onOutput = null, IBlenderRunner.FinishDel? onFinish = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
     {
         IBlenderRunner runner = BlenderRunner.BlenderRunners.GetRenderRunner(Settings, this);
@@ -89,9 +84,9 @@ public class RenderJob : IJsonSerializable
         }
 
         stepOutputAsync?.Invoke($"Rendering {Data.Name}...".AsMemory());
-        CoreManager.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
+        PKXCore.Logger.Information("Rendering {Output} ({Name})...", Data.Output, Data.Name);
         await Task.Run(async() => await runner.RunAsync(token));
-        CoreManager.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
+        PKXCore.Logger.Information("Rendering {Output} ({Name})...Done!", Data.Output, Data.Name);
 
         IconProcessor iconProcessor = new(this, Settings.OutputPath, Settings.SaturationBoost, Settings.SaveDanceGIF, Settings.OutputNameForGame, Settings.OutputNameForTarget);
         await Task.Run(async() => await iconProcessor.ProcessJobAsync(token, stepOutputAsync));

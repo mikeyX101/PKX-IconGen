@@ -38,7 +38,7 @@
         </MenuItem.Icon>
       </MenuItem>
       <Separator IsVisible="{Binding MainWindow.DevTools, Mode=OneWay}" />
-      <MenuItem IsVisible="{Binding MainWindow.DevTools, Mode=OneWay}" Header="Export Selected to Full RenderJob" Command="{Binding ExportRenderJobCommand}">
+      <MenuItem IsVisible="{Binding MainWindow.DevTools, Mode=OneWay}" Header="Export Selected to RenderJob" Command="{Binding ExportRenderJobCommand}">
         <MenuItem.Icon>
           <i:Icon Value="mdi-export" />
         </MenuItem.Icon>

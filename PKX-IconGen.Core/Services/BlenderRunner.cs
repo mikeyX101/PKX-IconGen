@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
+using CliWrap.Builders;
 using CliWrap.EventStream;
 using PKXIconGen.Core.Data;
 
@@ -69,6 +70,8 @@ internal class BlenderRunner : IBlenderRunner
     private byte[] Input { get; }
     private string? ExpectedJsonName { get; }
     private string ExecutableName { get; }
+    
+    private PokemonRenderData? ResultPRD { get; set; }
 
     private BlenderRunner(IBlenderRunnerInfo blenderRunnerInfo, string templateName, string[] arguments, string input, string? expectedJsonName = null)
     {
@@ -135,7 +138,38 @@ internal class BlenderRunner : IBlenderRunner
 
     private void Log(ReadOnlyMemory<char> s)
     {
-        CoreManager.Logger.Information(LogTemplate, ExecutableName, s);
+        PKXCore.Logger.Information(LogTemplate, ExecutableName, s);
+    }
+    
+    private void BuildArguments(ArgumentsBuilder args)
+    {
+        if (LogBlender)
+        {
+            args
+                .Add("--log").Add("*")
+                .Add("--log-file").Add(Paths.BlenderLog);
+        }
+
+        args
+            .Add("--debug-python")
+            .Add("--enable-autoexec")
+            .Add("--python-exit-code").Add("200")
+            .Add(Paths.GetTemplateCopy(TemplateName))
+            .Add(Arguments);
+
+        if (!string.IsNullOrWhiteSpace(OptionalArguments))
+        {
+            args.Add(OptionalArguments.Split(' '));
+        }
+
+        args
+            .Add("--") // Python Script args
+            .Add("--assets-path").Add(AssetsPath);
+
+        if (ShowXDCutout)
+        {
+            args.Add("--xd-cutout");
+        }
     }
 
     public async Task RunAsync(CancellationToken? cancellationToken = null)
@@ -149,39 +183,9 @@ internal class BlenderRunner : IBlenderRunner
 
         Command cmd = Cli.Wrap(BlenderPath)
             .WithWorkingDirectory(Paths.PythonFolder)
-            .WithArguments(args =>
-            {
-                if (LogBlender)
-                {
-                    args
-                        .Add("--log").Add("*")
-                        .Add("--log-file").Add(Paths.BlenderLog);
-                }
-
-                args
-                    .Add("--debug-python")
-                    .Add("--enable-autoexec")
-                    .Add("--python-exit-code").Add("200")
-                    .Add(Paths.GetTemplateCopy(TemplateName))
-                    .Add(Arguments);
-
-                if (!string.IsNullOrWhiteSpace(OptionalArguments))
-                {
-                    args.Add(OptionalArguments.Split(' '));
-                }
-
-                args
-                    .Add("--") // Python Script args
-                    .Add("--assets-path").Add(AssetsPath);
-
-                if (ShowXDCutout)
-                {
-                    args.Add("--xd-cutout");
-                }
-            });
+            .WithArguments(BuildArguments);
             
         cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
-        PokemonRenderData? prd = null;
             
         try
         {
@@ -201,25 +205,7 @@ internal class BlenderRunner : IBlenderRunner
                         break;
 
                     case ExitedCommandEvent exited:
-                        if (ExpectedJsonName is not null)
-                        {
-                            string jsonPath = Path.Combine(Paths.TempFolder, ExpectedJsonName + ".json");
-                            if (File.Exists(jsonPath))
-                            {
-                                OnOutput?.Invoke("Reading output Json...".AsMemory());
-                                try
-                                {
-                                    prd = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
-                                }
-                                finally
-                                {
-                                    File.Delete(jsonPath);
-                                }
-                            }
-                        }
-                            
-                        OnOutput?.Invoke($"Process exited; Code: {exited.ExitCode}".AsMemory());
-                        OnOutput?.Invoke("Operation has finished.".AsMemory());
+                        await OnProcessExitAsync(exited);
                         break;
                 }
             }
@@ -257,7 +243,30 @@ internal class BlenderRunner : IBlenderRunner
         finally
         {
             await Utils.CleanBlend1Files();
-            OnFinish?.Invoke(prd);
+            OnFinish?.Invoke(ResultPRD);
         }
+    }
+
+    private async Task OnProcessExitAsync(ExitedCommandEvent e)
+    {
+        if (ExpectedJsonName is not null)
+        {
+            string jsonPath = Path.Combine(Paths.TempFolder, ExpectedJsonName + ".json");
+            if (File.Exists(jsonPath))
+            {
+                OnOutput?.Invoke("Reading output Json...".AsMemory());
+                try
+                {
+                    ResultPRD = await JsonIO.ImportAsync<PokemonRenderData>(jsonPath);
+                }
+                finally
+                {
+                    File.Delete(jsonPath);
+                }
+            }
+        }
+                            
+        OnOutput?.Invoke($"Process exited; Code: {e.ExitCode}".AsMemory());
+        OnOutput?.Invoke("Operation has finished.".AsMemory());
     }
 }

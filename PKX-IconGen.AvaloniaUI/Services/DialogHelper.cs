@@ -67,7 +67,7 @@ public static class DialogHelper
             if (vmType.FullName == null)
             {
                 Exception ex = new NullReferenceException("vmType.FullName is null.");
-                Core.CoreManager.Logger.Error(ex, "vmType.FullName is null");
+                Core.PKXCore.Logger.Error(ex, "vmType.FullName is null");
                 throw ex;
             }
 
@@ -75,13 +75,13 @@ public static class DialogHelper
             if (windowType == null)
             {
                 Exception ex = new NullReferenceException($"No view type were found for {typeof(TViewModel)}");
-                Core.CoreManager.Logger.Error(ex, "No view type were found for {@ViewModelType}", typeof(TViewModel));
+                Core.PKXCore.Logger.Error(ex, "No view type were found for {@ViewModelType}", typeof(TViewModel));
                 throw ex;
             }
             if (!windowType.IsAssignableTo(typeof(Window)))
             {
                 Exception ex = new InvalidCastException("Found window type is not assignable to Window.");
-                Core.CoreManager.Logger.Error(ex, "Found window type {@WindowType} is not assignable to Window", windowType.Name);
+                Core.PKXCore.Logger.Error(ex, "Found window type {@WindowType} is not assignable to Window", windowType.Name);
                 throw ex;
             }
 
@@ -93,7 +93,7 @@ public static class DialogHelper
         if (window == null)
         {
             Exception ex = new NullReferenceException("Window was null.");
-            Core.CoreManager.Logger.Error(ex, "Window was null");
+            Core.PKXCore.Logger.Error(ex, "Window was null");
             throw ex;
         }
         

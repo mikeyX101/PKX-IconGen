@@ -33,7 +33,7 @@ internal static class Paths
         
     // Logs
     internal static string LogFolder => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-    private static string SessionLog { get; } = $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
+    private static readonly string SessionLog = $"log-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
     internal static string Log => Path.Combine(LogFolder, SessionLog);
 
     internal static string LogLatest => Path.Combine(LogFolder, "latest.log");

@@ -455,9 +455,6 @@ $RECYCLE.BIN/
 
 [Pp]ublish/
 
-# Kate Swap files
-*.kate-swp
-
 # Blender autosaves and debuging .blend files, we need .blend files though
 *.blend1
 
@@ -467,6 +464,9 @@ PKX-IconGen.Python/debugging/debug.blend
 PKX-IconGen.Python/debugging/edit.blend
 PKX-IconGen.Python/debugging/*.json
 PKX-IconGen.Python/debugging/*.blend1
+
+# Kate Swap files
+*.kate-swp
 
 # PKX/DAT
 *.pkx

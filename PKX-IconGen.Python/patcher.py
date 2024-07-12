@@ -92,14 +92,36 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _set_mat_blend_mode("Material.003", BlendMethod.BLEND)
         _set_mat_shadow_mode("Material.003", ShadowMethod.NONE)
         print("Patched Clamperl")
+    elif "fushigidane.pkx" in model_name:  # Bulbasaur, fix vertex on nose by dissolving it
+        _dissolve_vertex("Object.013", 5)
+        print("Patched Bulbasaur")
+
+
+def _start_mesh_edit(obj_name: str) -> bmesh.types.BMesh:
+    view_layer = bpy.context.view_layer
+    obj = bpy.data.objects[obj_name]
+    mesh = obj.data
+
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+    obj.select_set(True)
+    view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    return bmesh.from_edit_mesh(mesh)
+
+
+def _stop_mesh_edit(obj_name: str):
+    obj = bpy.data.objects[obj_name]
+    mesh = obj.data
+
+    bmesh.update_edit_mesh(mesh)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
 
 
 def _flip_outside_uv_x(obj_name: str):
-    obj = bpy.data.objects[obj_name]
-    obj.select_set(True)
-    bpy.ops.object.mode_set(mode="EDIT")
-    me = obj.data
-    bm = bmesh.from_edit_mesh(me)
+    bm = _start_mesh_edit(obj_name)
 
     uv_layer = bm.loops.layers.uv.verify()
     for face in bm.faces:
@@ -109,9 +131,7 @@ def _flip_outside_uv_x(obj_name: str):
                 flip_offset = loop_uv.uv[0] - 1
                 loop_uv.uv[0] = loop_uv.uv[0] - (flip_offset * 2)
 
-    bmesh.update_edit_mesh(me)
-    bpy.ops.object.mode_set(mode="OBJECT")
-    obj.select_set(False)
+    _stop_mesh_edit(obj_name)
 
 
 def _set_mat_bump_strength_to(mat_name: str, bump_name: str, strength: float):
@@ -179,3 +199,15 @@ def _set_bsdf_roughness(mat_name: str, bsdf_roughness: float):
 
 def _set_tex_projection(mat_name: str, tex_node: str, projection: TextureProjection):
     bpy.data.materials[mat_name].node_tree.nodes[tex_node].projection = projection.name
+
+
+def _dissolve_vertex(obj_name: str, vertex_idx: int):
+    bm = _start_mesh_edit(obj_name)
+
+    bm.verts.ensure_lookup_table()
+    for vert in bm.verts:
+        vert.select_set(False)
+    bm.verts[vertex_idx].select_set(True)
+    bpy.ops.mesh.dissolve_verts()
+
+    _stop_mesh_edit(obj_name)

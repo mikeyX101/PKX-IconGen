@@ -31,7 +31,7 @@ using Serilog.Exceptions;
 
 namespace PKXIconGen.Core;
 
-public static class CoreManager
+public static class PKXCore
 {
     internal const string LoggingAssemblyPropertyName = "LoggingAssembly";
     private const byte MaxLogFiles = 5;
@@ -61,25 +61,10 @@ public static class CoreManager
             return;
         }
 
-        if (!Directory.Exists(Paths.TempFolder))
-        {
-            Directory.CreateDirectory(Paths.TempFolder);
-        }
-
-        if (!Directory.Exists(Paths.TempBlendFolder))
-        {
-            Directory.CreateDirectory(Paths.TempBlendFolder);
-        }
-
-        if (!Directory.Exists(Paths.LogFolder))
-        {
-            Directory.CreateDirectory(Paths.LogFolder);
-        }
-            
-        if (!Directory.Exists(Paths.LogFolder))
-        {
-            Directory.CreateDirectory(Paths.LogFolder);
-        }
+        CreateDir(Paths.TempFolder);
+        CreateDir(Paths.TempBlendFolder);
+        CreateDir(Paths.LogFolder);
+        CreateDir(Paths.BlenderLogsFolder);
 
         Serilog.Formatting.ITextFormatter textFormatter = new LogTemplateFormatter();
         NullableLogger = new LoggerConfiguration()
@@ -90,7 +75,7 @@ public static class CoreManager
                 config.File(textFormatter, Paths.Log, 
                     buffered: true,
                     rollOnFileSizeLimit: false,
-                    flushToDiskInterval: TimeSpan.FromSeconds(15)
+                    flushToDiskInterval: TimeSpan.FromSeconds(10)
                 )
             )     
 #if DEBUG
@@ -106,6 +91,14 @@ public static class CoreManager
             
         Logger.Information("PKX-IconGen Core initiated");
         Initiated = true;
+    }
+
+    private static void CreateDir(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
     }
 
     public static void OnClose()

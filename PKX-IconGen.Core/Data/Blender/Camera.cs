@@ -21,6 +21,8 @@ using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// We need to let EF init properties
 
 namespace PKXIconGen.Core.Data.Blender;
 
@@ -30,20 +32,20 @@ namespace PKXIconGen.Core.Data.Blender;
 public readonly struct Camera : IJsonSerializableBlenderObject, IEquatable<Camera>
 {
     [JsonPropertyName("pos")]
-    public JsonSerializableVector3 Position { get; }
+    public JsonSerializableVector3 Position { get; init; }
     [JsonPropertyName("focus")]
-    public JsonSerializableVector3 FocusPoint { get; }
+    public JsonSerializableVector3 FocusPoint { get; init; }
 
     [JsonPropertyName("fov")]
-    public float FieldOfView { get; }
+    public float FieldOfView { get; init; }
         
     [JsonPropertyName("is_ortho")]
-    public bool IsOrthographic { get; }
+    public bool IsOrthographic { get; init; }
     [JsonPropertyName("ortho_scale")]
-    public float OrthographicScale { get; }
+    public float OrthographicScale { get; init; }
 
     [JsonPropertyName("light")]
-    public Light Light { get; }
+    public Light Light { get; init; }
         
     [UsedImplicitly]
     public Camera(Vector3 position, Vector3 focusPoint, float fieldOfView, bool isOrthographic, float orthographicScale, Light light)

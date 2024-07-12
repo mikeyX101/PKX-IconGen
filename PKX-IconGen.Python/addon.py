@@ -23,6 +23,7 @@ import os
 import bpy_extras.view3d_utils
 
 import common
+import version
 from data.color import Color
 from data.data_type import DataType
 from data.light import Light, LightType
@@ -42,7 +43,7 @@ from math import degrees, radians
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
     "blender": (3, 6, 0),
-    "version": (0, 3, 17),
+    "version": tuple(version.addon_ver_str.split('.')),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
     "author": "Samuel Caron/mikeyX",
@@ -407,8 +408,8 @@ def get_armature():
     return common.get_armature(prd, mode)
 
 
-def can_edit(mode: EditMode, secondary_enabled: bool) -> bool:
-    return mode in EditMode.ANY_FACE_MAIN or (mode in EditMode.ANY_FACE_SECONDARY and secondary_enabled) or mode in EditMode.ANY_BOX
+def can_edit(scene: any) -> bool:
+    return mode in EditMode.ANY_FACE_MAIN or (mode in EditMode.ANY_FACE_SECONDARY and scene.secondary_enabled) or mode in EditMode.ANY_BOX
 
 
 # Update Functions
@@ -757,6 +758,7 @@ def sync_prd_to_props(context=None):
     global render_textures
     scene = context.scene if context is not None else bpy.context.scene
 
+    scene.secondary_enabled = prd.face.secondary_camera is not None
     prd_camera: Optional[Camera] = prd.get_mode_camera(mode)
     animation_pose: Optional[int] = prd.get_mode_animation_pose(mode)
     animation_frame: Optional[int] = prd.get_mode_animation_frame(mode)
@@ -817,8 +819,6 @@ def sync_props_to_prd(context):
     light_distance: float = scene.light_distance
     light: Light = Light(light_type, light_strength, light_color, light_distance)
 
-    secondary_enabled: bool = scene.secondary_enabled
-
     animation_pose: float = scene.animation_pose
     animation_frame: float = scene.animation_frame
 
@@ -828,6 +828,7 @@ def sync_props_to_prd(context):
 
     shading: ObjectShading = ObjectShading[scene.shading]
 
+    secondary_enabled: bool = scene.secondary_enabled
     prd_camera: Optional[Camera]
     if mode in EditMode.ANY_FACE_SECONDARY and not secondary_enabled:
         prd_camera = None
@@ -837,6 +838,19 @@ def sync_props_to_prd(context):
     render_data = prd.get_mode_render(mode)
     if mode in EditMode.ANY_FACE_SECONDARY:
         render_data.secondary_camera = prd_camera
+        # Ensure we have both secondary camera instances from the opposite mode
+        if mode in EditMode.FACE_NORMAL_SECONDARY and (
+            prd.shiny.face.secondary_camera is not None and prd_camera is None
+        ) or (
+            prd.shiny.face.secondary_camera is None and prd_camera is not None
+        ):
+            prd.shiny.face.secondary_camera = prd_camera
+        elif mode in EditMode.FACE_SHINY_SECONDARY and (
+            prd.face.secondary_camera is not None and prd_camera is None
+        ) or (
+            prd.face.secondary_camera is None and prd_camera is not None
+        ):
+            prd.face.secondary_camera = prd_camera
     else:
         render_data.main_camera = prd_camera
     render_data.animation_pose = animation_pose
@@ -1298,8 +1312,9 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
         col = layout.column()
-        main_mode = context.scene.main_mode
+        main_mode = scene.main_mode
 
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -1308,14 +1323,17 @@ class PKXMainPanel(PKXPanel, bpy.types.Panel):
 
             if prop_name == "main_mode":
                 col.label(text="Main mode")
-                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+                col.row(align=True).prop(scene, prop_name, expand=expand)
             elif main_mode == "FACE" and (prop_name == "face_mode" or prop_name == "show_xd_cutout" or prop_name == "secondary_enabled"):
                 if prop_name == "face_mode":
                     col.label(text="Face mode")
-                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+                if prop_name != "secondary_enabled" or (
+                    scene.main_mode == "FACE" and (scene.face_mode == "FACE_NORMAL_SECONDARY" or scene.face_mode == "FACE_SHINY_SECONDARY")
+                ):
+                    col.row(align=True).prop(scene, prop_name, expand=expand)
             elif main_mode == "BOX" and prop_name == "box_mode":
                 col.label(text="Box mode")
-                col.row(align=True).prop(context.scene, prop_name, expand=expand)
+                col.row(align=True).prop(scene, prop_name, expand=expand)
 
         col.separator()
         col.operator(PKXDeleteOperator.bl_idname)
@@ -1344,7 +1362,7 @@ class PKXCameraPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(mode, scene.secondary_enabled) and not scene.advanced_camera_editing
+        col.enabled = can_edit(scene) and not scene.advanced_camera_editing
         for (prop_name, _) in CAMERAPROPS:
             if prop_name == "focus":
                 row = col.row(align=True)
@@ -1392,7 +1410,7 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(mode, scene.secondary_enabled)
+        col.enabled = can_edit(scene)
         for (prop_name, _) in TEXTURESPROPS:
             if prop_name == "current_texture_image":
                 row = col.row(align=True)
@@ -1442,21 +1460,22 @@ class PKXShinyPanel(PKXPanel, bpy.types.Panel):
         return prd.shiny.color1 is not None and prd.shiny.color2 is not None and (mode in EditMode.ANY_SHINY)
 
     def draw(self, context):
+        scene = context.scene
         col = self.layout.column()
         col.separator()
         row = col.row(align=True)
         row.label(text="Color1: ")
-        row.prop(context.scene, "color1_r")
-        row.prop(context.scene, "color1_g")
-        row.prop(context.scene, "color1_b")
-        row.prop(context.scene, "color1_a")
+        row.prop(scene, "color1_r")
+        row.prop(scene, "color1_g")
+        row.prop(scene, "color1_b")
+        row.prop(scene, "color1_a")
         col.separator()
         row = col.row(align=True)
         row.label(text="Color2: ")
-        row.prop(context.scene, "color2_r")
-        row.prop(context.scene, "color2_g")
-        row.prop(context.scene, "color2_b")
-        row.prop(context.scene, "color2_a")
+        row.prop(scene, "color2_r")
+        row.prop(scene, "color2_g")
+        row.prop(scene, "color2_b")
+        row.prop(scene, "color2_a")
 
 
 class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
@@ -1467,28 +1486,29 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(mode, context.scene.secondary_enabled)
+        col.enabled = can_edit(scene)
 
         row = col.row()
         row.label(text="Shading:")
-        row.prop(context.scene, "shading", expand=True)
+        row.prop(scene, "shading", expand=True)
 
         col.separator()
 
         col.label(text="Copy Tool")
-        copy_from: EditMode = get_edit_mode(context.scene)
-        copy_to: EditMode = EditMode[context.scene.copy_mode]
+        copy_from: EditMode = get_edit_mode(scene)
+        copy_to: EditMode = EditMode[scene.copy_mode]
         #  https://blender.stackexchange.com/questions/250876/disable-options-on-enumproperty/250922#250922
         row = col.row(align=True)
         for iden in data_type_defs.keys():
             item_layout = row.row(align=True)
             allowed = is_data_type_allowed_copy(iden, copy_from, copy_to)
             item_layout.enabled = allowed
-            item_layout.prop_enum(context.scene, "items_to_copy", iden)
+            item_layout.prop_enum(scene, "items_to_copy", iden)
 
-        col.prop(context.scene, "copy_mode")
+        col.prop(scene, "copy_mode")
         row = col.row()
         row.operator(PKXCopyToOperator.bl_idname)
         row.operator(PKXCopyFromOperator.bl_idname)
@@ -1498,7 +1518,7 @@ def init_simple_subpanel(self, context, props):
     layout = self.layout
 
     col = layout.column()
-    col.enabled = can_edit(mode, context.scene.secondary_enabled)
+    col.enabled = can_edit(context.scene)
     for (prop_name, _) in props:
         row = col.row(align=True)
         row.prop(context.scene, prop_name)
@@ -1545,7 +1565,6 @@ def register(data: PokemonRenderData):
         bpy.utils.register_class(c)
 
     scene = bpy.data.scenes["Scene"]
-    scene.secondary_enabled = secondary_enabled
     scene.show_xd_cutout = common.xdCutoutInitialState
 
     sync_prd_to_props()

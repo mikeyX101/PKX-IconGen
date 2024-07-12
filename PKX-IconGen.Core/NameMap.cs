@@ -40,7 +40,7 @@ public static class NameMap
         if (!File.Exists(nameMapPath))
         {
             Console.Error.WriteLine("Map for " + forGame + " not found: " + nameMapPath);
-            CoreManager.Logger.Error("Map for {ForGame} not found : {MapPath}", forGame, nameMapPath);
+            PKXCore.Logger.Error("Map for {ForGame} not found : {MapPath}", forGame, nameMapPath);
             return;
         }
 
@@ -66,7 +66,7 @@ public static class NameMap
         }
         catch (JsonException)
         {
-            CoreManager.Logger.Warning("Got property from NameMap for {Game}, but the name provided didn't exist: {Name}", NameMapGame, japaneseName);
+            PKXCore.Logger.Warning("Got property from NameMap for {Game}, but the name provided didn't exist: {Name}", NameMapGame, japaneseName);
             return null;
         }
     }

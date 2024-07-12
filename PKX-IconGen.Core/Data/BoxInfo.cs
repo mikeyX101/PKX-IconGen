@@ -67,7 +67,6 @@ public class BoxAnimation
     
 public class BoxInfo : IJsonSerializable, IEquatable<BoxInfo>, ICloneable
 {
-        
     [JsonPropertyName("first")]
     public RenderData First { get; init; }
         
@@ -109,33 +108,33 @@ public class BoxInfo : IJsonSerializable, IEquatable<BoxInfo>, ICloneable
         if (First?.Textures is not null && First.Textures.Count != 0)
         {
             First.Textures.Clear();
-            CoreManager.Logger.Information("First Box Model changed while having textures set up, removing to avoid conflicts");
+            PKXCore.Logger.Information("First Box Model changed while having textures set up, removing to avoid conflicts");
         }
         if (Second?.Textures is not null && Second.Textures.Count != 0)
         {
             Second.Textures.Clear();
-            CoreManager.Logger.Information("Second Box Model changed while having textures set up, removing to avoid conflicts");
+            PKXCore.Logger.Information("Second Box Model changed while having textures set up, removing to avoid conflicts");
         }
         if (Third?.Textures is not null && Third.Textures.Count != 0)
         {
             Third.Textures.Clear();
-            CoreManager.Logger.Information("Third Box Model changed while having textures set up, removing to avoid conflicts");
+            PKXCore.Logger.Information("Third Box Model changed while having textures set up, removing to avoid conflicts");
         }
             
         if (First?.RemovedObjects is not null && First.RemovedObjects.Count != 0)
         {
             First.RemovedObjects.Clear();
-            CoreManager.Logger.Information("First Box Model changed while having removed objects, resetting to avoid conflicts");
+            PKXCore.Logger.Information("First Box Model changed while having removed objects, resetting to avoid conflicts");
         }
         if (Second?.RemovedObjects is not null && Second.RemovedObjects.Count != 0)
         {
             Second.RemovedObjects.Clear();
-            CoreManager.Logger.Information("Second Box Model changed while having removed objects, resetting to avoid conflicts");
+            PKXCore.Logger.Information("Second Box Model changed while having removed objects, resetting to avoid conflicts");
         }
         if (Third?.RemovedObjects is not null && Third.RemovedObjects.Count != 0)
         {
             Third.RemovedObjects.Clear();
-            CoreManager.Logger.Information("Third Box Model changed while having removed objects, resetting to avoid conflicts");
+            PKXCore.Logger.Information("Third Box Model changed while having removed objects, resetting to avoid conflicts");
         }
     }
         

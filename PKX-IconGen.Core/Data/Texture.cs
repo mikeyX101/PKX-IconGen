@@ -21,21 +21,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// We need to let EF init properties
 
 namespace PKXIconGen.Core.Data;
 
 public readonly struct Texture : IJsonSerializable, IEquatable<Texture>
 {
     [JsonPropertyName("name")]
-    public string TextureName { get; }
+    public string TextureName { get; init; }
     /**
      * Can contain {{AssetsPath}}
      */
     [JsonPropertyName("path")]
-    public string? ImagePath { get; }
+    public string? ImagePath { get; init; }
 
     [JsonPropertyName("mats")]
-    public List<Material> Materials { get; }
+    public List<Material> Materials { get; init; }
     
     [JsonConstructor]
     public Texture(string textureName, string? imagePath, List<Material>? materials)

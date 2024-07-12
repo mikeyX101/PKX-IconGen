@@ -20,6 +20,8 @@
 using System;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// We need to let EF init properties
 
 namespace PKXIconGen.Core.Data.Blender;
 
@@ -29,13 +31,13 @@ namespace PKXIconGen.Core.Data.Blender;
 public readonly struct Light : IJsonSerializable, IEquatable<Light>
 {
     [JsonPropertyName("type")]
-    public LightType Type { get; }
+    public LightType Type { get; init; }
     [JsonPropertyName("strength")]
-    public float Strength { get; }
+    public float Strength { get; init; }
     [JsonPropertyName("color")]
-    public Color Color { get; }
+    public Color Color { get; init; }
     [JsonPropertyName("distance")]
-    public float Distance { get; }
+    public float Distance { get; init; }
         
     [UsedImplicitly]
     public Light(LightType type, float strength, Color color, float distance)

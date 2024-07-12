@@ -119,17 +119,17 @@ public sealed class Database : DbContext
             {
                 if (File.Exists(Paths.DatabaseFile) && (await Database.GetPendingMigrationsAsync()).Any())
                 {
-                    CoreManager.Logger.Information("New migrations, making backup of Database before applying...");
+                    PKXCore.Logger.Information("New migrations, making backup of Database before applying...");
                     string assemblyVer = Assembly.GetExecutingAssembly().GetName().Version?.ToString().Replace('.', '-') ?? "unknown-ver";
                     File.Copy(Paths.DatabaseFile, Path.Combine(Paths.DataFolder, $"DB_before_{assemblyVer}.db.bak"));
                 }
-                CoreManager.Logger.Information("Running Database migrations...");
+                PKXCore.Logger.Information("Running Database migrations...");
                 await Database.MigrateAsync();
-                CoreManager.Logger.Information("Database migration successful");
+                PKXCore.Logger.Information("Database migration successful");
             }
             catch (Exception e)
             {
-                CoreManager.Logger.Error(e, "Database migration failed");
+                PKXCore.Logger.Error(e, "Database migration failed");
                 throw;
             }
         });

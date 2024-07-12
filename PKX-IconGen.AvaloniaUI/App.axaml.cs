@@ -42,17 +42,17 @@ public class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            if (CoreManager.DatabaseMigrationTask == null)
+            if (PKXCore.DatabaseMigrationTask == null)
             {
                 const string msg = "Database Migration didn't happen.";
                 InvalidOperationException e = new(msg);
-                CoreManager.Logger.Fatal(e, msg);
+                PKXCore.Logger.Fatal(e, msg);
                 throw e;
             }
                 
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(CoreManager.DatabaseMigrationTask)
+                DataContext = new MainWindowViewModel(PKXCore.DatabaseMigrationTask)
             };
         }
         else

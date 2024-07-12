@@ -19,6 +19,7 @@
 
 using System;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace PKXIconGen.Core.Data;
 
@@ -32,12 +33,12 @@ public enum OutputChoice : byte
     Face, Box, BoxShiny
 }
 
-public readonly struct TextureNames
+public readonly struct TextureNames(Names dolphinNames, Names originalNames)
 {
-    [JsonPropertyName("dol")]
-    public Names DolphinNames { get; }
-    [JsonPropertyName("og")]
-    public Names OriginalNames { get; }
+    [JsonPropertyName("dol"), UsedImplicitly]
+    public Names DolphinNames { get; init; } = dolphinNames;
+    [JsonPropertyName("og"), UsedImplicitly]
+    public Names OriginalNames { get; init; } = originalNames;
     
     public string? GetName(TextureTargetChoice textureChoice, OutputChoice outputChoice) => textureChoice switch
     {
@@ -49,14 +50,14 @@ public readonly struct TextureNames
 
 public readonly struct Names
 {
-    [JsonPropertyName("f")]
-    public string? Face { get; }
+    [JsonPropertyName("f"), UsedImplicitly]
+    public string? Face { get; init; }
 
-    [JsonPropertyName("b")]
-    public string? Box { get; }
+    [JsonPropertyName("b"), UsedImplicitly]
+    public string? Box { get; init; }
 
-    [JsonPropertyName("bs")]
-    public string? BoxShiny { get; }
+    [JsonPropertyName("bs"), UsedImplicitly]
+    public string? BoxShiny { get; init; }
     
     public string? GetName(OutputChoice outputChoice) => outputChoice switch
     {

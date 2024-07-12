@@ -86,7 +86,6 @@ public class IconProcessor
     private Game Game => Job.Game;
     private RenderTarget Target => Job.Target;
         
-        
     public IconProcessor(RenderJob job, string outputPath, bool saturationBoost, bool saveDanceGif, Game nameForGame, TextureTargetChoice nameTarget)
     {
         Job = job;
@@ -151,7 +150,7 @@ public class IconProcessor
             
         token?.ThrowIfCancellationRequested();
         stepOutputAsync?.Invoke($"Combining face images for {Job.Data.Name}...".AsMemory());
-        CoreManager.Logger.Information("Combining face images for {Output} ({Name})...", Job.Data.FaceOutput, Job.Data.Name);
+        PKXCore.Logger.Information("Combining face images for {Output} ({Name})...", Job.Data.FaceOutput, Job.Data.Name);
         main.Mutate(ctx => ctx.AddImageBottom(shiny));
 
         if (HasSecondary)
@@ -169,7 +168,7 @@ public class IconProcessor
         string outputName = Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Face) ?? Job.Data.FaceOutput;
         await main.SaveAsPngAsync(Path.Combine(OutputPath, outputName + ".png"));
         stepOutputAsync?.Invoke($"Finished rendering face for {Job.Data.Name}!".AsMemory());
-        CoreManager.Logger.Information("Finished rendering face for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
+        PKXCore.Logger.Information("Finished rendering face for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
     }
         
     private async Task ProcessBoxAsync(IReadOnlyList<Task<Image>> boxImages, CancellationToken? token = null, Func<ReadOnlyMemory<char>, Task>? stepOutputAsync = null)
@@ -189,9 +188,9 @@ public class IconProcessor
             using Image thirdShiny = otherBoxImages[3];
                 
             stepOutputAsync?.Invoke($"Combining box images for {Job.Data.Name}...".AsMemory());
-            CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
+            PKXCore.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
             using Image danceFirst = first.Clone(ctx => ctx.AddImageBottom(second).AddImageBottom(third));
-            CoreManager.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceShinyOutput, Job.Data.Name);
+            PKXCore.Logger.Information("Combining box images for {Output} ({Name})...", Job.Data.DanceShinyOutput, Job.Data.Name);
             using Image danceFirstShiny = firstShiny.Clone(ctx => ctx.AddImageBottom(secondShiny).AddImageBottom(thirdShiny));
                 
             string outputName = (Job.Data.GetTextureNames(NameForGame, NameTarget, OutputChoice.Box) ?? Job.Data.DanceOutput) + ".png";
@@ -203,7 +202,7 @@ public class IconProcessor
             if (SaveDanceGIF)
             {
                 stepOutputAsync?.Invoke($"Saving dance GIF for {Job.Data.Name}...".AsMemory());
-                CoreManager.Logger.Information("Saving dance GIFs for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
+                PKXCore.Logger.Information("Saving dance GIFs for {Output} ({Name})...", Job.Data.DanceOutput, Job.Data.Name);
                 await SaveDanceGifAsync(Job.Data.DanceOutput + ".gif", first, second, third);
                 await SaveDanceGifAsync(Job.Data.DanceShinyOutput + ".gif", firstShiny, secondShiny, thirdShiny);
             }
@@ -221,7 +220,7 @@ public class IconProcessor
             
             
         stepOutputAsync?.Invoke($"Finished rendering box for {Job.Data.Name}!".AsMemory());
-        CoreManager.Logger.Information("Finished rendering box for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
+        PKXCore.Logger.Information("Finished rendering box for {Output} ({Name})!", Job.Data.FaceOutput, Job.Data.Name);
     }
 
     private async Task SaveDanceGifAsync(string gifName, Image first, Image second, Image third, CancellationToken? token = null)
@@ -271,19 +270,19 @@ public class IconProcessor
         {
             if (renderData.Glow.Alpha != 0)
             {
-                CoreManager.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
+                PKXCore.Logger.Information("Applying glow to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                 ctx.ApplyEdgeGlow(renderData.Glow.ToPixel<RgbaVector>(), glowIntensity, expandByPixels);
             }
             token?.ThrowIfCancellationRequested();
             if (renderData.Background.Alpha != 0)
             {
-                CoreManager.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
+                PKXCore.Logger.Information("Applying background color to {Mode} image for {Output} ({Name})...", mode, Job.Data.Output, Job.Data.Name);
                 using Image background = new Image<Rgba32>(img.Width, img.Height, renderData.Background.ToPixel<Rgba32>());
                 ctx.AddImageBehind(background);
             }
         });
             
-        CoreManager.Logger.Information("Applying style to {Mode} for game {Game} for {Output} ({Name})...", mode, Game, Job.Data.Output, Job.Data.Name);
+        PKXCore.Logger.Information("Applying style to {Mode} for game {Game} for {Output} ({Name})...", mode, Game, Job.Data.Output, Job.Data.Name);
         switch (Game)
         {
             case Game.PokemonColosseum:

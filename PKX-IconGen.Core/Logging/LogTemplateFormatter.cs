@@ -31,15 +31,15 @@ namespace PKXIconGen.Core.Logging;
 internal class LogTemplateFormatter : ITextFormatter
 {
     private readonly MessageTemplateTextFormatter
-        withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
-        withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + CoreManager.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
+        withProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + PKXCore.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}{Properties:j}"),
+        withoutProperties = new("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u4}] [{" + PKXCore.LoggingAssemblyPropertyName + "}] {Message:lj}{NewLine}{Exception}");
 
     public void Format(LogEvent logEvent, TextWriter output)
     {
         HashSet<string> tokens =
         [
             ..logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Select(p => p.PropertyName),
-            CoreManager.LoggingAssemblyPropertyName
+            PKXCore.LoggingAssemblyPropertyName
         ];
 
         MessageTemplateTextFormatter formatter = logEvent.Properties.All(p => tokens.Contains(p.Key)) ? withoutProperties : withProperties;

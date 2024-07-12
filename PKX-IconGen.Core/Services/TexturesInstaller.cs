@@ -73,7 +73,7 @@ public class TexturesInstaller : IDisposable
         if (texturesZip is null)
         {
             Exception e = new InvalidDataException("Can't find latest.zip node");
-            CoreManager.Logger.Error(e, "Can't find latest.zip node");
+            PKXCore.Logger.Error(e, "Can't find latest.zip node");
             throw e;
         }
 
@@ -81,7 +81,7 @@ public class TexturesInstaller : IDisposable
         if (texturesZipHash is null)
         {
             Exception e = new InvalidDataException("Can't find latest.zip.sha256 node");
-            CoreManager.Logger.Error(e, "Can't find latest.zip.sha256 node");
+            PKXCore.Logger.Error(e, "Can't find latest.zip.sha256 node");
             throw e;
         }
 
@@ -100,14 +100,14 @@ public class TexturesInstaller : IDisposable
 
             if (expectedHash.ToArray().SequenceEqual(fileHash))
             {
-                CoreManager.Logger.Information("File found and has same hash");
+                PKXCore.Logger.Information("File found and has same hash");
                 return;
             }
 
-            CoreManager.Logger.Information("File found but hash didn't match");
+            PKXCore.Logger.Information("File found but hash didn't match");
         }
 
-        CoreManager.Logger.Information("Downloading textures...");
+        PKXCore.Logger.Information("Downloading textures...");
         IProgress<double>? progressHandler = OnProgress is not null ? new Progress<double>(OnProgress) : null;
         await using Stream downloadStream = await MegaClient.DownloadAsync(texturesZip, progressHandler, token);
         // File should be around 200MB, which is reasonable enough to have in memory to compute hash instantly
@@ -122,7 +122,7 @@ public class TexturesInstaller : IDisposable
         if (!expectedHash.SequenceEqual(computedHash))
         {
             Exception e = new InvalidDataException("Downloaded archive doesn't match expected hash");
-            CoreManager.Logger.Error(e, "Downloaded archive doesn't match expected hash");
+            PKXCore.Logger.Error(e, "Downloaded archive doesn't match expected hash");
             throw e;
         }
 
@@ -130,7 +130,7 @@ public class TexturesInstaller : IDisposable
         memoryStream.Position = 0;
         await memoryStream.CopyToAsync(fileStream, token);
 
-        CoreManager.Logger.Information("Downloaded textures successfully");
+        PKXCore.Logger.Information("Downloaded textures successfully");
     }
 
     public Task ExtractAsync(CancellationToken token = default)
@@ -138,7 +138,7 @@ public class TexturesInstaller : IDisposable
         if (!File.Exists(ZipTarget))
         {
             Exception e = new FileNotFoundException("Tried to extract the archive, but it was not found");
-            CoreManager.Logger.Error(e, "Tried to extract the archive, but it was not found");
+            PKXCore.Logger.Error(e, "Tried to extract the archive, but it was not found");
             return Task.FromException(e);
         }
         
@@ -149,9 +149,9 @@ public class TexturesInstaller : IDisposable
                 Directory.CreateDirectory(ZipExtractTarget);
             }
 
-            CoreManager.Logger.Information("Extracting textures...");
+            PKXCore.Logger.Information("Extracting textures...");
             ZipFile.ExtractToDirectory(ZipTarget, ZipExtractTarget, true);
-            CoreManager.Logger.Information("Extracted textures successfully");
+            PKXCore.Logger.Information("Extracted textures successfully");
         }, token);
     }
 

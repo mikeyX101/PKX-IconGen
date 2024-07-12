@@ -433,6 +433,7 @@ public sealed partial class MainWindowViewModel : WindowViewModelBase, IDisposab
         NbOfPokemonRendered = 0;
         CurrentlyRendering = true;
 
+        LogVM.WriteLine("------------------".AsMemory());
         Settings settings = await DoDBQueryAsync(db => db.GetSettingsAsync());
         IEnumerable<RenderJob> renderJobs = PokemonRenderDataSelection.SelectedItems.Where(prd => prd is not null).Select(prd => new RenderJob(prd!, settings, renderTarget));
         foreach (RenderJob job in renderJobs)
@@ -451,13 +452,13 @@ public sealed partial class MainWindowViewModel : WindowViewModelBase, IDisposab
             catch (OperationCanceledException)
             {
                 LogVM.WriteLine("Rendering cancelled.".AsMemory());
-                CoreManager.Logger.Information("Rendering cancelled");
+                PKXCore.Logger.Information("Rendering cancelled");
                 break;
             }
             catch (Exception e)
             {
                 LogVM.WriteLine("An error occured while rendering: Enable Blender logging, try to render again and see logs for details.".AsMemory());
-                CoreManager.Logger.Error(e, "An error occured while rendering");
+                PKXCore.Logger.Error(e, "An error occured while rendering");
                 break;
             }
         }

@@ -20,16 +20,18 @@
 using System;
 using System.Text.Json.Serialization;
 using PKXIconGen.Core.Data.Blender;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// We need to let EF init properties
 
 namespace PKXIconGen.Core.Data;
 
 public readonly struct Material: IJsonSerializable, IEquatable<Material>
 {
     [JsonPropertyName("name")]
-    public string Name { get; }
+    public string Name { get; init; }
         
     [JsonPropertyName("map")]
-    public JsonSerializableVector2 Map { get; }
+    public JsonSerializableVector2 Map { get; init; }
         
     [JsonConstructor]
     public Material(string name, JsonSerializableVector2 map)

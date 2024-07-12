@@ -49,7 +49,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while serializing to JSON in file: {@FilePath}. Object getting serialized: {@Object}", path, data);
+            PKXCore.Logger.Error(ex, "Error while serializing to JSON in file: {@FilePath}. Object getting serialized: {@Object}", path, data);
             throw;
         }
     }
@@ -62,7 +62,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while serializing to JSON in stream. Object getting serialized: {@Object}", data);
+            PKXCore.Logger.Error(ex, "Error while serializing to JSON in stream. Object getting serialized: {@Object}", data);
             throw;
         }
     }
@@ -76,7 +76,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}", path);
+            PKXCore.Logger.Error(ex, "Error while deserializing from JSON in file: {@FilePath}", path);
             throw;
         }
     }
@@ -89,7 +89,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while deserializing from JSON in stream");
+            PKXCore.Logger.Error(ex, "Error while deserializing from JSON in stream");
             throw;
         }
     }
@@ -103,7 +103,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}", path);
+            PKXCore.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in file: {@FilePath}", path);
             throw;
         }
     }
@@ -116,7 +116,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in stream");
+            PKXCore.Logger.Error(ex, "Error while getting the AsyncEnumerable from JSON in stream");
             throw;
         }
     }
@@ -148,7 +148,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+            PKXCore.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
             throw;
         }
     }
@@ -163,7 +163,7 @@ public static class JsonIO
         }
         catch (Exception ex)
         {
-            CoreManager.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
+            PKXCore.Logger.Error(ex, "Error while serializing to JSON in a string. Object getting serialized: {@Object}", data);
             throw;
         }
     }

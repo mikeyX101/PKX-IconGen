@@ -36,7 +36,7 @@ public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>, ICloneable
         
     private string? model;
     /// <summary>
-    /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
+    /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.  Setting a new value will reset textures and removed objects.
     /// </summary>
     [JsonPropertyName("model")]
     [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "False during init")]
@@ -46,21 +46,26 @@ public class ShinyInfo : IJsonSerializable, IEquatable<ShinyInfo>, ICloneable
         set
         {
             // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed in case the model is actually different
-            if (FaceRender?.Textures is not null && FaceRender.Textures.Count != 0)
-            {
-                FaceRender.Textures.Clear();
-                CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
-            }
-            if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
-            {
-                FaceRender.RemovedObjects.Clear();
-                CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
-            }
-                
-            BoxRender?.ResetTexturesAndRemovedObjects();
+            ResetTexturesAndRemovedObjects();
                 
             model = value is not null ? Utils.CleanModelPathString(value) : value;
         }
+    }
+
+    public void ResetTexturesAndRemovedObjects()
+    {
+        if (FaceRender?.Textures is not null && FaceRender.Textures.Count != 0)
+        {
+            FaceRender.Textures.Clear();
+            PKXCore.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+        }
+        if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
+        {
+            FaceRender.RemovedObjects.Clear();
+            PKXCore.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
+        }
+                
+        BoxRender?.ResetTexturesAndRemovedObjects();
     }
 
     [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON. Use FaceRender instead.")]

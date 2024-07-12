@@ -78,7 +78,7 @@ public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData
 
     private string model;
     /// <summary>
-    /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets.
+    /// Model path. Can contain {{AssetsPath}} to represent the path to extracted assets. Setting a new value will reset textures and removed objects.
     /// </summary>
     [Column, JsonPropertyName("model"), JsonRequired]
     [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "False during init")]
@@ -88,22 +88,29 @@ public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData
         set
         {
             // Due to limitations, we need to empty the texture list and the removed objects list if the model is changed in case the model is actually different
-            if (FaceRender?.Textures != null && FaceRender.Textures.Count != 0)
-            {
-                FaceRender.Textures.Clear();
-                CoreManager.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
-            }
-            if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
-            {
-                FaceRender.RemovedObjects.Clear();
-                CoreManager.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
-            }
-                
-            BoxRender?.ResetTexturesAndRemovedObjects();
-            CachedNames = null;
-            NamesCached = false;
+            ResetTexturesAndRemovedObjects();
+            
             model = Utils.CleanModelPathString(value);
         }
+    }
+
+    public void ResetTexturesAndRemovedObjects()
+    {
+        if (FaceRender?.Textures != null && FaceRender.Textures.Count != 0)
+        {
+            FaceRender.Textures.Clear();
+            PKXCore.Logger.Information("Model changed while having textures set up, removing to avoid conflicts");
+        }
+        if (FaceRender?.RemovedObjects is not null && FaceRender.RemovedObjects.Count != 0)
+        {
+            FaceRender.RemovedObjects.Clear();
+            PKXCore.Logger.Information("Model changed while having removed objects, resetting to avoid conflicts");
+        }
+
+        Shiny.Model ??= null;
+        BoxRender?.ResetTexturesAndRemovedObjects();
+        CachedNames = null;
+        NamesCached = false;
     }
         
     [JsonPropertyName("render"), UsedImplicitly, Obsolete("Used for old JSON compatibility. Use FaceRender instead.")]

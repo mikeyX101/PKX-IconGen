@@ -90,35 +90,6 @@ public static class Utils
         return newStart + (value - originalStart) * scale;
     }
 
-    // Saturation and Value to 1
-    public static uint HueToRgb(float hue)
-    {
-        hue = Math.Clamp(hue, 0, 360);
-        const float sat = 1;
-        const float val = 1;
-
-        const float c = sat * val;
-        float h = hue / 60;
-        float x = c * (1 - Math.Abs(h % 2 - 1));
-
-        float r = 0;
-        float g = 0;
-        float b = 0;
-        if (h is >= 0 and < 1)       { r = c; g = x; b = 0; }
-        else if (h is >= 1 and < 2)  { r = x; g = c; b = 0; }
-        else if (h is >= 2 and < 3)  { r = 0; g = c; b = x; }
-        else if (h is >= 3 and < 4)  { r = 0; g = x; b = c; }
-        else if (h is >= 4 and < 5)  { r = x; g = 0; b = c; }
-        else if (h is >= 5 and <= 6) { r = c; g = 0; b = x; }
-
-        const float m = val - c;
-        byte red = (byte)Math.Round(ConvertRange(0, 1, 0, 255, r + m));
-        byte green = (byte)Math.Round(ConvertRange(0, 1, 0, 255, g + m));
-        byte blue = (byte)Math.Round(ConvertRange(0, 1, 0, 255, b + m));
-
-        return (uint)(0xFF << 24 | red << 16 | green << 8 | blue);
-    }
-
     public static Task CleanTempFolders()
     {
         return Task.Run(() =>
