@@ -76,20 +76,20 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
+    <PackageReference Include="Avalonia" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.6" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.10.5" />
-    <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.0.10.5" />
-    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.0.10.5" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.6" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.2.0.14" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.2.0.14" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.2.0.14" />
     <PackageReference Include="AvaloniaColorPicker" Version="1.4.0" />
     <!-- Only needed to scafold new migrations -->
-    <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.3.0" />
-    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.3.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.1" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.6.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PKX-IconGen.Core\PKX-IconGen.Core.csproj" />
