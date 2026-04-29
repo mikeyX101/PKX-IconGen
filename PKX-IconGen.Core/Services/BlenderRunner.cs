@@ -183,10 +183,9 @@ internal class BlenderRunner : IBlenderRunner
 
         Command cmd = Cli.Wrap(BlenderPath)
             .WithWorkingDirectory(Paths.PythonFolder)
-            .WithArguments(BuildArguments);
-            
-        cmd = cmd.WithStandardInputPipe(PipeSource.FromBytes(Input));
-            
+            .WithArguments(BuildArguments)
+            .WithStandardInputPipe(PipeSource.FromBytes(Input));
+        
         try
         {
             await foreach (CommandEvent cmdEvent in cmd.ListenAsync(token))

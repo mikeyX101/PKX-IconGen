@@ -16,7 +16,7 @@ xcopy "%project%\..\PKX-IconGen.Python\patches\*.py" "%output%\Python\patches" /
 xcopy "%project%\..\PKX-IconGen.Python\data\*.py" "%output%\Python\data" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\*.py" "%output%\Python" /Y /E
 xcopy "%project%\..\PKX-IconGen.Python\template.blend" "%output%\Python" /Y /E
-xcopy "%project%\..\PKX-IconGen.Python\importer\*" "%output%\Python\importer" /Y /E
+xcopy "%project%\..\PKX-IconGen.Python\importer\*" "%output%\Python\importer" /s /Y /E
 
 xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon.png" "%output%\" /Y /E
 xcopy "%project%\..\PKX-IconGen.AvaloniaUI\Assets\gen-icon-bright.png" "%output%\" /Y /E

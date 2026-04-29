@@ -1,1 +1,1 @@
-addon_ver_str: str = "0.3.18"
+addon_ver_str: str = "0.4.1"

@@ -25,8 +25,8 @@ namespace PKXIconGen.Core;
 
 public static class Versions
 {
-    public const string ImporterCommit = "56192b582f6d07599f24eb0e0e48d1c6886d2ac9";
-    public static DateTime ImporterDate => new(2021, 08, 27);
+    public const string ImporterCommit = "5ca0b0569c1b659c39088fcda7eef5168e42c88f";
+    public static DateTime ImporterDate => new(2026, 04, 21);
 
     public static string AddonVersion => GetAddonVersion();
     private static string? CachedAddonVersion;
@@ -40,7 +40,7 @@ public static class Versions
         try
         {
             using FileStream addonFile = File.Open(Path.Combine(Paths.PythonFolder, "version.py"), FileMode.Open, FileAccess.Read, FileShare.Read);
-            using TextReader reader = new StreamReader(addonFile, Encoding.UTF8);
+            using StreamReader reader = new(addonFile, Encoding.UTF8);
             string? versionLine = reader.ReadLine() ?? throw new FormatException("Version file format is invalid");
             CachedAddonVersion = versionLine.Replace("addon_ver_str: str = \"", "").Replace("\"", "");
         }

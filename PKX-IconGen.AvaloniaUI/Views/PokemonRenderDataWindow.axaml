@@ -22,7 +22,7 @@
         xmlns:vm="using:PKXIconGen.AvaloniaUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:i="clr-namespace:Optris.Icons.Avalonia;assembly=Optris.Icons.Avalonia"
         xmlns:pkxuc="using:PKXIconGen.AvaloniaUI.Views.Controls"
         xmlns:data="clr-namespace:PKXIconGen.Core.Data;assembly=PKX-IconGen.Core"
 
@@ -35,7 +35,7 @@
         
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-        ExtendClientAreaChromeHints="PreferSystemChrome"
+        WindowDecorations="Full"
         ExtendClientAreaToDecorationsHint="True"
         
         MinWidth="1024" Width="1024" MinHeight="768" Height="768" CanResize="True">
@@ -135,7 +135,7 @@
           <RadioButton Content="Color: " Name="ShinyFilter" GroupName="Shiny" IsChecked="{Binding ShinyModel, Mode=OneTime, Converter={x:Static StringConverters.IsNullOrEmpty}}" Command="{ReflectionBinding UseShinyColor}" Grid.Column="0" Grid.Row="0" />
           <TextBlock Text="Color1: " Classes="VectorLabel" Grid.Column="1" Grid.Row="0" />
           <TextBox Text="{Binding Color1, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsEnabled="{Binding #ShinyFilter.IsChecked}" IsReadOnly="True" Grid.Column="2" Grid.Row="0" />
-          <Button HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding ShinySyncCommand}" Grid.Column="0" Grid.Row="1">
+          <Button HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding OnShinySyncClickCommand}" Grid.Column="0" Grid.Row="1">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">Sync</TextBlock>
           </Button>
           <TextBlock Text="Color2: " Classes="VectorLabel" Grid.Column="1" Grid.Row="1" />
@@ -147,20 +147,20 @@
         </Grid>
         <TextBlock Text="Background:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="0" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="0">
-          <pkxuc:ColorDisplay Color="{Binding Background, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left" ToolTip.Tip="{x:Static assets:Resources.TooltipBackgroundColor}" />
+          <pkxuc:ColorDisplay Color="{Binding Background, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Stretch" ToolTip.Tip="{x:Static assets:Resources.TooltipBackgroundColor}" />
         </Border>
         
         <TextBlock Text="Glow:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Grid.Column="2" Grid.Row="1" />
         <Border CornerRadius="8" Classes="ShinyEdit" Grid.Column="3" Grid.Row="1">
-          <pkxuc:ColorDisplay Color="{Binding Glow, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Left" ToolTip.Tip="{x:Static assets:Resources.TooltipGlowColor}" />
+          <pkxuc:ColorDisplay Color="{Binding Glow, Mode=TwoWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="True" HorizontalAlignment="Stretch" ToolTip.Tip="{x:Static assets:Resources.TooltipGlowColor}" />
         </Border>
       </Grid>
       
       <Border CornerRadius="10" Classes="ShinyEditDark" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2">
         <Grid ShowGridLines="False" ColumnDefinitions="100,75,*,75,*,75,*,75,*,75,*,75,*" RowDefinitions="*,20,*,*,*,*,*,50">
           <TextBlock Text="Animation:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="0" />
-          <TextBlock Text="Pose: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" />
-          <TextBox Text="{Binding AnimationPose, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="4" />
+          <TextBlock Text="Name: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" />
+          <TextBox Text="{Binding AnimationName, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="4" />
           
           <TextBlock Text="Frame: " HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="7" Grid.Row="0"/>
           <TextBox Text="{Binding AnimationFrame, Mode=OneWay}" IsReadOnly="True" Grid.Column="8" Grid.Row="0" Grid.ColumnSpan="4" />
@@ -169,26 +169,26 @@
           
           <TextBlock Text="Camera" HorizontalAlignment="Center" Margin="8" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6"/>
           <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="2" />
-          <TextBox Text="{Binding MainCamera.Position.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="2" />
+          <TextBox Text="{ReflectionBinding MainCamera.Position.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="2" />
           <TextBlock Text="Pos Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="2" />
-          <TextBox Text="{Binding MainCamera.Position.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="2" />
+          <TextBox Text="{ReflectionBinding MainCamera.Position.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="2" />
           <TextBlock Text="Pos Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="2" />
-          <TextBox Text="{Binding MainCamera.Position.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="2" />
+          <TextBox Text="{ReflectionBinding MainCamera.Position.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="2" />
           <TextBlock Text="Focus X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.X, Mode=OneWay}" IsReadOnly="True" Grid.Column="2" Grid.Row="3" />
+          <TextBox Text="{ReflectionBinding MainCamera.FocusPoint.X, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="2" Grid.Row="3" />
           <TextBlock Text="Focus Y: " Classes="VectorLabel" Grid.Column="3" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.Y, Mode=OneWay}" IsReadOnly="True" Grid.Column="4" Grid.Row="3" />
+          <TextBox Text="{ReflectionBinding MainCamera.FocusPoint.Y, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="4" Grid.Row="3" />
           <TextBlock Text="Focus Z: " Classes="VectorLabel" Grid.Column="5" Grid.Row="3" />
-          <TextBox Text="{Binding MainCamera.FocusPoint.Z, Mode=OneWay}" IsReadOnly="True" Grid.Column="6" Grid.Row="3" />
+          <TextBox Text="{ReflectionBinding MainCamera.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="3" />
 
           <TextBlock Text="Lights" HorizontalAlignment="Center" Margin="8" Grid.Column="7" Grid.Row="1" Grid.ColumnSpan="6" />
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="2" />
-          <pkxuc:ColorDisplay Color="{Binding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="2" Grid.ColumnSpan="5" />
+          <pkxuc:ColorDisplay Color="{ReflectionBinding MainLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" HorizontalAlignment="Stretch" IsEnabled="False" Grid.Column="8" Grid.Row="2" Grid.ColumnSpan="5" />
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="3" />
-          <TextBox Text="{Binding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="2" />
+          <TextBox Text="{ReflectionBinding MainLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="3" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="3" />
-          <i:Icon Value="{Binding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="3" />
-          <TextBox Text="{Binding MainLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="3" IsReadOnly="True" />
+          <i:Icon Value="{ReflectionBinding MainLight.Type, Mode=OneWay, Converter={StaticResource LightTypeMaterialDesignIconConverter}}" Grid.Column="11" Grid.Row="3" />
+          <TextBox Text="{ReflectionBinding MainLight.Type, Mode=OneWay}" Margin="0,0,16,0" Grid.Column="12" Grid.Row="3" IsReadOnly="True" />
 
           <TextBlock Text="*Secondary:" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8" Grid.Column="0" Grid.Row="4" />
           <TextBlock Text="Pos X: " Classes="VectorLabel" Grid.Column="1" Grid.Row="4" />
@@ -205,7 +205,7 @@
           <TextBox Text="{ReflectionBinding SecondaryCamera.FocusPoint.Z, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="6" Grid.Row="5" />
 
           <TextBlock Text="Color: " Classes="VectorLabel" Grid.Column="7" Grid.Row="4" />
-          <pkxuc:ColorDisplay Color="{ReflectionBinding SecondaryLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" IsEnabled="False" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
+          <pkxuc:ColorDisplay Color="{ReflectionBinding SecondaryLight.Color, Mode=OneWay, Converter={StaticResource PkxColorAvaloniaColorConverter}}" HorizontalAlignment="Stretch" IsEnabled="False" Grid.Column="8" Grid.Row="4" Grid.ColumnSpan="5" />
           <TextBlock Text="Str: " Classes="VectorLabel" Grid.Column="7" Grid.Row="5" />
           <TextBox Text="{ReflectionBinding SecondaryLight.Strength, Mode=OneWay, TargetNullValue=None, FallbackValue=None}" IsReadOnly="True" Grid.Column="8" Grid.Row="5" Grid.ColumnSpan="2" />
           <TextBlock Text="Type: " Classes="VectorLabel" Grid.Column="10" Grid.Row="5" />

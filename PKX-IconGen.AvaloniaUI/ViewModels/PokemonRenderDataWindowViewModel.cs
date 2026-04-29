@@ -123,6 +123,10 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
         get => Data.Model;
         set {
             Data.Model = value;
+            if (IsModelPathValid(Data.Model))
+            {
+                ShinySync(false);
+            }
             this.RaisePropertyChanged();
         }
     }
@@ -170,10 +174,10 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
     }
         
     #region Blender Data
-    public ushort AnimationPose => CurrentRenderData.AnimationPose;
+    public AnimationName AnimationName => CurrentRenderData.AnimationName;
     public ushort AnimationFrame => CurrentRenderData.AnimationFrame;
-    public Camera MainCamera => CurrentRenderData.MainCamera;
-    public Light MainLight => CurrentRenderData.MainCamera.Light;
+    public Camera? MainCamera => CurrentRenderData.MainCamera;
+    public Light? MainLight => CurrentRenderData.MainCamera?.Light;
     public Camera? SecondaryCamera => CurrentRenderData.SecondaryCamera;
     public Light? SecondaryLight => CurrentRenderData.SecondaryCamera?.Light;
 
@@ -187,6 +191,11 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
         set => this.RaiseAndSetIfChanged(ref currentlyModifying, value);
     }
 
+    private bool IsModelPathValid(string? modelPath) =>
+        !string.IsNullOrWhiteSpace(modelPath) &&
+        modelPath.EndsWith(".pkx") &&
+        File.Exists(Core.Utils.GetTrueModelPath(modelPath, BlenderRunnerInfo.AssetsPath));
+    
     public PokemonRenderDataWindowViewModel(string title, IBlenderRunnerInfo blenderRunnerInfo, PokemonRenderData renderData)
     {
         Title = title;
@@ -201,11 +210,11 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
             vm => vm.Name, vm => vm.Model, vm => vm.Color1, vm => vm.Color2, vm => vm.ShinyModel,
             (name, model, color1, color2, shinyModel) => 
                 !string.IsNullOrWhiteSpace(name) && 
-                !string.IsNullOrWhiteSpace(model) && (model.EndsWith(".dat") || model.EndsWith(".pkx")) && File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath)) &&
+                IsModelPathValid(model) &&
                 (   
                     color1.HasValue && color2.HasValue
                     ||
-                    (!string.IsNullOrWhiteSpace(shinyModel) && (shinyModel.EndsWith(".dat") || shinyModel.EndsWith(".pkx")) && File.Exists(Core.Utils.GetTrueModelPath(shinyModel, BlenderRunnerInfo.AssetsPath)))
+                    IsModelPathValid(shinyModel)
                 )
         );
             
@@ -213,12 +222,10 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
             vm => vm.Model, vm => vm.ShinyModel,
             (model, shinyModel) => 
                 shinyModel is null &&
-                !string.IsNullOrWhiteSpace(model) && 
-                model.EndsWith(".pkx") && 
-                File.Exists(Core.Utils.GetTrueModelPath(model, BlenderRunnerInfo.AssetsPath))
+                IsModelPathValid(model)
         );
 
-        ShinySyncCommand = ReactiveCommand.Create(ShinySync, canSync);
+        OnShinySyncClickCommand = ReactiveCommand.Create(OnShinySyncClick, canSync);
         ModifyBlenderDataCommand = ReactiveCommand.Create(ModifyBlenderData, canModifyOrSave);
         CancelCommand = ReactiveCommand.Create(Cancel);
         SaveCommand = ReactiveCommand.Create(Save, canModifyOrSave);
@@ -234,7 +241,7 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
         this.RaisePropertyChanged(nameof(Color2));
         this.RaisePropertyChanged(nameof(ShinyModel));
 
-        this.RaisePropertyChanged(nameof(AnimationPose));
+        this.RaisePropertyChanged(nameof(AnimationName));
         this.RaisePropertyChanged(nameof(AnimationFrame));
 
         this.RaisePropertyChanged(nameof(MainCamera));
@@ -316,23 +323,13 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
     #endregion
         
     #region Other Buttons
-    public ReactiveCommand<Unit, Unit> ShinySyncCommand { get; }
-    private async void ShinySync()
+    public ReactiveCommand<Unit, Unit> OnShinySyncClickCommand { get; }
+    private async void OnShinySyncClick()
     {
         // Model should be valid here
         try
         {
-            await using ShinyExtractor shiny = new(Core.Utils.GetTrueModelPath(Model, BlenderRunnerInfo.AssetsPath)!);
-
-            ShinyColor[]? colors = shiny.GetColors();
-            if (colors is not null)
-            {
-                //await DialogHelper.ShowDialog(DialogType.Info, DialogButtons.Ok, $"Colors found!\nColor1: {colors[0].DisplayString}\nColor2: {colors[1].DisplayString}");
-
-                Color1 = colors[0];
-                Color2 = colors[1];
-            }
-            else
+            if (!ShinySync(true))
             {
                 await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "This game file doesn't support shiny colors.");
             }
@@ -341,6 +338,32 @@ public sealed class PokemonRenderDataWindowViewModel : WindowViewModelBase, IDis
         {
             await DialogHelper.ShowDialog(DialogType.Warning, DialogButtons.Ok, "No colors found in this file.");
         }
+    }
+    private bool ShinySync(bool shouldThrowOnException)
+    {
+        // Model should be valid here
+        try
+        {
+            using ShinyExtractor shiny = new(Core.Utils.GetTrueModelPath(Model, BlenderRunnerInfo.AssetsPath)!);
+
+            ShinyColor[]? colors = shiny.GetColors();
+            if (colors is not null)
+            {
+                //await DialogHelper.ShowDialog(DialogType.Info, DialogButtons.Ok, $"Colors found!\nColor1: {colors[0].DisplayString}\nColor2: {colors[1].DisplayString}");
+
+                Color1 = colors[0];
+                Color2 = colors[1];
+                return true;
+            }
+        }
+        catch (Exception)
+        {
+            if (shouldThrowOnException)
+            {
+                throw;
+            }
+        }
+        return false;
     }
         
     public void ShinyToggle() => ShowShiny = !ShowShiny;

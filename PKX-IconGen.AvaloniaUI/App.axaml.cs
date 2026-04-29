@@ -23,11 +23,10 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Xaml.Interactions.Core;
 using Avalonia.Xaml.Interactivity;
-using AvaloniaColorPicker;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using PKXIconGen.AvaloniaUI.Views;
 using PKXIconGen.Core;
-using Projektanker.Icons.Avalonia;
+using Optris.Icons.Avalonia;
 
 namespace PKXIconGen.AvaloniaUI;
 
@@ -63,9 +62,6 @@ public class App : Application
 
             GC.KeepAlive(typeof(Icon));
             GC.KeepAlive(typeof(Attached));
-                
-            GC.KeepAlive(typeof(ColorButton));
-            GC.KeepAlive(typeof(ColorPicker));
         }
 
         base.OnFrameworkInitializationCompleted();

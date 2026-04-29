@@ -127,10 +127,22 @@ public static class Utils
     {
         return typeof(T)
             .GetProperties()
-            .Where(p => p.GetCustomAttributes(typeof(JsonPropertyNameAttribute)).Count() == 1)
+            .Where(p => p.GetCustomAttributes<JsonPropertyNameAttribute>().Count() == 1)
             .ToDictionary(
                 p => p.Name,
-                p => p.GetCustomAttributes(typeof(JsonPropertyNameAttribute)).OfType<JsonPropertyNameAttribute>().First().Name
+                p => p.GetCustomAttributes<JsonPropertyNameAttribute>().First().Name
             );
+    }
+    
+    public static string? GetExeFromEnvPath(string exeName)
+    {
+        string environmentPath = Environment.GetEnvironmentVariable("PATH")!;
+
+        char separator = OperatingSystem.IsWindows() ? ';' : ':';
+        string extension = OperatingSystem.IsWindows() ? ".exe" : "";
+        string[] paths = environmentPath.Split(separator);
+        return paths
+            .Select(x => Path.Combine(x, exeName + extension))
+            .FirstOrDefault(File.Exists);
     }
 }

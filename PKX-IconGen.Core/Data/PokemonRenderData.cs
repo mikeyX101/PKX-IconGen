@@ -173,7 +173,7 @@ public class PokemonRenderData : IJsonSerializable, IEquatable<PokemonRenderData
 
         model = "";
 
-        faceRender = new RenderData();
+        faceRender = new RenderData(RenderTarget.Face);
         boxRender = new BoxInfo();
         shiny = new ShinyInfo();
     }

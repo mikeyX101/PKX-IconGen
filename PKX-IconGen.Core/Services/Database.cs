@@ -93,7 +93,7 @@ public sealed class Database : DbContext
         pokemonRenderDataEntityBuilder.Property(nameof(PokemonRenderData.OutputName)).IsRequired(false);
 
         pokemonRenderDataEntityBuilder.Property<RenderData>(nameof(PokemonRenderData.FaceRender))
-            .HasDefaultValue(new RenderData())
+            .HasDefaultValue(new RenderData(RenderTarget.Face))
             .HasConversion(
                 v => JsonSerializer.Serialize(v, serializerOptions),
                 v => JsonSerializer.Deserialize<RenderData>(v, serializerOptions) ?? new RenderData(RenderTarget.Face));
@@ -159,7 +159,6 @@ public sealed class Database : DbContext
             .Set(propertySelector, value)
             .Update();
 
-        Entry(ctx.GetTable<Settings>().First(s => s.InternalID == SettingsId)).Reload();
         return changed;
     }
     #endregion

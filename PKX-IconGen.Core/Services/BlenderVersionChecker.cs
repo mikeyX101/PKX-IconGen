@@ -21,44 +21,129 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using CliWrap;
+using CliWrap.Exceptions;
 
 namespace PKXIconGen.Core.Services;
 
-public readonly struct BlenderCheckResult(bool isBlender, bool isValidVersion, float version)
+public readonly struct BlenderCheckResult(bool isBlender, bool isValidVersion, string version)
 {
     public bool IsBlender { get; } = isBlender;
 
     public bool IsValidVersion { get; } = isValidVersion;
 
-    public float Version { get; } = version;
+    public string Version { get; } = version;
 }
 
 public static class BlenderVersionChecker
 {
-    private const float MinimumBlenderVersion = 2.93f;
+    private static readonly int[] MinimumBlenderVersion = [4, 5, 0];
+    private const float MinimumBlenderVersionFloat = 4.50f;
 
-    public static BlenderCheckResult? CheckExecutable(string? path)
+    public static async Task<BlenderCheckResult?> CheckExecutable(string? path, CancellationToken? cancellationToken = null)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            // Ask with "blender --version"?
-            return new BlenderCheckResult(true, true, 0);
-        }
+        CancellationToken token = cancellationToken ?? CancellationToken.None;
         
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) 
+        string? executable = path;
+        if (string.IsNullOrWhiteSpace(executable)) 
             return null;
 
+        if (!File.Exists(executable))
+        {
+            executable = Utils.GetExeFromEnvPath(executable);
+            if (executable == null)
+            {
+                return null;
+            }
+        }
+        
+        if (!OperatingSystem.IsWindows())
+        {
+            return await GetBlenderVersionFromParam(executable, token);
+        }
+        
         // Windows has metadata we can use.
-        FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(path);
+        FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(executable);
         string? name = fileVersionInfo.ProductName;
-        float? version = fileVersionInfo.ProductVersion != null ? float.Parse(fileVersionInfo.ProductVersion, CultureInfo.InvariantCulture) : null;
+        string? version = fileVersionInfo.FileVersion;
 
-        if (name != null && version.HasValue)
+        if (name != null && version != null)
         {
             bool isBlender = name.Equals("Blender");
-            bool isValidVersion = version.Value >= MinimumBlenderVersion;
-            return new BlenderCheckResult(isBlender, isValidVersion, version.Value);    
+            bool isValidVersion = VerifyVersionString(version);
+            return new BlenderCheckResult(isBlender, isValidVersion, version);    
         }
         return null;
+    }
+
+    private static async Task<BlenderCheckResult?> GetBlenderVersionFromParam(string executable, CancellationToken token)
+    {
+        using CancellationTokenSource forcefulCts = new();
+        using CancellationTokenSource gracefulCts = new();
+
+        await using Stream output = new MemoryStream(2048);
+        using StreamReader reader = new(output, Encoding.UTF8, true);
+        
+        Command cmd = Cli.Wrap(executable)
+            .WithArguments("-v")
+            .WithStandardOutputPipe(PipeTarget.ToStream(output));
+
+        try
+        {
+            forcefulCts.CancelAfter(TimeSpan.FromSeconds(3));
+            gracefulCts.CancelAfter(TimeSpan.FromSeconds(1));
+            CommandResult result = await cmd.ExecuteAsync(forcefulCts.Token, gracefulCts.Token);
+
+            if (result.IsSuccess && !token.IsCancellationRequested)
+            {
+                reader.BaseStream.Position = 0;
+                string? blenderVer = await reader.ReadLineAsync(token);
+                bool isBlender = blenderVer?.StartsWith("Blender ") ?? false;
+                bool isValidVersion = false;
+                string versionStr = "";
+                if (blenderVer is { Length: <= 24 } && isBlender)
+                {
+                    versionStr = blenderVer.Remove(0, 8).Replace("LTS", "").Trim();
+                    isValidVersion = VerifyVersionString(versionStr);
+                }
+
+                return new BlenderCheckResult(isBlender, isValidVersion, versionStr);
+            }
+        }
+        catch (CommandExecutionException e)
+        {
+            PKXCore.Logger.Warning(e, "Executable exited with error code {Code}", e.ExitCode);
+        }
+
+        return null;
+    }
+    
+    // XX.XX.XX
+    private static bool VerifyVersionString(string verString)
+    {
+        bool success = false;
+        int[] version = new int[3];
+        
+        string[] components = verString.Split('.');
+        if (components.Length == 3)
+        {
+            success = int.TryParse(components[0], out version[0]) && 
+                      int.TryParse(components[1], out version[1]) && 
+                      int.TryParse(components[2], out version[2]);
+
+            if (success)
+            {
+                success = 
+                    version[0] >= MinimumBlenderVersion[0] &&
+                    version[1] >= MinimumBlenderVersion[1] &&
+                    version[2] >= MinimumBlenderVersion[2];
+            }
+        }
+            
+        return success;
     }
 }

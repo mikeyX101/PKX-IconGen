@@ -86,7 +86,7 @@ Enter "export"</value>
         <value>Output name for the rendered file. If unspecified, uses the Pokemon's name.</value>
     </data>
     <data name="TooltipModelPath" xml:space="preserve">
-        <value>Path to the Pokemon model. It should be a .pkx or .dat file. A .pkx file contains extra information like shiny colors.
+        <value>Path to the Pokemon model. It should be a .pkx file. A .pkx file contains extra information like shiny colors.
 
 If it is in the assets folder, you can specify {{AssetsPath}} instead of manually going in the folder.
 Example: {{AssetsPath}}/pkx_lugia/lugia.pkx

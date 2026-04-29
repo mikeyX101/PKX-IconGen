@@ -65,7 +65,7 @@ public partial class FileTextField : UserControl
             filters.Clear();
             List<string> extensions = Type switch
             {
-                FileSelectType.GCNModel => [".dat", ".pkx"],
+                FileSelectType.GCNModel => [".pkx"],
                 FileSelectType.Directory or FileSelectType.Executable or _ => ["*"]
             };
             if (OperatingSystem.IsWindows() && Type == FileSelectType.Executable)

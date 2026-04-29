@@ -19,8 +19,9 @@
 import json
 
 from types import SimpleNamespace
-from typing import Optional, List, Callable
+from typing import Optional, List
 
+from .animation_name import AnimationName
 from .box_info import BoxInfo
 from .edit_mode import EditMode
 from .camera import Camera
@@ -46,8 +47,8 @@ class PokemonRenderData(object):
         self.box = box
         self.shiny = shiny
 
-    def to_json(self) -> str:
-        return json.dumps(self, default=vars, separators=(',', ':'))
+    def to_json(self, pretty_print = False) -> str:
+        return json.dumps(self, default=vars, separators=(',', ':'), indent=2 if pretty_print else None)
 
     def get_mode_model(self, mode: EditMode) -> str:
         if mode in EditMode.ANY_NORMAL:
@@ -86,9 +87,9 @@ class PokemonRenderData(object):
         else:
             raise Exception(f"Unknown edit mode: {mode.name}")
 
-    def get_mode_animation_pose(self, mode: EditMode) -> int:
+    def get_mode_animation_name(self, mode: EditMode) -> AnimationName:
         render: RenderData = self.get_mode_render(mode)
-        return render.animation_pose
+        return render.animation_name
 
     def get_mode_animation_frame(self, mode: EditMode) -> int:
         render: RenderData = self.get_mode_render(mode)
@@ -111,8 +112,10 @@ class PokemonRenderData(object):
         if obj is None:
             return obj
 
+        keys = obj.__dict__.keys()
+
         output_name: Optional[str] = None
-        if "output_name" in obj.__dict__.keys():
+        if "output_name" in keys:
             output_name = obj.output_name
 
         return PokemonRenderData(

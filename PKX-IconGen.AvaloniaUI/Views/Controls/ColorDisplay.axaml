@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:conv="using:PKXIconGen.AvaloniaUI.Converters"
-             xmlns:cp="using:AvaloniaColorPicker"
         
              mc:Ignorable="d" d:DesignWidth="512" d:DesignHeight="768"
              x:Class="PKXIconGen.AvaloniaUI.Views.Controls.ColorDisplay"
@@ -11,26 +10,26 @@
     <UserControl.Resources>
         <conv:AvaloniaColorHexStringConverter x:Key="AvaloniaColorHexStringConverter"/>
     </UserControl.Resources>
-    <StackPanel Orientation="Horizontal">
-        <cp:ColorButton Margin="2" Color="{Binding #Root.Color, Mode=TwoWay}" IsEnabled="{Binding #Root.IsEnabled}" />
-        <StackPanel Orientation="Horizontal">
+    <Grid ColumnDefinitions="2*,1.5*,*,*,*,*" RowDefinitions="*" HorizontalAlignment="Stretch">
+        <ColorPicker Width="80" Color="{Binding #Root.Color, Mode=TwoWay}" IsEnabled="{Binding #Root.IsEnabled}" Grid.Column="0" />
+        <StackPanel Orientation="Horizontal" Grid.Column="1">
             <TextBlock Text="{Binding #Root.Color, Converter={StaticResource AvaloniaColorHexStringConverter}}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="50">
-            <TextBlock Text="R:" Margin="2" VerticalAlignment="Center" />
+        <StackPanel Orientation="Horizontal" Grid.Column="2">
+            <TextBlock Text="R:" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.R}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="50">
-            <TextBlock Text="G:" Margin="2" VerticalAlignment="Center" />
+        <StackPanel Orientation="Horizontal" Grid.Column="3">
+            <TextBlock Text="G:" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.G}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="50">
-            <TextBlock Text="B:" Margin="2" VerticalAlignment="Center" />
+        <StackPanel Orientation="Horizontal" Grid.Column="4">
+            <TextBlock Text="B:" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.B}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Width="50">
-            <TextBlock Text="A:" Margin="2" VerticalAlignment="Center" />
+        <StackPanel Orientation="Horizontal" Grid.Column="5">
+            <TextBlock Text="A:" VerticalAlignment="Center" />
             <TextBlock Text="{Binding #Root.Color.A}" Margin="0,0,8,0" VerticalAlignment="Center" />
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </UserControl>

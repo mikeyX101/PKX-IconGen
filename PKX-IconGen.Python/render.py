@@ -1,6 +1,6 @@
 """ License 
     PKX-IconGen.Python - Python code for PKX-IconGen to interact with Blender
-    Copyright (C) 2021-2023 Samuel Caron/mikeyx
+    Copyright (C) 2021-2026 Samuel Caron/mikeyx
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+from pathlib import Path
 from typing import Optional, List
 
 import bpy
@@ -24,6 +25,7 @@ import os
 sys.path.append(os.getcwd())
 
 from math import radians
+from data.animation_name import AnimationName
 from data.camera import Camera
 from data.game import Game
 from data.light import Light
@@ -31,6 +33,8 @@ from data.pokemon_render_data import PokemonRenderData
 from data.edit_mode import EditMode
 from data.render_job import RenderJob
 from data.render_target import RenderTarget
+
+import camera_resolver
 import common
 
 last_rendered_mode: Optional[EditMode] = None
@@ -49,14 +53,14 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
 
     objs = bpy.data.objects
     scene = bpy.data.scenes["Scene"]
-    armature = common.get_armature(prd, mode)
+    armature = common.get_armature_obj(prd, mode)
     camera = objs["PKXIconGen_Camera"]
     focus = objs["PKXIconGen_FocusPoint"]
     light = objs["PKXIconGen_TopLight"]
 
-    prd_camera: Camera = prd.get_mode_camera(mode) or Camera.default(RenderTarget[scene.main_mode])
+    prd_camera: Camera = prd.get_mode_camera(mode) or camera_resolver.get_default_camera(RenderTarget[scene.main_mode], mode, prd)
     prd_light: Light = prd_camera.light or Light.default(RenderTarget[scene.main_mode])
-    animation_pose: int = prd.get_mode_animation_pose(mode) or 0
+    animation_name: AnimationName = prd.get_mode_animation_name(mode) or AnimationName.IDLE
     animation_frame: int = prd.get_mode_animation_frame(mode) or 0
 
     camera.location = prd_camera.pos.to_mathutils_vector()
@@ -70,8 +74,7 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     light.data.color = prd_light.color.to_list()
     light.location[2] = prd_light.distance
 
-    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
-    armature.animation_data.action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(animation_pose)]
+    armature.animation_data.action = common.get_animation_action(prd.get_mode_model(mode), animation_name)
     scene.frame_set(animation_frame)
 
     common.remove_objects(prd.get_mode_removed_objects(mode))

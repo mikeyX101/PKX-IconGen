@@ -1,6 +1,6 @@
-""" License 
+""" License
     PKX-IconGen.Python - Python code for PKX-IconGen to interact with Blender
-    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+    Copyright (C) 2021-2026 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,15 +15,21 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
+
 import copy
 from typing import List, Optional
 import bpy
 import os
 
 import bpy_extras.view3d_utils
+# noinspection PyUnresolvedReferences
+import mathutils
 
+import camera_resolver
 import common
 import version
+from common import image_is_integer_scale
+from data.animation_name import AnimationName
 from data.color import Color
 from data.data_type import DataType
 from data.light import Light, LightType
@@ -42,7 +48,7 @@ from math import degrees, radians
 
 bl_info = {
     "name": "PKX-IconGen Data Interaction",
-    "blender": (3, 6, 0),
+    "blender": (4, 5, 0),
     "version": tuple(version.addon_ver_str.split('.')),
     "category": "User Interface",
     "description": "Addon to help users use PKX-IconGen without any Blender knowledge",
@@ -61,7 +67,6 @@ render_textures: dict[str, Texture] = dict()
 custom_texture_path_invalid: bool = False
 custom_texture_scale_invalid: bool = False
 custom_texture_reused: bool = False
-
 
 # Operators
 class ShowRegionUiOperator(bpy.types.Operator):
@@ -94,6 +99,27 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
             context.scene.custom_texture_path = context.scene.custom_texture_path.replace(common.assets_path, "{{AssetsPath}}")
         return {'FINISHED'}
 
+class PKXLinkUnlinkedTextureOperator(bpy.types.Operator):
+    """Relink custom texture to model texture"""
+    bl_idname = "wm.pkx_link_unlinked_texture"
+    bl_label = "Link"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.current_texture_image is not None and context.scene.texture_to_link_to is not None and image_is_integer_scale(context.scene.texture_to_link_to, context.scene.current_texture_image)
+
+    def execute(self, context):
+        unlinked_texture = context.scene.current_texture_image
+        unlinked_texture_data = get_texture_obj(unlinked_texture.name.removeprefix("UNLINKED_"))
+        texture_to_link_to = context.scene.texture_to_link_to
+        new_tex_name = texture_to_link_to.name
+        render_textures[new_tex_name] = Texture(new_tex_name, unlinked_texture_data.path, get_initial_texture_materials(new_tex_name))
+        render_textures.pop(unlinked_texture_data.name)
+        unlinked_texture.name = unlinked_texture_data.name
+
+        context.scene.current_texture_image = texture_to_link_to
+        context.scene.texture_to_link_to = None
+        return {'FINISHED'}
 
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
@@ -128,7 +154,7 @@ class PKXResetDeletedOperator(bpy.types.Operator):
     def execute(self, context):
         global removed_objects
         removed_objects = []
-        common.show_armature(get_armature(), True)
+        common.show_armature(get_armature_obj(), True)
 
         return {'FINISHED'}
 
@@ -200,7 +226,7 @@ def copy_prd_data(copy_from: EditMode, copy_to: EditMode, items_to_copy: set[str
     target: RenderData = prd.get_mode_render(copy_to)
 
     if DataType.ANIMATION in data_flags:
-        target.animation_pose = source.animation_pose
+        target.animation_name = source.animation_name
         target.animation_frame = source.animation_frame
 
     if DataType.CAMERA_LIGHT in data_flags:
@@ -248,7 +274,7 @@ class PKXCameraFocusOperator(bpy.types.Operator):
             scene = context.scene
             region = context.region
             rv3d = context.region_data
-            coord = event.mouse_region_x, event.mouse_region_y
+            coord = mathutils.Vector((event.mouse_region_x, event.mouse_region_y))
 
             # get the ray from the viewport and mouse
             view_vector = bpy_extras.view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
@@ -308,7 +334,7 @@ class PKXCameraFocusOperator(bpy.types.Operator):
 
 
 class PKXSaveOperator(bpy.types.Operator):
-    """Save to Json"""
+    """Save to JSON"""
     bl_idname = "wm.pkx_save"
     bl_label = "Save PKX Json"
 
@@ -317,12 +343,12 @@ class PKXSaveOperator(bpy.types.Operator):
             sync_camera_to_props(context)
         sync_props_to_prd(context)
 
-        json: str = prd.to_json()
+        json: str = prd.to_json(common.debugging)
         common.print_verbose(f"Output: {json}")
-        # Will not work if debugging, test saves from the C# PKX-IconGen application
         try:
             name: str = prd.output_name or prd.name
-            with open('../Temp/' + name + '.json', 'w') as json_file:
+            path: str = './debugging/dbg_out_' if common.debugging else '../Temp/'
+            with open(path + name + '.json', 'w') as json_file:
                 json_file.write(json)
                 json_file.close()
                 bpy.ops.wm.save_mainfile()
@@ -404,8 +430,8 @@ def get_camera_light():
     return bpy.data.objects["PKXIconGen_TopLight"]
 
 
-def get_armature():
-    return common.get_armature(prd, mode)
+def get_armature_obj():
+    return common.get_armature_obj(prd, mode)
 
 
 def can_edit(scene: any) -> bool:
@@ -460,15 +486,12 @@ def set_show_xd_cutout(toggle: bool):
     camera.data.background_images[0].show_background_image = toggle
 
 
-def update_animation_pose(self, context):
-    value = self.animation_pose
-    armature = get_armature()
+def update_animation_name(self, context):
+    value = self.animation_name
+    armature = get_armature_obj()
 
-    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
     # While debugging, if an error occurs here, make sure to clear cache between different JSON files
-    action = bpy.data.actions[os.path.basename(clean_model_path) + '_Anim 0 ' + str(value)]
-
-    armature.animation_data.action = action
+    armature.animation_data.action = common.get_animation_action(prd.get_mode_model(mode), AnimationName[value])
 
 
 def update_animation_frame(self, context):
@@ -597,7 +620,7 @@ def update_advanced_camera_editing(self, context):
 def update_current_texture_image(self, context):
     value = self.current_texture_image
 
-    if value is not None:
+    if value is not None and not self.current_texture_image.name.startswith("UNLINKED"):
         self.texture_material = None
 
         texture: Texture = get_texture_obj(value.name)
@@ -607,7 +630,6 @@ def update_current_texture_image(self, context):
 
             # Materials updates are made in update_texture_material()
             self.texture_material = bpy.data.materials[first_material.name]
-
 
 def update_custom_texture_path(self, context):
     global custom_texture_path_invalid
@@ -718,7 +740,7 @@ def sync_camera_to_props(context=None):
 
 def sync_props_to_scene(context=None):
     scene = context.scene if context is not None else bpy.context.scene
-    armature = get_armature()
+    armature = get_armature_obj()
     camera = get_camera()
     camera_focus = get_camera_focus()
     camera_light = get_camera_light()
@@ -734,9 +756,7 @@ def sync_props_to_scene(context=None):
     camera.data.angle = radians(scene.fov)
     camera.data.ortho_scale = scene.ortho_scale
 
-    clean_model_path = common.get_relative_asset_path(prd.get_mode_model(mode))
-    armature.animation_data.action = bpy.data.actions[
-        os.path.basename(clean_model_path) + '_Anim 0 ' + str(scene.animation_pose)]
+    armature.animation_data.action = common.get_animation_action(prd.get_mode_model(mode), AnimationName[scene.animation_name])
     scene.frame_set(scene.animation_frame)
 
     common.show_armature(armature, True)
@@ -760,11 +780,11 @@ def sync_prd_to_props(context=None):
 
     scene.secondary_enabled = prd.face.secondary_camera is not None
     prd_camera: Optional[Camera] = prd.get_mode_camera(mode)
-    animation_pose: Optional[int] = prd.get_mode_animation_pose(mode)
+    animation_name: Optional[AnimationName] = prd.get_mode_animation_name(mode)
     animation_frame: Optional[int] = prd.get_mode_animation_frame(mode)
 
     if prd_camera is None:
-        prd_camera = Camera.default(RenderTarget[scene.main_mode])
+        prd_camera = camera_resolver.get_default_camera(RenderTarget[scene.main_mode], mode, prd)
 
     scene.pos = prd_camera.pos.to_mathutils_vector()
     scene.focus = prd_camera.focus.to_mathutils_vector()
@@ -778,7 +798,7 @@ def sync_prd_to_props(context=None):
     scene.light_color = prd_light.color.to_mathutils_vector()
     scene.light_distance = prd_light.distance
 
-    scene.animation_pose = animation_pose
+    scene.animation_name = animation_name.name
     scene.animation_frame = animation_frame
 
     removed_objects = prd.get_mode_removed_objects(mode)
@@ -819,8 +839,8 @@ def sync_props_to_prd(context):
     light_distance: float = scene.light_distance
     light: Light = Light(light_type, light_strength, light_color, light_distance)
 
-    animation_pose: float = scene.animation_pose
-    animation_frame: float = scene.animation_frame
+    animation_name: AnimationName = AnimationName[scene.animation_name]
+    animation_frame: int = scene.animation_frame
 
     removed_objs: list[str] = list(removed_objects)
 
@@ -853,7 +873,7 @@ def sync_props_to_prd(context):
             prd.face.secondary_camera = prd_camera
     else:
         render_data.main_camera = prd_camera
-    render_data.animation_pose = animation_pose
+    render_data.animation_name = animation_name
     render_data.animation_frame = animation_frame
     render_data.removed_objects = removed_objs
     render_data.textures = textures
@@ -941,14 +961,19 @@ MAINPROPS = [
 ]
 
 ANIMATIONPROPS = [
-    ('animation_pose',
-     bpy.props.IntProperty(
-         name="Animation Pose",
-         description="Animation pose like idle, attacking, dying, etc... Last 2-3 poses are usually empty",
-         min=0,
-         max=len(bpy.data.actions) if len(bpy.data.actions) != 0 else 50,  # TODO Fix
+    ('animation_name',
+     bpy.props.EnumProperty(
+         name="Animation",
+         description="Animation to use",
+         items=[
+             ('IDLE', "Idle", "Idle animation"),
+             ('PHYSICAL_ATTACK', "Physical Attack", "Physical attack animation"),
+             ('SPECIAL_ATTACK', "Special Attack", "Special attack animation"),
+             ('TAKING_DAMAGE', "Taking Damage", "Taking damage animation"),
+             ('FAINTING', "Fainting", "Fainting animation")
+         ],
          
-         update=update_animation_pose
+         update=update_animation_name
      )),
     ('animation_frame',
      bpy.props.IntProperty(
@@ -1006,7 +1031,7 @@ CAMERAPROPS = [
      bpy.props.FloatProperty(
          name='Orthographic Scale (Zoom)',
          description="\"Zoom\" of an orthographic camera",
-         min=0,
+         min=0.001,
          default=7.31429,
          
          update=update_camera_ortho_scale
@@ -1072,11 +1097,14 @@ LIGHTPROPS = [
 
 
 def poll_current_texture_image(scene, img):
-    model: str = common.get_relative_asset_path(prd.get_mode_model(mode))
-    model_file: str = os.path.basename(model)
+    is_unlinked = img.name.startswith("UNLINKED_")
+    is_normal_texture = mode in EditMode.ANY_NORMAL and not img.name.endswith(".001")
+    is_shiny_texture = mode in EditMode.ANY_SHINY and img.name.endswith(".001")
+    return img.type != "RENDER_RESULT" and (img.filepath == "" and (img.name.startswith("tex_") and (is_normal_texture or is_shiny_texture)) or is_unlinked)
 
-    return img.type != "RENDER_RESULT" and img.name.startswith(model_file) and img.filepath == ""
 
+def poll_texture_to_link_to(scene, img):
+    return img.filepath == ""
 
 def poll_texture_materials(scene, mat_obj):
     original_img = scene.current_texture_image
@@ -1103,6 +1131,13 @@ TEXTURESPROPS = [
          poll=poll_current_texture_image,
          
          update=update_current_texture_image,
+     )),
+    ('texture_to_link_to',
+     bpy.props.PointerProperty(
+         name="Link to",
+         description="Texture to link to this unlinked texture. Changes to the texture will be overwritten, and material changes from both textures will be lost",
+         type=bpy.types.Image,
+         poll=poll_texture_to_link_to
      )),
     ('custom_texture_path',
      bpy.props.StringProperty(
@@ -1255,8 +1290,8 @@ ADVANCEDPROPS = [
          name="Object Shading:",
          description="Determines how the objects are shaded, sometimes Smooth shading can give better results, but can break and look weird in other cases",
          items=[
-             ('FLAT', "Flat", "Flat Shading, default and the most stable"),
-             ('SMOOTH', "Smooth", "Smooth shading, can give better results for more round Pokemon, can cause visual \"weirdness\".")
+             ('FLAT', "Flat", "Flat Shading, use this if Smooth shading looks weird"),
+             ('SMOOTH', "Smooth", "Smooth shading, default")
          ],
          default=0,  # Flat
          
@@ -1348,7 +1383,7 @@ class PKXAnimationPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_simple_subpanel(self, context, ANIMATIONPROPS)
+        init_simple_subpanel(self.layout, context, ANIMATIONPROPS)
 
 
 class PKXCameraPanel(PKXPanel, bpy.types.Panel):
@@ -1396,7 +1431,7 @@ class PKXLightPanel(PKXPanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        init_simple_subpanel(self, context, LIGHTPROPS)
+        init_simple_subpanel(self.layout, context, LIGHTPROPS)
 
 
 class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
@@ -1420,7 +1455,14 @@ class PKXTexturesPanel(PKXPanel, bpy.types.Panel):
                     col.template_icon(icon_value=scene.current_texture_image.preview.icon_id, scale=5)
                     row = col.row(align=True)
                     row.label(text=f"Regular texture size: {scene.current_texture_image.size[0]}x{scene.current_texture_image.size[1]}")
-            else:
+            elif prop_name == "texture_to_link_to" and scene.current_texture_image is not None and scene.current_texture_image.name.startswith("UNLINKED"):
+                row = col.row(align=True)
+                row.prop(scene, prop_name)
+                if scene.texture_to_link_to is not None:
+                    col.template_icon(icon_value=scene.texture_to_link_to.preview.icon_id, scale=5)
+                row = col.row(align=True)
+                row.operator(PKXLinkUnlinkedTextureOperator.bl_idname)
+            elif scene.current_texture_image is None or not scene.current_texture_image.name.startswith("UNLINKED"):
                 image_col = col.column()
                 image_col.enabled = scene.current_texture_image is not None
 
@@ -1514,9 +1556,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         row.operator(PKXCopyFromOperator.bl_idname)
 
 
-def init_simple_subpanel(self, context, props):
-    layout = self.layout
-
+def init_simple_subpanel(layout, context, props):
     col = layout.column()
     col.enabled = can_edit(context.scene)
     for (prop_name, _) in props:
@@ -1541,6 +1581,7 @@ CLASSES = [
     PKXDeleteOperator,
     PKXResetDeletedOperator,
     PKXReplaceByAssetsPathOperator,
+    PKXLinkUnlinkedTextureOperator,
     PKXCopyToOperator,
     PKXCopyFromOperator,
     PKXCameraFocusOperator,
@@ -1565,14 +1606,23 @@ def register(data: PokemonRenderData):
         bpy.utils.register_class(c)
 
     scene = bpy.data.scenes["Scene"]
-    scene.show_xd_cutout = common.xdCutoutInitialState
+    scene.show_xd_cutout = common.xd_cutout_initial_state
 
     sync_prd_to_props()
     sync_props_to_scene()
 
+    # Focus viewport camera on model meshes + camera
+    bpy.data.objects["PKXIconGen_Camera"].hide_select = False
+    common.focus_view3d_on_objects(get_armature_obj().children + tuple([bpy.data.objects["PKXIconGen_Camera"]]))
+    bpy.data.objects["PKXIconGen_Camera"].hide_select = True
+
+    # Scale camera sprite according to first model
+    armature_dimensions = get_armature_obj().dimensions
+    sprite_scale = max(armature_dimensions.x, armature_dimensions.y, armature_dimensions.z) / 4
+    bpy.data.objects["PKXIconGen_FocusPoint"].scale = mathutils.Vector((sprite_scale, sprite_scale, sprite_scale))
+
     # Unselect on start
-    for obj in bpy.context.selected_objects:
-        obj.select_set(False)
+    bpy.ops.object.select_all(action='DESELECT')
 
     # Key binds
     wm = bpy.context.window_manager
@@ -1587,9 +1637,8 @@ def register(data: PokemonRenderData):
 
     # Deactivate object context menu
     for b in wm.keyconfigs.active.keymaps["Object Mode"].keymap_items:
-        if b is not None and b.name == "Object Context Menu":
+        if b is not None and b.name == "Object":
             b.active = False
-
 
 def unregister():
     for prop_list in ALLPROPS:

@@ -21,12 +21,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 using PKXIconGen.Core;
 using PKXIconGen.Core.Data;
 using PKXIconGen.Core.Services;
-using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.MaterialDesign;
+using Optris.Icons.Avalonia;
+using Optris.Icons.Avalonia.MaterialDesign;
 
 namespace PKXIconGen.AvaloniaUI;
 
@@ -70,13 +70,15 @@ public static class Program
     
     private static AppBuilder BuildAvaloniaApp()
     {
-        IconProvider.Current
-            .Register<MaterialDesignIconProvider>();
+        IconProvider.Current.Register<MaterialDesignIconProvider>();
 
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .LogToTrace()
-            .UseReactiveUI();
+#if DEBUG
+            .WithDeveloperTools()
+#endif
+            .UseReactiveUI(builder => {});
     }
 
     private static async Task HandleUnexpectedAppErrorAsync(Exception ex)

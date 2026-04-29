@@ -13,5 +13,5 @@
 
 cd ..
 cp -n ./template.blend ./debugging/debug.blend # To avoid overriding template.blend, do not override if debug.blend is already present, useful for cache tests
-$1 --debug-python --enable-autoexec --python-exit-code 200 ./debugging/debug.blend --python "$2" -- --pkx-debug "$3" --debug-egg "$4" --assets-path "$5"
+$1 --debug-python --enable-autoexec --python-exit-code 200 ./debugging/debug.blend --python "$2" -- --pkx-debug "$3" --debug-egg "$4" --assets-path "$5" --verbose
 wait

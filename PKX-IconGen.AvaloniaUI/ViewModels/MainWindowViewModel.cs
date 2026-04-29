@@ -238,14 +238,14 @@ public sealed partial class MainWindowViewModel : WindowViewModelBase, IDisposab
         // Reactive collections
         PokemonRenderDataItemsSource = new SourceCache<PokemonRenderData, uint>(prd => prd.Id);
         PokemonRenderDataItemsSource.Connect()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .AutoRefresh(prd => prd.Name)
             .AutoRefresh(prd => prd.FaceRender)
             .BindToObservableList(out IObservableList<PokemonRenderData> observableList)
             .Subscribe();
             
         observableList.Connect()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Sort(SortExpressionComparer<PokemonRenderData>.Ascending(prd => prd.Name))
             .Bind(out pokemonRenderDataItems)
             .Subscribe();
@@ -340,9 +340,31 @@ public sealed partial class MainWindowViewModel : WindowViewModelBase, IDisposab
         }
     }
 
-    private void VerifyBlenderExecutable()
+    private CancellationTokenSource? verifyBlenderTokenSource;
+    private async void VerifyBlenderExecutable()
     {
-        BlenderCheckResult? blenderCheckResult = BlenderVersionChecker.CheckExecutable(BlenderPath);
+        if (verifyBlenderTokenSource is not null)
+        {
+            DisposeVerifyBlenderToken();
+        }
+        verifyBlenderTokenSource = new CancellationTokenSource();
+        await HandleVerifyBlenderExecutable(verifyBlenderTokenSource.Token);
+        DisposeVerifyBlenderToken();
+    }
+    private async Task HandleVerifyBlenderExecutable(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(500, token);
+        }
+        catch (TaskCanceledException) {}
+        
+        BlenderCheckResult? blenderCheckResult = await BlenderVersionChecker.CheckExecutable(BlenderPath, token);
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+        
         if (blenderCheckResult != null)
         {
             IsBlenderValid = blenderCheckResult.Value.IsBlender;
@@ -364,6 +386,16 @@ public sealed partial class MainWindowViewModel : WindowViewModelBase, IDisposab
 
         BlenderWarningClass = "Error";
         BlenderWarningText = "Please specify a Blender executable.";
+    }
+    private void DisposeVerifyBlenderToken()
+    {
+        // Make sure tokens are canceled
+        if (verifyBlenderTokenSource == null) 
+            return;
+        
+        verifyBlenderTokenSource.Cancel();
+        verifyBlenderTokenSource.Dispose();
+        verifyBlenderTokenSource = null;
     }
         
     #region Pokemon List

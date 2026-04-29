@@ -22,9 +22,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using PKXIconGen.Core.Data.Blender;
+using PKXIconGen.Core.Data.Compatibility;
 
 namespace PKXIconGen.Core.Data;
 
+[JsonConverter(typeof(RenderDataJsonConverter))]
 public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
 {
     [Obsolete("Used for old JSON compatibility. Use PRD.Model or PRD.Shiny.Model instead.")]
@@ -39,13 +41,18 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
         set => model = value;
     }
 
-    [JsonPropertyName("animation_pose")]
+    [JsonPropertyName("animation_pose"), Obsolete("Used for old JSON compatibility. Use AnimationName instead.")]
     public ushort AnimationPose { get; init; }
+    
+    [JsonPropertyName("animation_name")]
+    public AnimationName AnimationName { get; init; }
+    
     [JsonPropertyName("animation_frame")]
     public ushort AnimationFrame { get; init; }
 
+    // If null, Blender will figure out the starting camera
     [JsonPropertyName("main_camera")]
-    public Camera MainCamera { get; init; }
+    public Camera? MainCamera { get; init; }
     [JsonPropertyName("secondary_camera")]
     public Camera? SecondaryCamera { get; init; }
 
@@ -74,17 +81,17 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     [JsonPropertyName("glow")]
     public Color Glow { get; set; }
         
-    public RenderData(RenderTarget target = RenderTarget.Face) {
-        AnimationPose = 0;
+    public RenderData(RenderTarget target) {
+        AnimationName = AnimationName.Idle;
         AnimationFrame = 0;
 
-        MainCamera = Camera.GetDefaultCamera(target);
+        MainCamera = null;
         SecondaryCamera = null;
 
         RemovedObjects = new HashSet<string>();
         Textures = new List<Texture>();
 
-        ObjectShading = ObjectShading.Flat;
+        ObjectShading = ObjectShading.Smooth;
             
         Background = target == RenderTarget.Face ? new Color(0,0,0,1) : new Color(0,0,0,0);
         Glow = target == RenderTarget.Face ? new Color(1, 1, 1, 0) : new Color(0, 0, 0, 1);
@@ -92,9 +99,9 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
 
     [JsonConstructor]
     public RenderData(
-        ushort animationPose, 
+        AnimationName animationName, 
         ushort animationFrame, 
-        Camera mainCamera, 
+        Camera? mainCamera, 
         Camera? secondaryCamera, 
         HashSet<string> removedObjects, 
         List<Texture>? textures, 
@@ -102,7 +109,7 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
         Color background,
         Color glow)
     {
-        AnimationPose = animationPose;
+        AnimationName = animationName;
         AnimationFrame = animationFrame;
 
         MainCamera = mainCamera;
@@ -120,10 +127,10 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     public bool Equals(RenderData? other)
     {
         return other is not null &&
-               AnimationPose == other.AnimationPose &&
+               AnimationName == other.AnimationName &&
                AnimationFrame == other.AnimationFrame &&
                MainCamera.Equals(other.MainCamera) &&
-               (SecondaryCamera?.Equals(other.SecondaryCamera) ?? other.SecondaryCamera == null) &&
+               SecondaryCamera.Equals(other.SecondaryCamera) &&
                RemovedObjects.SequenceEqual(other.RemovedObjects) &&
                Textures.SequenceEqual(other.Textures) &&
                ObjectShading == other.ObjectShading &&
@@ -146,7 +153,7 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     }
 
     public override int GetHashCode() => (
-        AnimationPose, 
+        AnimationName, 
         AnimationFrame, 
         MainCamera, 
         SecondaryCamera, 
@@ -160,12 +167,12 @@ public class RenderData : IJsonSerializable, IEquatable<RenderData>, ICloneable
     public object Clone()
     {
         return new RenderData(
-            AnimationPose,
+            AnimationName,
             AnimationFrame,
             MainCamera,
             SecondaryCamera,
-            new HashSet<string>(RemovedObjects),
-            new List<Texture>(Textures),
+            [..RemovedObjects],
+            [..Textures],
             ObjectShading,
             Background,
             Glow

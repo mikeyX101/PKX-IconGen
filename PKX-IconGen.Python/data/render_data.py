@@ -1,6 +1,6 @@
 """ License 
     PKX-IconGen.Python - Python code for PKX-IconGen to interact with Blender
-    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+    Copyright (C) 2021-2026 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 from typing import Optional
 from typing import List
 
+from .animation_name import AnimationName
 from .camera import Camera
 from .color import Color
 from .object_shading import ObjectShading
@@ -28,24 +29,24 @@ from .texture import Texture
 class RenderData(object):
 
     def __init__(self,
-                 animation_pose: int,
+                 animation_name: Optional[AnimationName],
                  animation_frame: int,
-                 main_camera: Camera,
+                 main_camera: Optional[Camera], # While it is marked as Optional, it never will be since it is initiated once the model is loaded
                  secondary_camera: Optional[Camera],
                  removed_objects: List[str],
-                 textures: Optional[List[Texture]],
-                 shading: Optional[ObjectShading],
+                 textures: Optional[List[Texture]], # Optional for compatibility, should always be not null
+                 shading: Optional[ObjectShading], # Optional for compatibility, should always be not null
                  bg: Optional[Color],
                  glow: Optional[Color]):
-        self.animation_pose = animation_pose
+        self.animation_name = animation_name or AnimationName.IDLE
         self.animation_frame = animation_frame
 
         self.main_camera = main_camera
         self.secondary_camera = secondary_camera
 
         self.removed_objects = removed_objects
-        self.textures = textures or list[Texture]()  # Optional for compatibility, should always be not null
-        self.shading = shading or ObjectShading.FLAT  # Optional for compatibility, should always be not null
+        self.textures = textures or list[Texture]()
+        self.shading = shading or ObjectShading.SMOOTH
 
         self.bg = bg or Color(0, 0, 0, 1)
         self.glow = glow or Color(1, 1, 1, 0)
@@ -55,32 +56,42 @@ class RenderData(object):
         if obj is None:
             return obj
 
+        keys = obj.__dict__.keys()
+
+        animation_name: Optional[AnimationName] = None
+        if "animation_name" in keys:
+            animation_name = AnimationName(obj.animation_name)
+
+        main_camera: Optional[Camera] = None
+        if "main_camera" in keys:
+            main_camera = Camera.parse_obj(obj.main_camera)
+
         secondary_camera: Optional[Camera] = None
-        if "secondary_camera" in obj.__dict__.keys():
+        if "secondary_camera" in keys:
             secondary_camera = Camera.parse_obj(obj.secondary_camera)
 
         textures: Optional[List[Texture]] = None
-        if "textures" in obj.__dict__.keys():
+        if "textures" in keys:
             textures = list[Texture]()
             for texture in obj.textures:
                 textures.append(Texture.parse_obj(texture))
 
         shading: Optional[ObjectShading] = None
-        if "shading" in obj.__dict__.keys():
+        if "shading" in keys:
             shading = ObjectShading(obj.shading)
 
         bg: Optional[Color] = None
-        if "bg" in obj.__dict__.keys():
+        if "bg" in keys:
             bg = Color.parse_obj(obj.bg)
 
         glow: Optional[Color] = None
-        if "glow" in obj.__dict__.keys():
+        if "glow" in keys:
             glow = Color.parse_obj(obj.glow)
 
         return RenderData(
-            obj.animation_pose,
+            animation_name,
             obj.animation_frame,
-            Camera.parse_obj(obj.main_camera),
+            main_camera,
             secondary_camera,
             obj.removed_objects,
             textures,

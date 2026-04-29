@@ -92,9 +92,9 @@ def apply_patches_by_model_name(model_path: Optional[str]):
         _set_mat_blend_mode("Material.003", BlendMethod.BLEND)
         _set_mat_shadow_mode("Material.003", ShadowMethod.NONE)
         print("Patched Clamperl")
-    elif "fushigidane.pkx" in model_name:  # Bulbasaur, fix vertex on nose by dissolving it
+    elif "fushigidane.pkx" in model_name:  # !!Bulbasaur, fix vertex on nose by dissolving it
         _dissolve_vertex("Object.013", 5)
-        print("Patched Bulbasaur")
+        print("!!Patched Bulbasaur")
 
 
 def _start_mesh_edit(obj_name: str) -> bmesh.types.BMesh:

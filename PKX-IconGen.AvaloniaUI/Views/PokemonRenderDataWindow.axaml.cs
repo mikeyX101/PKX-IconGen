@@ -18,7 +18,7 @@
 #endregion
 
 using System;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 using PKXIconGen.AvaloniaUI.ViewModels;
 using ReactiveUI;
 

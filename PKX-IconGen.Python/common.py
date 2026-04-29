@@ -1,6 +1,6 @@
 """ License
     PKX-IconGen.Python - Python code for PKX-IconGen to interact with Blender
-    Copyright (C) 2021-2022 Samuel Caron/mikeyX#4697
+    Copyright (C) 2021-2026 Samuel Caron/mikeyX#4697
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,14 +17,15 @@
 """
 
 import getopt
-import math
 import os
 import sys
+from pathlib import Path
 
 import bpy
 from typing import List, Optional, Final
 
 import blender_compat
+from data.animation_name import AnimationName
 from patcher import apply_patches_by_model_name
 from data.edit_mode import EditMode
 from data.object_shading import ObjectShading
@@ -32,8 +33,9 @@ from data.pokemon_render_data import PokemonRenderData
 from data.shiny_color import ColorChannel, ShinyColors, ShinyColor
 from data.shiny_info import ShinyInfo
 from data.texture import Texture
-from importer import import_hsd
 
+from importer.shared.helpers.logger import Logger
+from importer.importer.importer import Importer
 
 class PkxIconGenCache(object):
     def __init__(self):
@@ -74,13 +76,14 @@ SHINYCOLOR2_NAME: Final[str] = "PKX_ShinyColor2"
 SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"
 
 cmd_args = None
+debugging = False
 assets_path: Optional[str] = None
-xdCutoutInitialState: bool = False
+xd_cutout_initial_state: bool = False
 do_print_verbose: bool = False
 pkx_cache = PkxIconGenCache()
 
-
 def attach_debugger(debug_egg: str):
+    global debugging
     # https://github.com/sybrenstuvel/random-blender-addons/blob/main/remote_debugger.py
     eggpath = os.path.abspath(debug_egg)
 
@@ -90,15 +93,16 @@ def attach_debugger(debug_egg: str):
         if not any('pycharm-debug' in p for p in sys.path):
             sys.path.append(eggpath)
 
+        # noinspection PyUnresolvedReferences
         import pydevd_pycharm
-        pydevd_pycharm.settrace('localhost', port=1090, stdoutToServer=True, stderrToServer=True,
+        pydevd_pycharm.settrace('localhost', port=1090, stdout_to_server=True, stderr_to_server=True,
                                 suspend=False)
-
+        debugging = True
 
 def parse_cmd_args(script_args):
     global cmd_args
     global assets_path
-    global xdCutoutInitialState
+    global xd_cutout_initial_state
     global do_print_verbose
 
     if cmd_args is None:
@@ -108,15 +112,13 @@ def parse_cmd_args(script_args):
                 assets_path = value
                 print(f"Assets Path: {assets_path}")
             elif arg == "--xd-cutout":
-                xdCutoutInitialState = True
+                xd_cutout_initial_state = True
             elif arg == "--verbose":
                 do_print_verbose = True
-
 
 def print_verbose(msg: str):
     if do_print_verbose:
         print(msg)
-
 
 def get_absolute_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}", assets_path)
@@ -125,48 +127,66 @@ def get_absolute_asset_path(model: str) -> str:
 def get_relative_asset_path(model: str) -> str:
     return model.replace("{{AssetsPath}}/", "")
 
+def import_model(model_idx: int, model_path: str):
+    objs = bpy.data.objects
+
+    if assets_path is not None:
+        true_path = get_absolute_asset_path(model_path)
+    else:
+        true_path = model_path
+
+    print(f"Importing: {true_path}")
+    model_bytes: bytes
+    with open(true_path, 'rb') as f:
+        model_bytes = f.read()
+    options = {
+        "ik_hack": True,
+        "verbose": False, #do_print_verbose
+        "max_frame": 1000000000,
+        "section_names": [],
+        "filepath": true_path,
+        "import_lights": False,
+        "import_cameras": False,
+        "include_shiny": False,
+        "strict_mirror": False
+    }
+    model_name = Path(true_path).name
+    logger = Logger(False, model_name)
+    Importer.run(bpy.context, model_bytes, model_name, options, logger)
+
+    armature = objs[bpy.data.armatures[model_idx].name] # While debugging, if an error occurs here, make sure to clear cache between different JSON files
+    armature.hide_select = True
+    armature.hide_viewport = True
+
 
 def import_models(prd: PokemonRenderData):
-    objs = bpy.data.objects
+    armatures = bpy.data.armatures
     normal_imported: bool = False
     shiny_imported: bool = False
 
     shiny_info: ShinyInfo = prd.shiny
 
-    if objs.find("Armature0") == -1:
-        if assets_path is not None:
-            true_path = get_absolute_asset_path(prd.model)
-        else:
-            true_path = prd.model
-
-        print(f"Importing: {true_path}")
-        import_hsd.load(None, bpy.context, true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
-        armature = objs["Armature0"]
-        armature.hide_select = True
-        armature.hide_viewport = True
+    if len(armatures) == 0:
+        import_model(0, prd.model)
         normal_imported = True
 
-    if objs.find("Armature1") == -1 and shiny_info.model is not None:
-        if assets_path is not None:
-            shiny_true_path = get_absolute_asset_path(shiny_info.model)
-        else:
-            shiny_true_path = shiny_info.model
+    if len(armatures) == 1 and shiny_info.model is not None:
+        import_model(1, shiny_info.model)
 
-        print(f"Importing: {shiny_true_path}")
-        import_hsd.load(None, bpy.context, shiny_true_path, 0, "scene_data", "SCENE", True, True, 1000, True)
         switch_model(shiny_info, EditMode.FACE_NORMAL)  # Hide shiny model on load
-        shiny_armature = objs["Armature1"]  # While debugging, if an error occurs here, make sure to clear cache between different JSON files
-        shiny_armature.hide_select = True
-        shiny_armature.hide_viewport = True
         shiny_imported = True
 
     if normal_imported or shiny_imported:
         bpy.ops.wm.save_mainfile()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(bpy.data.filepath), "edit.blend"))
 
+    # Remove material animations
+    for mat in bpy.data.materials:
+        mat.animation_data_clear()
+
     # Run patches
-    apply_patches_by_model_name(prd.model)
-    apply_patches_by_model_name(prd.shiny.model)
+    #apply_patches_by_model_name(prd.model)
+    #apply_patches_by_model_name(prd.shiny.model)
 
     mats = bpy.data.materials
     for mat in mats:
@@ -207,7 +227,8 @@ def import_models(prd: PokemonRenderData):
 
 def setup_shiny_mats(tree: bpy.types.NodeTree):
     uses_bump: bool = tree.nodes.find("Bump") != -1
-    uses_single_color: bool = tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color].links[0].from_node.bl_idname == "ShaderNodeRGB"
+    principled_bsdf_in_links = tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color].links
+    uses_single_color: bool = principled_bsdf_in_links[0].from_node.bl_idname == "ShaderNodeRGB" if len(principled_bsdf_in_links) > 0 else False
 
     if uses_single_color:
         rgb_node = tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color].links[0].from_node
@@ -314,12 +335,9 @@ def switch_model(shiny_info: ShinyInfo, mode: EditMode):
     elif shiny_info.model is not None:
         objs = bpy.data.objects
 
-        if mode in EditMode.ANY_SHINY:
-            show_armature(objs["Armature0"], False)
-            show_armature(objs["Armature1"], True)
-        else:
-            show_armature(objs["Armature1"], False)
-            show_armature(objs["Armature0"], True)
+        show_shiny = mode in EditMode.ANY_SHINY
+        show_armature(objs[bpy.data.armatures[0].name], not show_shiny)
+        show_armature(objs[bpy.data.armatures[1].name], show_shiny)
     else:
         raise Exception("PRD had no filter or alt model.")
 
@@ -365,13 +383,21 @@ def image_is_integer_scale(original_img, new_img) -> bool:
 
 def set_textures(textures: List[Texture]):
     for texture in textures:
-        original_img = bpy.data.images[texture.name]
+        if bpy.data.images.find(texture.name) == -1:
+            print("Image not found, ignoring. [%s]" % texture.name)
+            if texture.path is not None:
+                full_path: str = get_absolute_asset_path(texture.path)
+                unlinked_img = bpy.data.images.load(filepath=full_path, check_existing=True)
+                unlinked_img.name = "UNLINKED_" + texture.name
+            continue
+
         custom_img = None
         if texture.path is not None:
             full_path: str = get_absolute_asset_path(texture.path)
             set_custom_image(bpy.data.images[texture.name], full_path)
             custom_img = bpy.data.images.load(filepath=full_path, check_existing=True)
 
+        original_img = bpy.data.images[texture.name]
         for mat in texture.mats:
             set_material_map(custom_img or original_img,
                              bpy.data.materials[mat.name],
@@ -381,8 +407,13 @@ def set_textures(textures: List[Texture]):
 
 def reset_texture_images(texture: Texture):
     if texture.path is not None:
-        original_img = bpy.data.images[texture.name]
         custom_img = bpy.data.images.load(filepath=get_absolute_asset_path(texture.path), check_existing=True)
+        if bpy.data.images.find(texture.name) == -1:
+            print("Image not found, ignoring. [%s]" % texture.name)
+            custom_img.name = "UNLINKED_" + texture.name
+            return
+
+        original_img = bpy.data.images[texture.name]
 
         nodes = get_image_nodes(custom_img)
 
@@ -418,43 +449,46 @@ def reset_materials_maps():
             mapping_node.inputs[1].default_value[1] = defaults[1]
 
 
-def get_armature(prd: PokemonRenderData, mode: EditMode):
-    objs = bpy.data.objects
+def get_armature_obj(prd: PokemonRenderData, mode: EditMode):
     shiny_model = prd.shiny.model
     if shiny_model is not None and shiny_model != "" and mode in EditMode.ANY_SHINY:
-        armature = objs["Armature1"]
+        armature = bpy.data.armatures[1]
     else:
-        armature = objs["Armature0"]
+        armature = bpy.data.armatures[0]
 
-    return armature
+    return bpy.data.objects[armature.name]
 
 
 def show_armature(armature_obj, show: bool):
-    not_show = not show
+    hide = not show
 
-    armature_obj.hide_render = not_show
+    armature_obj.hide_render = hide
 
     for child in armature_obj.children:
-        child.hide_render = not_show
-        child.hide_viewport = not_show
+        if not child.hide_get(): # Ignore importer hidden meshes
+            child.hide_render = hide
+            child.hide_viewport = hide
 
 
 def allow_select_all_armatures(allow_select: bool):
     not_allow_select = not allow_select
 
-    for child in bpy.data.objects["Armature0"].children:
+    objs = bpy.data.objects
+    for child in objs[bpy.data.armatures[0].name].children:
         child.hide_select = not_allow_select
 
-    shiny_armature_idx = bpy.data.objects.find("Armature1")
+    shiny_armature_idx = objs.find(bpy.data.armatures[1].name) if len(bpy.data.armatures) > 1 else -1
     if shiny_armature_idx != -1:
-        for child in bpy.data.objects[shiny_armature_idx].children:
+        for child in objs[shiny_armature_idx].children:
             child.hide_select = not_allow_select
 
 
 def remove_objects(removed_objects: List[str]):
     objs = bpy.data.objects
-
     for obj_name in removed_objects:
+        if objs.find(obj_name) == -1:
+            print("Removed object not found, ignoring. [%s]" % obj_name)
+            continue
         obj = objs[obj_name]
         obj.hide_render = True
         obj.hide_viewport = True
@@ -463,76 +497,65 @@ def remove_objects(removed_objects: List[str]):
 def update_shading(shading: ObjectShading):
     use_smooth = shading == ObjectShading.SMOOTH
 
-    for child in bpy.data.objects["Armature0"].children:
+    objs = bpy.data.objects
+    for child in objs[bpy.data.armatures[0].name].children:
         for polygon in child.data.polygons:
             polygon.use_smooth = use_smooth
 
-    shiny_armature_idx = bpy.data.objects.find("Armature1")
+    shiny_armature_idx = objs.find(bpy.data.armatures[1].name) if len(bpy.data.armatures) > 1 else -1
     if shiny_armature_idx != -1:
-        for child in bpy.data.objects[shiny_armature_idx].children:
+        for child in objs[shiny_armature_idx].children:
             for polygon in child.data.polygons:
                 polygon.use_smooth = use_smooth
 
 
-def hue2rgb(hue: float) -> List[float]:
-    """Input hue is [0, 1]"""
-    sat = 1
-    val = 1
-    hue = convert_range(0, 1, 0, 360, hue)
+def get_animation_action(model: str, animation_name: AnimationName):
+    suffix = "Idle"
+    if animation_name == AnimationName.PHYSICAL_ATTACK:
+        suffix = "Physical"
+    elif animation_name == AnimationName.SPECIAL_ATTACK:
+        suffix = "Attack"
+    elif animation_name == AnimationName.TAKING_DAMAGE:
+        suffix = "Damage"
+    elif animation_name == AnimationName.FAINTING:
+        suffix = "Faint"
 
-    c: float = sat * val
-    m: float = val - c
-    h: float = hue / 60
-    x: float = c * (1 - math.fabs(h % 2 - 1))
+    clean_model_name = Path(get_relative_asset_path(model)).stem
+    actions = bpy.data.actions.values()
+    for action in actions:
+        name = action.name
+        if name.startswith(clean_model_name) and name.endswith(suffix):
+            return action
 
-    rgb: List[float] = []
-    if 0 <= h < 1:
-        rgb = [c, x, 0]
-    elif 1 <= h < 2:
-        rgb = [x, c, 0]
-    elif 2 <= h < 3:
-        rgb = [0, c, x]
-    elif 3 <= h < 4:
-        rgb = [0, x, c]
-    elif 4 <= h < 5:
-        rgb = [x, 0, c]
-    elif 5 <= h <= 6:
-        rgb = [c, 0, x]
-
-    for i in range(len(rgb)):
-        rgb[i] += m
-    return rgb
+    raise Exception(f"Animation not found for model {clean_model_name}, animation {animation_name}!{' Debugging is enabled, clear debug cache first?' if debugging else ''}")
 
 
-def rgb2hue(rgb: List[float]) -> float:
-    """Result hue is [0, 1]"""
-    r: float = rgb[0]
-    g: float = rgb[1]
-    b: float = rgb[2]
+def get_view3d_context():
+    context_override = bpy.context.copy()
+    context_override["screen"] = bpy.data.screens["Layout.001"]
+    context_override["area"] = context_override["screen"].areas[0]
+    for region in context_override["area"].regions:
+        if region.type == "WINDOW":
+            context_override["region"] = region
+            break
 
-    max_c: float = max(rgb)
-    min_c: float = min(rgb)
-    delta: float = max_c - min_c
-
-    hue: float = 0
-    if delta == 0:
-        hue = 0
-    elif max_c == r:
-        hue = ((g - b) / delta) % 6
-    elif max_c == g:
-        hue = ((b - r) / delta) + 2
-    elif max_c == b:
-        hue = ((r - g) / delta) + 4
-
-    return convert_range(0, 6, 0, 1, hue)
+    return context_override
 
 
-def convert_range(original_start: float, original_end: float, new_start: float, new_end: float, value: float) -> float:
-    if original_start > value:
-        raise ValueError("Value was smaller than the original range.")
+def focus_view3d_on_objects(objects: List[bpy.types.Object]):
+    with bpy.context.temp_override(**get_view3d_context()):
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in objects:
+            obj.select_set(True)
+        bpy.ops.view3d.view_selected()
+        bpy.ops.object.select_all(action='DESELECT')
 
-    elif original_end < value:
-        raise ValueError("Value was greater than the original range.")
 
-    scale: float = (new_end - new_start) / (original_end - original_start)
-    return new_start + (value - original_start) * scale
+# for active scene camera
+def focus_camera_on_objects(objects: List[bpy.types.Object]):
+    with bpy.context.temp_override(**get_view3d_context()):
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in objects:
+            obj.select_set(True)
+        bpy.ops.view3d.camera_to_view_selected()
+        bpy.ops.object.select_all(action='DESELECT')

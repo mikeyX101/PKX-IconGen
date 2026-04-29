@@ -17,6 +17,7 @@
 """
 
 __all__ = [
+    "animation_name",
     "box_info",
     "camera", 
     "color",

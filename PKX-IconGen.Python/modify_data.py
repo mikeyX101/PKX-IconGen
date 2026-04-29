@@ -27,6 +27,7 @@ import common
 from addon import register
 
 if __name__ == "__main__":
+    # noinspection DuplicatedCode
     debug_json: Optional[str] = None
     debug_egg: Optional[str] = None
     prd: PokemonRenderData
