@@ -19,6 +19,7 @@
 from enum import Flag
 
 
+# noinspection PyTypeChecker
 class EditMode(Flag):
     FACE_NORMAL = 1
     FACE_NORMAL_SECONDARY = 2
@@ -45,3 +46,8 @@ class EditMode(Flag):
 
     ANY_NORMAL = ANY_FACE_NORMAL | BOX_FIRST | BOX_SECOND | BOX_THIRD
     ANY_SHINY = ANY_FACE_SHINY | BOX_FIRST_SHINY | BOX_SECOND_SHINY | BOX_THIRD_SHINY
+
+    # To remove annoying PyCharm type check bug with enum literals
+    def __contains__(self, item: 'EditMode'):
+        return super().__contains__(item)
+

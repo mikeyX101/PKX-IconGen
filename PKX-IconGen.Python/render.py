@@ -15,7 +15,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
-from pathlib import Path
 from typing import Optional, List
 
 import bpy
@@ -95,18 +94,18 @@ def get_mode_base_resolution(mode: EditMode, game: Game) -> int:
     return base_resolution
 
 
-def render_job_mode(job: RenderJob, path: str, mode: EditMode):
+def render_job_mode(render_job: RenderJob, path: str, mode: EditMode):
     global last_rendered_mode
 
     blender_render = bpy.data.scenes["Scene"].render
 
-    base_resolution = get_mode_base_resolution(mode, job.game)
+    base_resolution = get_mode_base_resolution(mode, render_job.game)
 
-    blender_render.resolution_x = base_resolution * job.scale
-    blender_render.resolution_y = base_resolution * job.scale
+    blender_render.resolution_x = base_resolution * render_job.scale
+    blender_render.resolution_y = base_resolution * render_job.scale
 
-    reset_all(job.data)
-    sync_prd_to_scene(job.data, mode)
+    reset_all(render_job.data)
+    sync_prd_to_scene(render_job.data, mode)
     blender_render.filepath = path
     bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)
     last_rendered_mode = mode

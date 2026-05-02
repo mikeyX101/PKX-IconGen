@@ -23,9 +23,9 @@ from .vector2 import Vector2
 
 class Material(object):
 
-    def __init__(self, name: str, map: Vector2):
+    def __init__(self, name: str, mapping: Vector2):
         self.name = name
-        self.map = map
+        self.map = mapping
 
     @staticmethod
     def parse_obj(obj: Optional[any]) -> Optional['Material']:

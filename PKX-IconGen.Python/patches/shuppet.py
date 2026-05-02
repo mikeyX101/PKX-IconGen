@@ -20,13 +20,15 @@ import blender_compat
 
 import bpy
 
+import common
+
 
 # Fix body material being multiplied by unknown color attribute
 def patch():
     mat = bpy.data.materials["Material.009"]
     tree = mat.node_tree
     if tree is not None:
-        bsdf = tree.nodes["Principled BSDF"]
+        bsdf = common.get_principled_bsdf_from_tree_nodes(tree)
         mix_mult_node = bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links[0].from_node
         if mix_mult_node.bl_idname == "ShaderNodeMixRGB" and mix_mult_node.blend_type == 'MULTIPLY':
             color_map_blend_node = mix_mult_node.inputs[blender_compat.mix_in.color1].links[0].from_node

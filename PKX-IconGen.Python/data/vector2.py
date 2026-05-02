@@ -16,7 +16,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 """
 
-from math import radians
 from typing import Optional
 # noinspection PyUnresolvedReferences
 from mathutils import Euler

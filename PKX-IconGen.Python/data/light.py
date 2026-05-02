@@ -32,8 +32,8 @@ class LightType(IntEnum):
 
 class Light(object):
     
-    def __init__(self, type: LightType, strength: float, color: Color, distance: float):
-        self.type = type
+    def __init__(self, light_type: LightType, strength: float, color: Color, distance: float):
+        self.type = light_type
         self.strength = strength
         self.color = color
         self.distance = distance
@@ -55,14 +55,14 @@ class Light(object):
         if target is RenderTarget.FACE:
             light = Light(
                 LightType.AREA,
-                250,
+                15,
                 Color.default(),
                 5
             )
         elif target is RenderTarget.BOX:
             light = Light(
                 LightType.AREA,
-                650,
+                40,
                 Color.default(),
                 13
             )

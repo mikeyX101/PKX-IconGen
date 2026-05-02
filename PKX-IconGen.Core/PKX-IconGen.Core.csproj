@@ -9,7 +9,7 @@
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <Authors>mikeyX</Authors>
-    <AssemblyVersion>0.4.1</AssemblyVersion>
+    <AssemblyVersion>0.4.2</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <Version>$(AssemblyVersion)</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>

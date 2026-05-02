@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import common
 from blender_data_enums import *
 from math import radians
 from typing import Optional
@@ -194,7 +195,7 @@ def _set_mat_shadow_mode(mat_name: str, shadow_mode: ShadowMethod):
 
 
 def _set_bsdf_roughness(mat_name: str, bsdf_roughness: float):
-    bpy.data.materials[mat_name].node_tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.roughness].default_value = bsdf_roughness
+    common.get_principled_bsdf_from_tree_nodes(bpy.data.materials[mat_name].node_tree).inputs[blender_compat.principled_bsdf_in.roughness].default_value = bsdf_roughness
 
 
 def _set_tex_projection(mat_name: str, tex_node: str, projection: TextureProjection):

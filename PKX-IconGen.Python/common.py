@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from typing import List, Optional, Final
+from typing import List, Optional, Final, Any
 
 import blender_compat
 from data.animation_name import AnimationName
@@ -43,7 +43,7 @@ class PkxIconGenCache(object):
         self.shiny_color2: Final[list] = []
         self.shiny_mix: Final[list] = []
         # Mapping/Mat/Defaults by Blender images - (mat_name, mapping_node, [default_x, default_y])
-        self.img_mat_mapping: Final[dict[str, list[(str, any, [float, float])]]] = {}
+        self.img_mat_mapping: Final[dict[str, list[tuple[str, bpy.types.ShaderNode, list[float]]]]] = {}
         # TexImage by Blender materials
         self.mat_tex_image: Final[dict[str, list]] = {}
         # TexImage by Blender images
@@ -54,7 +54,7 @@ class PkxIconGenCache(object):
     def init_mat_cache(self, mat_name: str):
         self.mat_tex_image[mat_name] = []
 
-    def add_mat_mapping(self, tex_node, mat):
+    def add_mat_mapping(self, tex_node: bpy.types.ShaderNode, mat: bpy.types.Material):
         if tex_node.bl_idname != "ShaderNodeTexImage":
             print(f"Tried using {tex_node.bl_idname} to add to Mat/Mapping cache")
             return
@@ -62,13 +62,15 @@ class PkxIconGenCache(object):
         if tex_node.image.name not in self.img_mat_mapping:
             self.img_mat_mapping[tex_node.image.name] = []
 
-        mapping_node = tex_node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
+        mapping_node: bpy.types.ShaderNode = tex_node.inputs[blender_compat.tex_image_in.vector].links[0].from_node
         if mapping_node.bl_idname != "ShaderNodeMapping":
             print(f"Node attached to ShaderNodeTexImage for image {tex_node.image.name} was not ShaderNodeMapping, but {mapping_node.bl_idname} instead.")
         else:
+            name: str = mat.name
             x = mapping_node.inputs[1].default_value[0]
             y = mapping_node.inputs[1].default_value[1]
-            self.img_mat_mapping[tex_node.image.name].append((mat.name, mapping_node, [x, y]))
+            mat_mapping: tuple[str, Any, list[float]] = (name, mapping_node, [x, y])
+            self.img_mat_mapping[tex_node.image.name].append(mat_mapping)
 
 
 SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
@@ -227,11 +229,12 @@ def import_models(prd: PokemonRenderData):
 
 def setup_shiny_mats(tree: bpy.types.NodeTree):
     uses_bump: bool = tree.nodes.find("Bump") != -1
-    principled_bsdf_in_links = tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color].links
+    principled_bsdf = get_principled_bsdf_from_tree_nodes(tree)
+    principled_bsdf_in_links = principled_bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links
     uses_single_color: bool = principled_bsdf_in_links[0].from_node.bl_idname == "ShaderNodeRGB" if len(principled_bsdf_in_links) > 0 else False
 
     if uses_single_color:
-        rgb_node = tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color].links[0].from_node
+        rgb_node = principled_bsdf.inputs[blender_compat.principled_bsdf_in.base_color].links[0].from_node
 
         color2_node = tree.nodes.new("ShaderNodeGroup")
         color2_node.name = f"{SHINYCOLOR2_NAME}.color"
@@ -245,7 +248,7 @@ def setup_shiny_mats(tree: bpy.types.NodeTree):
         tree.links.new(rgb_node.outputs[0], color2_node.inputs[0])  # ShaderNodeRGB.Color -> PKX_ShinyColor2.Color
         tree.links.new(color2_node.outputs[0], mix_node.inputs[blender_compat.mix_in.color2])  # PKX_ShinyColor2.Color -> PKX_ShinyMixRGB.Color2
         tree.links.new(rgb_node.outputs[0], mix_node.inputs[blender_compat.mix_in.color1])  # ShaderNodeRGB.Color -> PKX_ShinyMixRGB.Color1
-        tree.links.new(mix_node.outputs[0], tree.nodes["Principled BSDF"].inputs[blender_compat.principled_bsdf_in.base_color])  # PKX_ShinyMixRGB.Color -> PrincipledBSDF.Color
+        tree.links.new(mix_node.outputs[0], principled_bsdf.inputs[blender_compat.principled_bsdf_in.base_color])  # PKX_ShinyMixRGB.Color -> PrincipledBSDF.Color
     else:
         tex_number: int = 0
         for node in tree.nodes:
@@ -286,6 +289,12 @@ def setup_shiny_mats(tree: bpy.types.NodeTree):
 
                 tex_number += 1
 
+
+def get_principled_bsdf_from_tree_nodes(tree):
+    for node in tree.nodes:
+        if node.bl_idname == "ShaderNodeBsdfPrincipled":
+            return node
+    raise Exception("No Principled BSDF found")
 
 def show_shiny_mats():
     for node in pkx_cache.shiny_mix:

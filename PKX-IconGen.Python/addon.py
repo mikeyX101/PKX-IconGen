@@ -71,13 +71,14 @@ custom_texture_reused: bool = False
 # Operators
 class ShowRegionUiOperator(bpy.types.Operator):
     """Show region UI"""
-    bl_idname = "wm.show_region_ui"
+    bl_idname = "pkx.show_region_ui"
     bl_label = "Show region UI"
 
     @classmethod
     def poll(cls, context):
         return context.active_object is not None
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         bpy.ops.wm.context_toggle(data_path="space_data.show_region_ui")
         return {'FINISHED'}
@@ -85,13 +86,14 @@ class ShowRegionUiOperator(bpy.types.Operator):
 
 class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
     """Replaces the full AssetsPath with {{AssetsPath}}, path and image needs to be valid. If path is empty, adds the full AssetsPath"""
-    bl_idname = "wm.pkx_assets_path"
+    bl_idname = "pkx.pkx_assets_path"
     bl_label = "{{AssetsPath}}"
 
     @classmethod
     def poll(cls, context):
         return len(context.scene.custom_texture_path) == 0 or (not custom_texture_path_invalid and not custom_texture_scale_invalid and not custom_texture_reused)
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         if len(context.scene.custom_texture_path) == 0:
             context.scene.custom_texture_path = common.assets_path + "/icon-gen/"
@@ -101,13 +103,14 @@ class PKXReplaceByAssetsPathOperator(bpy.types.Operator):
 
 class PKXLinkUnlinkedTextureOperator(bpy.types.Operator):
     """Relink custom texture to model texture"""
-    bl_idname = "wm.pkx_link_unlinked_texture"
+    bl_idname = "pkx.pkx_link_unlinked_texture"
     bl_label = "Link"
 
     @classmethod
     def poll(cls, context):
         return context.scene.current_texture_image is not None and context.scene.texture_to_link_to is not None and image_is_integer_scale(context.scene.texture_to_link_to, context.scene.current_texture_image)
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         unlinked_texture = context.scene.current_texture_image
         unlinked_texture_data = get_texture_obj(unlinked_texture.name.removeprefix("UNLINKED_"))
@@ -123,13 +126,14 @@ class PKXLinkUnlinkedTextureOperator(bpy.types.Operator):
 
 class PKXDeleteOperator(bpy.types.Operator):
     """Delete selected items, useful for getting rid of duplicate meshes or bounding box cubes"""
-    bl_idname = "wm.pkx_delete"
+    bl_idname = "pkx.pkx_delete"
     bl_label = "Delete selected items"
 
     @classmethod
     def poll(cls, context):
         return len([obj for obj in context.selected_objects if "PKXIconGen_" not in obj.name]) > 0
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         objs = context.selected_objects
 
@@ -144,13 +148,14 @@ class PKXDeleteOperator(bpy.types.Operator):
 
 class PKXResetDeletedOperator(bpy.types.Operator):
     """Restores every deleted item"""
-    bl_idname = "wm.pkx_reset_deleted"
+    bl_idname = "pkx.pkx_reset_deleted"
     bl_label = "Reset deleted items"
 
     @classmethod
     def poll(cls, context):
         return len(removed_objects) > 0
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         global removed_objects
         removed_objects = []
@@ -161,13 +166,14 @@ class PKXResetDeletedOperator(bpy.types.Operator):
 
 class PKXCopyToOperator(bpy.types.Operator):
     """Copy selected data from the current mode to another mode"""
-    bl_idname = "wm.pkx_copy_to"
+    bl_idname = "pkx.pkx_copy_to"
     bl_label = "Copy to"
 
     @classmethod
     def poll(cls, context):
         return context.scene.copy_mode != "" and len(context.scene.items_to_copy) != 0
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         scene = context.scene
 
@@ -186,13 +192,14 @@ class PKXCopyToOperator(bpy.types.Operator):
 
 class PKXCopyFromOperator(bpy.types.Operator):
     """Copy selected data from another mode to the current mode"""
-    bl_idname = "wm.pkx_copy_from"
+    bl_idname = "pkx.pkx_copy_from"
     bl_label = "Copy from"
 
     @classmethod
     def poll(cls, context):
         return context.scene.copy_mode != "" and len(context.scene.items_to_copy) != 0
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         scene = context.scene
 
@@ -216,6 +223,8 @@ class PKXCopyFromOperator(bpy.types.Operator):
 def copy_prd_data(copy_from: EditMode, copy_to: EditMode, items_to_copy: set[str]):
     data_flags = DataType.from_blender_flags(items_to_copy)
     for data_type in DataType:
+        # Type hint is wrong, str not () -> str | None
+        # noinspection PyTypeChecker
         data_type_name: str = data_type.name
         allowed = is_data_type_allowed_copy(data_type_name, copy_from, copy_to)
         if not allowed and data_type in data_flags:
@@ -254,6 +263,35 @@ def is_data_type_allowed_copy(data_type_str: str, copy_from: EditMode, copy_to: 
     )
 
 
+class PKXResetToDefaultCamera(bpy.types.Operator):
+    """Select Camera"""
+    bl_idname = "pkx.pkx_reset_to_default_camera"
+    bl_label = "Reset to default camera and light z "
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    # noinspection PyMethodMayBeStatic
+    def execute(self, context):
+        scene = context.scene
+
+        if scene.advanced_camera_editing:
+            sync_camera_to_props(context)
+        sync_props_to_prd(context)
+
+        render_data = prd.get_mode_render(mode)
+        render_data.main_camera = None # prd_to_props() will get default camera
+
+        # Current mode gets changed, so we need to sync up the props and the scene
+        sync_prd_to_props(context)
+        sync_props_to_scene(context)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+
 # From operator_modal_view3d_raycast.py
 class PKXCameraFocusOperator(bpy.types.Operator):
     """Move camera focus to a place you leftclick, rightclick or 'esc' to cancel"""
@@ -264,6 +302,7 @@ class PKXCameraFocusOperator(bpy.types.Operator):
     def poll(cls, context):
         return not context.scene.advanced_camera_editing
 
+    # noinspection PyMethodMayBeStatic
     def modal(self, context, event):
         if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
             # allow navigation
@@ -288,26 +327,24 @@ class PKXCameraFocusOperator(bpy.types.Operator):
                 depsgraph = context.evaluated_depsgraph_get()
                 for dup in depsgraph.object_instances:
                     if dup.is_instance:  # Real dupli instance
-                        obj = dup.instance_object
-                        yield obj, dup.matrix_world.copy()
+                        yield dup.instance_object, dup.matrix_world.copy()
                     else:  # Usual object
-                        obj = dup.object
-                        yield obj, obj.matrix_world.copy()
+                        yield dup.object, obj.matrix_world.copy()
 
-            def obj_ray_cast(obj, matrix):
+            def obj_ray_cast(mesh, mesh_matrix):
                 """Wrapper for ray casting that moves the ray into object space"""
 
                 # get the ray relative to the object
-                matrix_inv = matrix.inverted()
+                matrix_inv = mesh_matrix.inverted()
                 ray_origin_obj = matrix_inv @ ray_origin
                 ray_target_obj = matrix_inv @ ray_target
                 ray_direction_obj = ray_target_obj - ray_origin_obj
 
                 # cast the ray
-                success, location, normal, face_index = obj.ray_cast(ray_origin_obj, ray_direction_obj)
+                success, location, ray_normal, mesh_face_index = mesh.ray_cast(ray_origin_obj, ray_direction_obj)
 
                 if success:
-                    return location, normal, face_index
+                    return location, ray_normal, mesh_face_index
                 else:
                     return None, None, None
 
@@ -335,9 +372,10 @@ class PKXCameraFocusOperator(bpy.types.Operator):
 
 class PKXSaveOperator(bpy.types.Operator):
     """Save to JSON"""
-    bl_idname = "wm.pkx_save"
+    bl_idname = "pkx.pkx_save"
     bl_label = "Save PKX Json"
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         if context.scene.advanced_camera_editing:
             sync_camera_to_props(context)
@@ -345,6 +383,7 @@ class PKXSaveOperator(bpy.types.Operator):
 
         json: str = prd.to_json(common.debugging)
         common.print_verbose(f"Output: {json}")
+        # noinspection PyBroadException
         try:
             name: str = prd.output_name or prd.name
             path: str = './debugging/dbg_out_' if common.debugging else '../Temp/'
@@ -361,13 +400,14 @@ class PKXSaveOperator(bpy.types.Operator):
 
 class PKXSaveQuitOperator(bpy.types.Operator):
     """Save and exit back to PKX-IconGen"""
-    bl_idname = "wm.pkx_save_quit"
+    bl_idname = "pkx.pkx_save_quit"
     bl_label = "Save and quit"
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         # noinspection PyBroadException
         try:
-            bpy.ops.wm.pkx_save()
+            bpy.ops.pkx.pkx_save()
         except:
             return {'CANCELLED'}
         bpy.ops.wm.quit_blender()
@@ -376,13 +416,14 @@ class PKXSaveQuitOperator(bpy.types.Operator):
 
 class PKXSelectCamera(bpy.types.Operator):
     """Select Camera"""
-    bl_idname = "wm.pkx_select_camera"
+    bl_idname = "pkx.pkx_select_camera"
     bl_label = "Select Camera"
 
     @classmethod
     def poll(cls, context):
         return context.scene.advanced_camera_editing
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         bpy.ops.object.select_all(action="DESELECT")
         get_camera().select_set(True)
@@ -391,13 +432,14 @@ class PKXSelectCamera(bpy.types.Operator):
 
 class PKXSelectFocusPoint(bpy.types.Operator):
     """Select Camera Focus Point"""
-    bl_idname = "wm.pkx_select_camera_focus_point"
+    bl_idname = "pkx.pkx_select_camera_focus_point"
     bl_label = "Select Camera Focus Point"
 
     @classmethod
     def poll(cls, context):
         return context.scene.advanced_camera_editing
 
+    # noinspection PyMethodMayBeStatic
     def execute(self, context):
         bpy.ops.object.select_all(action="DESELECT")
         get_camera_focus().select_set(True)
@@ -434,7 +476,7 @@ def get_armature_obj():
     return common.get_armature_obj(prd, mode)
 
 
-def can_edit(scene: any) -> bool:
+def can_edit(scene) -> bool:
     return mode in EditMode.ANY_FACE_MAIN or (mode in EditMode.ANY_FACE_SECONDARY and scene.secondary_enabled) or mode in EditMode.ANY_BOX
 
 
@@ -1254,6 +1296,7 @@ def set_items_to_copy_defaults() -> None:
         defaults.add('REMOVED_OBJECTS')
         defaults.add('TEXTURES')
 
+    # noinspection PyUnresolvedReferences
     ADVANCEDPROPS[1][1].keywords["default"] = defaults
 
 
@@ -1281,9 +1324,11 @@ def get_copy_mode_items(self, context) -> list[Optional[tuple]]:
 
 
 def set_copy_mode_default(secondary_enabled: bool) -> None:
+    # noinspection PyUnresolvedReferences
     ADVANCEDPROPS[2][1].keywords["default"] = 9 if secondary_enabled else 7
 
-
+# Fake bpy doesn't handle the callback for EnumProperty.items well
+# noinspection PyTypeChecker
 ADVANCEDPROPS = [
     ('shading',
      bpy.props.EnumProperty(
@@ -1293,7 +1338,7 @@ ADVANCEDPROPS = [
              ('FLAT', "Flat", "Flat Shading, use this if Smooth shading looks weird"),
              ('SMOOTH', "Smooth", "Smooth shading, default")
          ],
-         default=0,  # Flat
+         default=1,  # Smooth
          
          update=update_shading
      )),
@@ -1538,7 +1583,10 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         row.prop(scene, "shading", expand=True)
 
         col.separator()
+        row = col.row()
+        row.operator(PKXResetToDefaultCamera.bl_idname)
 
+        col.separator()
         col.label(text="Copy Tool")
         copy_from: EditMode = get_edit_mode(scene)
         copy_to: EditMode = EditMode[scene.copy_mode]
@@ -1584,6 +1632,7 @@ CLASSES = [
     PKXLinkUnlinkedTextureOperator,
     PKXCopyToOperator,
     PKXCopyFromOperator,
+    PKXResetToDefaultCamera,
     PKXCameraFocusOperator,
     PKXSelectCamera,
     PKXSelectFocusPoint
@@ -1653,7 +1702,7 @@ def unregister():
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()
 
-    bpy.ops.wm.show_region_ui()
+    bpy.ops.pkx.show_region_ui()
 
 
 if __name__ == "__main__":
