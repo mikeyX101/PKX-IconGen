@@ -17,7 +17,7 @@
 """
 
 import copy
-from typing import List, Optional
+from typing import List, Optional, Literal
 import bpy
 import os
 
@@ -266,7 +266,7 @@ def is_data_type_allowed_copy(data_type_str: str, copy_from: EditMode, copy_to: 
 class PKXResetToDefaultCamera(bpy.types.Operator):
     """Select Camera"""
     bl_idname = "pkx.pkx_reset_to_default_camera"
-    bl_label = "Reset to default camera and light z "
+    bl_label = "Reset to default camera and light"
 
     @classmethod
     def poll(cls, context):
@@ -329,7 +329,7 @@ class PKXCameraFocusOperator(bpy.types.Operator):
                     if dup.is_instance:  # Real dupli instance
                         yield dup.instance_object, dup.matrix_world.copy()
                     else:  # Usual object
-                        yield dup.object, obj.matrix_world.copy()
+                        yield dup.object, dup.object.matrix_world.copy()
 
             def obj_ray_cast(mesh, mesh_matrix):
                 """Wrapper for ray casting that moves the ray into object space"""
@@ -461,11 +461,11 @@ def get_edit_mode(scene) -> EditMode:
 
 
 def get_camera():
-    return bpy.data.objects["PKXIconGen_Camera"]
+    return bpy.data.objects[common.CAMERA_NAME]
 
 
 def get_camera_focus():
-    return bpy.data.objects["PKXIconGen_FocusPoint"]
+    return bpy.data.objects[common.CAMERA_FOCUS_NAME]
 
 
 def get_camera_light():
@@ -628,6 +628,70 @@ def update_shading(self, context):
     value = self.shading
 
     common.update_shading(ObjectShading[value])
+
+
+def update_overlay_image(self, context):
+    value = self.overlay_image
+
+    overlay = bpy.data.objects[common.CAMERA_NAME].data.background_images[1].image
+    overlay.filepath = value
+
+    w, h = (overlay.size[0], overlay.size[1])
+    overlay_type: Literal["GENERIC", "FACE", "BOX"] = "GENERIC"
+    if w == h or w * 2 == h:
+        overlay_type = "FACE"
+    elif w * 3 == h:
+        overlay_type = "BOX"
+
+    self.overlay_image_type = overlay_type
+
+def update_overlay_image_type(self, context):
+    value = self.overlay_image_type
+
+    update_overlay_from_type(value)
+
+def update_overlay_from_type(overlay_type: Literal["GENERIC", "FACE", "BOX"]):
+    global mode
+
+    overlay_bg: bpy.data.CameraBackgroundImage = bpy.data.objects[common.CAMERA_NAME].data.background_images[1]
+    overlay_img = overlay_bg.image
+    w, h = (overlay_img.size[0], overlay_img.size[1])
+
+    if w == 0 or h == 0:
+        return
+
+    frame_method: Literal["STRETCH", "FIT", "CROP"] = "STRETCH"
+    offset_x: float = 0
+    offset_y: float = 0
+    scale: float = 1
+
+    if overlay_type == "FACE" and mode in EditMode.ANY_FACE:
+        frame_method = "CROP"
+        if w == h:
+            offset_x = 0.5
+            offset_y = -0.5
+            scale = 2
+        elif w * 2 == h:
+            offset_y = -0.25
+
+        if mode in EditMode.ANY_FACE_SECONDARY:
+            offset_x = offset_x * -1
+        if mode in EditMode.ANY_SHINY:
+            offset_y = offset_y * -1
+
+    elif overlay_type == "BOX" and mode in EditMode.ANY_BOX:
+        frame_method = "CROP"
+        mult = -1
+        if mode in EditMode.ANY_BOX_SECOND:
+            mult = 0
+        elif mode in EditMode.ANY_BOX_THIRD:
+            mult = 1
+        offset_y = 0.333333 * mult
+
+    overlay_bg.frame_method = frame_method
+    overlay_bg.offset[0] = offset_x
+    overlay_bg.offset[1] = offset_y
+    overlay_bg.scale = scale
 
 
 def update_advanced_camera_editing(self, context):
@@ -813,6 +877,8 @@ def sync_props_to_scene(context=None):
     common.set_textures(list(render_textures.values()))
 
     common.update_shading(ObjectShading[scene.shading])
+
+    update_overlay_from_type(scene.overlay_image_type)
 
 
 def sync_prd_to_props(context=None):
@@ -1364,7 +1430,28 @@ ADVANCEDPROPS = [
          items=get_copy_mode_items,
          options=set(),
          default=99  # 'FACE_SHINY'
-     ))
+     )),
+    ('overlay_image',
+     bpy.props.StringProperty(
+         name="Overlay",
+         description="Overlay to put over the camera, type will be detected for face and box images with the correct ratio, or specify the type of overlay to use. Not saved",
+         default="",
+         subtype="FILE_PATH",
+
+         update=update_overlay_image,
+     )),
+    ('overlay_image_type',
+     bpy.props.EnumProperty(
+         name="Overlay Image Type",
+         description="How to overlay the image on the camera",
+         items=[
+             ('GENERIC', "Generic", "Fits and stretches the image on the camera view"),
+             ('FACE', "Face", "For face images, overlays the face corresponding to the current face mode"),
+             ('BOX', "Box", "For box images, overlays the box image corresponding to the current box mode")
+         ],
+
+         update=update_overlay_image_type
+     )),
 ]
 
 ALLPROPS = [
@@ -1576,14 +1663,22 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         scene = context.scene
 
         col = layout.column()
-        col.enabled = can_edit(scene)
+        enabled = can_edit(scene)
 
         row = col.row()
+        row.enabled = enabled
         row.label(text="Shading:")
         row.prop(scene, "shading", expand=True)
 
         col.separator()
         row = col.row()
+        row.prop(scene, "overlay_image")
+        row = col.row()
+        row.prop(scene, "overlay_image_type", expand=True)
+
+        col.separator()
+        row = col.row()
+        row.enabled = enabled
         row.operator(PKXResetToDefaultCamera.bl_idname)
 
         col.separator()
@@ -1592,6 +1687,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         copy_to: EditMode = EditMode[scene.copy_mode]
         #  https://blender.stackexchange.com/questions/250876/disable-options-on-enumproperty/250922#250922
         row = col.row(align=True)
+        row.enabled = enabled
         for iden in data_type_defs.keys():
             item_layout = row.row(align=True)
             allowed = is_data_type_allowed_copy(iden, copy_from, copy_to)
@@ -1600,6 +1696,7 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
 
         col.prop(scene, "copy_mode")
         row = col.row()
+        row.enabled = enabled
         row.operator(PKXCopyToOperator.bl_idname)
         row.operator(PKXCopyFromOperator.bl_idname)
 
@@ -1661,14 +1758,15 @@ def register(data: PokemonRenderData):
     sync_props_to_scene()
 
     # Focus viewport camera on model meshes + camera
-    bpy.data.objects["PKXIconGen_Camera"].hide_select = False
-    common.focus_view3d_on_objects(get_armature_obj().children + tuple([bpy.data.objects["PKXIconGen_Camera"]]))
-    bpy.data.objects["PKXIconGen_Camera"].hide_select = True
+    camera = bpy.data.objects[common.CAMERA_NAME]
+    camera.hide_select = False
+    common.focus_view3d_on_objects(get_armature_obj().children + tuple([camera]))
+    camera.hide_select = True
 
     # Scale camera sprite according to first model
     armature_dimensions = get_armature_obj().dimensions
     sprite_scale = max(armature_dimensions.x, armature_dimensions.y, armature_dimensions.z) / 4
-    bpy.data.objects["PKXIconGen_FocusPoint"].scale = mathutils.Vector((sprite_scale, sprite_scale, sprite_scale))
+    bpy.data.objects["CameraSprite"].scale = mathutils.Vector((sprite_scale, sprite_scale, sprite_scale))
 
     # Unselect on start
     bpy.ops.object.select_all(action='DESELECT')

@@ -172,7 +172,7 @@ def _set_mat_texture_ext_mode(mat_name: str, tex_node: str, ext_mode: str):
 
 def _make_obj_track_camera(obj_name: str):
     view_layer = bpy.context.view_layer
-    camera = bpy.data.objects['PKXIconGen_Camera']
+    camera = bpy.data.objects[common.CAMERA_NAME]
 
     for obj in bpy.context.selected_objects:
         obj.select_set(False)

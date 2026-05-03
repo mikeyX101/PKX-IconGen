@@ -73,6 +73,9 @@ class PkxIconGenCache(object):
             self.img_mat_mapping[tex_node.image.name].append(mat_mapping)
 
 
+CAMERA_NAME: Final[str] = "PKXIconGen_Camera"
+CAMERA_FOCUS_NAME: Final[str] = "PKXIconGen_FocusPoint"
+
 SHINYCOLOR1_NAME: Final[str] = "PKX_ShinyColor1"
 SHINYCOLOR2_NAME: Final[str] = "PKX_ShinyColor2"
 SHINYMIXNODE_NAME: Final[str] = "PKX_ShinyMixRGB"

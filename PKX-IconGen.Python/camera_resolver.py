@@ -45,8 +45,8 @@ def init_cameras(prd: PokemonRenderData):
 
 
 def get_default_camera(render_target: RenderTarget, mode: EditMode, prd: PokemonRenderData) -> Camera:
-    scene_camera = bpy.data.objects["PKXIconGen_Camera"]
-    scene_focus_point = bpy.data.objects["PKXIconGen_FocusPoint"]
+    scene_camera = bpy.data.objects[common.CAMERA_NAME]
+    scene_focus_point = bpy.data.objects[common.CAMERA_FOCUS_NAME]
 
     armature_obj = get_armature_obj(prd, mode)
     armature = armature_obj.data

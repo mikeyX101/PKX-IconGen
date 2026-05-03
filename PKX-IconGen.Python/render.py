@@ -53,8 +53,8 @@ def sync_prd_to_scene(prd: PokemonRenderData, mode: EditMode):
     objs = bpy.data.objects
     scene = bpy.data.scenes["Scene"]
     armature = common.get_armature_obj(prd, mode)
-    camera = objs["PKXIconGen_Camera"]
-    focus = objs["PKXIconGen_FocusPoint"]
+    camera = objs[common.CAMERA_NAME]
+    focus = objs[common.CAMERA_FOCUS_NAME]
     light = objs["PKXIconGen_TopLight"]
 
     prd_camera: Camera = prd.get_mode_camera(mode) or camera_resolver.get_default_camera(RenderTarget[scene.main_mode], mode, prd)
