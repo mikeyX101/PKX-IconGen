@@ -1452,6 +1452,15 @@ ADVANCEDPROPS = [
 
          update=update_overlay_image_type
      )),
+    ('overlay_opacity',
+     bpy.props.FloatProperty(
+         name="Overlay opacity",
+         description="Opacity of the camera overlay",
+         min=0,
+         max=1,
+         default=0.2,
+         precision=2
+     )),
 ]
 
 ALLPROPS = [
@@ -1673,6 +1682,8 @@ class PKXAdvancedPanel(PKXPanel, bpy.types.Panel):
         col.separator()
         row = col.row()
         row.prop(scene, "overlay_image")
+        row = col.row()
+        row.prop(scene, "overlay_opacity", slider=True)
         row = col.row()
         row.prop(scene, "overlay_image_type", expand=True)
 
